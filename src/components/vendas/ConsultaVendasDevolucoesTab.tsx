@@ -143,22 +143,9 @@ export const ConsultaVendasDevolucoesTab: React.FC = () => {
   return (
     <div id="consulta-vendas-devolucoes-container" className="flex-1 flex flex-col h-full bg-zinc-950 text-zinc-100 overflow-hidden">
       {/* Top Header & Métricas */}
-      <div className="bg-zinc-900/90 border-b border-zinc-800/80 px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Receipt className="w-5 sm:w-6 h-5 sm:h-6 text-amber-500 shrink-0" />
-              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">Consulta de Vendas e Devoluções</h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap">
-                {orders.length} vendas
-              </span>
-            </div>
-            <p className="text-xs text-zinc-400 mt-1">
-              Rastreamento de pedidos, comprovantes fiscais e gestão de trocas e estornos.
-            </p>
-          </div>
-
-          {/* Sub-abas de alternância */}
+      <div className="bg-zinc-900/90 border-b border-zinc-800/80 px-3 sm:px-6 py-3 sm:py-3.5 flex-shrink-0 space-y-3">
+        {/* Sub-abas de alternância */}
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1 sm:gap-2 bg-zinc-950/80 p-1 sm:p-1.5 rounded-lg border border-zinc-800 overflow-x-auto">
             <button
               id="tab-btn-vendas-ativas"
@@ -188,7 +175,7 @@ export const ConsultaVendasDevolucoesTab: React.FC = () => {
         </div>
 
         {/* Quick KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-3 sm:mt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <div className="bg-zinc-950/60 border border-zinc-800/80 rounded-lg p-2.5 sm:p-3">
             <span className="text-[10px] sm:text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Total de Vendas</span>
             <div className="text-base sm:text-lg font-bold text-emerald-400 mt-0.5">
@@ -225,7 +212,7 @@ export const ConsultaVendasDevolucoesTab: React.FC = () => {
 
       {/* VIEW 1: VENDAS REALIZADAS */}
       {subView === 'vendas' && (
-        <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-6">
+        <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-6 pb-24 lg:pb-6">
           {/* Filtros de pesquisa */}
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3 sm:p-3.5 mb-3 sm:mb-4 flex flex-col md:flex-row gap-3 items-center justify-between">
             <div className="relative flex-1 w-full">
@@ -409,7 +396,7 @@ export const ConsultaVendasDevolucoesTab: React.FC = () => {
 
       {/* VIEW 2: HISTÓRICO DE DEVOLUÇÕES */}
       {subView === 'historico_devolucoes' && (
-        <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-6">
+        <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-6 pb-24 lg:pb-6">
           <div className="flex-1 overflow-auto rounded-xl border border-zinc-800/80 bg-zinc-900/40">
             {devolucoesVendas.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-zinc-500">

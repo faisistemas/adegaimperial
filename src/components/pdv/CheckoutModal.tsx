@@ -153,14 +153,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           {selectedMethod === 'PIX' && (
             <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
               {/* QR Code Container */}
-              <div className="w-36 h-36 sm:w-40 sm:h-40 bg-white p-2 rounded-xl shrink-0 flex flex-col items-center justify-center relative shadow-lg">
-                <QrCode className="w-full h-full text-zinc-950" />
-                <div className="absolute inset-x-0 bottom-1 text-center font-bold text-[8px] text-zinc-800 bg-white/90">
-                  PIX BANCO CENTRAL
-                </div>
+              <div className="w-36 h-36 sm:w-40 sm:h-40 bg-white p-2 rounded-xl shrink-0 flex flex-col items-center justify-center relative shadow-lg overflow-hidden">
+                <img
+                  src="/pix-qrcode.png"
+                  alt="QR Code PIX Banco Central"
+                  className="w-full h-full object-contain"
+                />
               </div>
 
-              <div className="flex-1 space-y-3 text-center sm:text-left w-full">
+              <div className="flex-1 min-w-0 space-y-3 text-center sm:text-left">
                 <div>
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <span className="text-xs font-semibold text-zinc-200">QR Code Dinâmico Gerado</span>
@@ -173,7 +174,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </p>
                 </div>
 
-                <div className="p-2 bg-zinc-900 rounded-lg border border-zinc-800">
+                <div className="p-2 bg-zinc-900 rounded-lg border border-zinc-800 max-w-sm">
                   <p className="text-[10px] text-zinc-400 font-mono truncate">{pixPayload}</p>
                 </div>
 
@@ -243,9 +244,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       onChange={(e) => setInstallments(Number(e.target.value))}
                       className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200"
                     >
-                      <option value={1}>1x de R$ {total.toFixed(2)} (À vista)</option>
-                      <option value={2}>2x de R$ {(total / 2).toFixed(2)}</option>
-                      <option value={3}>3x de R$ {(total / 3).toFixed(2)}</option>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                        <option key={n} value={n}>
+                          {n === 1
+                            ? `1x de R$ ${total.toFixed(2)} (À vista)`
+                            : `${n}x de R$ ${(total / n).toFixed(2)}`}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}

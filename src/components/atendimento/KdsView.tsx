@@ -137,37 +137,30 @@ export const KdsView: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-zinc-950 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-20">
+    <div className="flex-1 overflow-y-auto bg-zinc-950 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-24 lg:pb-6">
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4">
-        <div>
-          <h2 className="text-base sm:text-lg font-bold text-zinc-100 font-serif">KDS Bar & Cozinha</h2>
-          <p className="text-xs text-zinc-400">Preparo em tempo real, tempos de espera e alertas sonoros</p>
-        </div>
+      <div className="flex items-center justify-end gap-2 sm:gap-3 border-b border-zinc-800 pb-3">
+        {/* Sound alert switch */}
+        <button
+          onClick={() => setSoundAlertEnabled(!soundAlertEnabled)}
+          className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all ${
+            soundAlertEnabled
+              ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+              : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+          }`}
+        >
+          {soundAlertEnabled ? <Volume2 className="w-4 h-4 text-amber-400" /> : <VolumeX className="w-4 h-4 text-zinc-500" />}
+          <span>{soundAlertEnabled ? 'Sons Ativados' : 'Silenciado'}</span>
+        </button>
 
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {/* Sound alert switch */}
-          <button
-            onClick={() => setSoundAlertEnabled(!soundAlertEnabled)}
-            className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all ${
-              soundAlertEnabled
-                ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
-                : 'bg-zinc-900 border-zinc-800 text-zinc-400'
-            }`}
-          >
-            {soundAlertEnabled ? <Volume2 className="w-4 h-4 text-amber-400" /> : <VolumeX className="w-4 h-4 text-zinc-500" />}
-            <span>{soundAlertEnabled ? 'Sons Ativados' : 'Silenciado'}</span>
-          </button>
-
-          {/* Quick test order */}
-          <button
-            onClick={() => setQuickOrderModal(true)}
-            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-amber-950/40"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Simular Ticket</span>
-          </button>
-        </div>
+        {/* Quick test order */}
+        <button
+          onClick={() => setQuickOrderModal(true)}
+          className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-amber-950/40"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Simular Ticket</span>
+        </button>
       </div>
 
       {/* Metric Counters */}

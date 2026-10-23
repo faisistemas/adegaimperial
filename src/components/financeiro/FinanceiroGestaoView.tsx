@@ -58,44 +58,27 @@ export const FinanceiroGestaoView: React.FC<FinanceiroGestaoViewProps> = ({ init
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto w-full p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-20">
-      {/* Top Header do Módulo */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-zinc-900/80 border border-zinc-800 p-3.5 sm:p-5 rounded-2xl shadow-xl">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 sm:p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-400 shrink-0">
-            <DollarSign className="w-5 sm:w-6 h-5 sm:h-6" />
-          </div>
-          <div>
-            <h1 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-              Financeiro e Gestão Integrada
-            </h1>
-            <p className="text-xs text-zinc-400">
-              Controle de caixa, contas a pagar e receber, dashboard operacional, relatórios e auditoria.
-            </p>
-          </div>
-        </div>
-
-        {/* Abas Superiores Estilizadas */}
-        <div className="flex items-center gap-1.5 bg-zinc-950/80 border border-zinc-800 p-1.5 rounded-2xl overflow-x-auto scrollbar-none shrink-0">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all shrink-0 whitespace-nowrap ${
-                  isActive
-                    ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/25'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-                }`}
-              >
-                <Icon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+    <div className="flex-1 overflow-y-auto w-full p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-24 lg:pb-6">
+      {/* Abas Superiores do Módulo */}
+      <div className="flex items-center gap-1.5 bg-zinc-900/80 border border-zinc-800 p-1.5 sm:p-2 rounded-2xl overflow-x-auto scrollbar-none shadow-xl">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all shrink-0 whitespace-nowrap ${
+                isActive
+                  ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/25'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+              }`}
+            >
+              <Icon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Renderização da Aba Ativa */}

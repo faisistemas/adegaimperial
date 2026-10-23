@@ -53,22 +53,30 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="h-16 bg-zinc-950 border-b border-zinc-800/80 px-3 sm:px-4 md:px-6 flex items-center justify-between text-zinc-100 z-30 sticky top-0">
-      {/* Left Area (Mobile Menu Trigger) */}
-      <div className="flex items-center gap-3 sm:gap-4">
+      {/* Left Area (Mobile Menu Trigger & Mobile Brand) */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {onToggleMobileMenu && (
           <button
             type="button"
             onClick={onToggleMobileMenu}
-            className="lg:hidden min-w-[42px] min-h-[42px] flex items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            className="lg:hidden min-w-[38px] min-h-[38px] sm:min-w-[42px] sm:min-h-[42px] flex items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer shrink-0"
             title="Abrir Menu de Módulos"
           >
             <Menu className="w-5 h-5" />
           </button>
         )}
+        <div className="flex lg:hidden items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-lg overflow-hidden border border-amber-500/30 bg-zinc-950 shrink-0">
+            <img src="/logo.jpg" alt="Adega Imperial" className="w-full h-full object-cover" />
+          </div>
+          <span className="font-serif font-black text-xs sm:text-sm text-zinc-100 tracking-tight truncate">
+            {activeStore?.name || 'Adega Imperial'}
+          </span>
+        </div>
       </div>
 
       {/* Center & Right Actions */}
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
         {/* Cardápio Online QR Simulator */}
         <button
           id="btn-open-cardapio-qr"

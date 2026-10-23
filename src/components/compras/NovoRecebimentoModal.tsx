@@ -184,16 +184,16 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-zinc-900 border border-zinc-800 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-6 bg-black/85 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-zinc-950 border border-zinc-800/90 w-full max-w-5xl rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/80 bg-zinc-950 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
               <PackageCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-zinc-100">
+              <h2 className="text-sm sm:text-base font-bold text-zinc-100 font-sans">
                 Recebimento de Mercadorias & Entrada de Estoque
               </h2>
               <p className="text-xs text-zinc-400">
@@ -203,14 +203,15 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-100 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
+            className="text-zinc-400 hover:text-zinc-100 p-2 rounded-xl hover:bg-zinc-800/60 transition-colors cursor-pointer"
+            title="Fechar Modal"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto space-y-5 sm:space-y-6">
           {erro && (
             <div className="flex items-center gap-2 p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-red-300 text-xs">
               <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -219,7 +220,7 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
           )}
 
           {/* Vinculação de Pedido & NF-e */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-zinc-950/70 border border-zinc-800 rounded-xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 sm:p-5 bg-zinc-900/50 border border-zinc-800/90 rounded-2xl">
             <div>
               <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
                 Vincular Pedido de Compra
@@ -227,7 +228,7 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
               <select
                 value={pedidoId}
                 onChange={(e) => setPedidoId(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500"
               >
                 <option value="">Entrada Avulsa (Sem pedido)</option>
                 {pedidosCompra
@@ -247,7 +248,7 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
               <select
                 value={fornecedorId}
                 onChange={(e) => setFornecedorId(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500"
                 required
               >
                 {fornecedores.map((f) => (
@@ -266,8 +267,8 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
                 type="text"
                 value={notaFiscalNumero}
                 onChange={(e) => setNotaFiscalNumero(e.target.value)}
-                placeholder="Ex: 048.912"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
+                placeholder="Ex: 848.912"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
               />
             </div>
 
@@ -279,8 +280,8 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
                 type="text"
                 value={notaFiscalChave}
                 onChange={(e) => setNotaFiscalChave(e.target.value)}
-                placeholder="3526..."
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
+                placeholder="3526 0961 1234 5600 018"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs font-mono tracking-wider text-zinc-100 focus:outline-none focus:border-emerald-500"
               />
             </div>
           </div>
@@ -297,7 +298,7 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
               <button
                 type="button"
                 onClick={handleAddManualItem}
-                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors"
+                className="px-3.5 py-1.5 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold rounded-xl border border-zinc-700/60 flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Adicionar Outro Produto</span>
@@ -308,11 +309,11 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
               {itens.map((item, idx) => (
                 <div
                   key={idx}
-                  className="p-4 bg-zinc-950 border border-zinc-800/90 rounded-xl space-y-3 hover:border-zinc-700 transition-colors"
+                  className="p-4 sm:p-5 bg-zinc-900/50 border border-zinc-800/90 rounded-2xl space-y-3 hover:border-zinc-700/80 transition-colors"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-zinc-800 text-zinc-300 text-xs flex items-center justify-center font-mono">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                      <span className="w-7 h-7 rounded-lg bg-zinc-800 text-zinc-300 text-xs flex items-center justify-center font-mono font-bold shrink-0">
                         {idx + 1}
                       </span>
                       <select
@@ -325,7 +326,7 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
                             handleItemChange(idx, 'precoCustoUnitario', p.costPrice || 50);
                           }
                         }}
-                        className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-100 font-semibold focus:outline-none focus:border-emerald-500"
+                        className="flex-1 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs font-semibold text-zinc-100 focus:outline-none focus:border-emerald-500 truncate"
                       >
                         {products.map((p) => (
                           <option key={p.id} value={p.id}>
@@ -338,27 +339,28 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveItem(idx)}
-                      className="text-zinc-500 hover:text-red-400 p-1 rounded transition-colors"
+                      className="text-zinc-500 hover:text-red-400 p-2 rounded-lg hover:bg-zinc-800/60 transition-colors shrink-0 cursor-pointer"
+                      title="Excluir produto da conferência"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
 
                   {/* Campos do Item */}
-                  <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Qtd. Recebida</label>
+                      <label className="block text-[11px] text-zinc-400 mb-1.5 font-medium">Qtd. Recebida</label>
                       <input
                         type="number"
                         min="1"
                         value={item.quantidadeRecebida}
                         onChange={(e) => handleItemChange(idx, 'quantidadeRecebida', Number(e.target.value))}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-center font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-center font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1" title="Fator de conversão se comprado em caixa">
+                      <label className="block text-[11px] text-zinc-400 mb-1.5 font-medium" title="Fator de conversão se comprado em caixa">
                         Fator Caixa (un)
                       </label>
                       <input
@@ -366,45 +368,45 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
                         min="1"
                         value={item.fatorConversao}
                         onChange={(e) => handleItemChange(idx, 'fatorConversao', Number(e.target.value))}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-center font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-center font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Custo NF-e (R$)</label>
+                      <label className="block text-[11px] text-zinc-400 mb-1.5 font-medium">Custo NF-e (R$)</label>
                       <input
                         type="number"
                         step="0.01"
                         min="0.01"
                         value={item.precoCustoUnitario}
                         onChange={(e) => handleItemChange(idx, 'precoCustoUnitario', Number(e.target.value))}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-right font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-center font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Nº Lote Rastreável</label>
+                      <label className="block text-[11px] text-zinc-400 mb-1.5 font-medium">Nº Lote Rastreável</label>
                       <input
                         type="text"
                         value={item.loteNumero}
                         onChange={(e) => handleItemChange(idx, 'loteNumero', e.target.value)}
-                        placeholder="Ex: LOTE-2026-A"
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
+                        placeholder="Ex: LOT-19559"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-center font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Data de Validade</label>
+                      <label className="block text-[11px] text-zinc-400 mb-1.5 font-medium">Data de Validade</label>
                       <input
                         type="date"
                         value={item.dataValidade}
                         onChange={(e) => handleItemChange(idx, 'dataValidade', e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-center font-mono text-zinc-100 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] text-red-400 mb-1" title="Garrafas quebradas no transporte">
+                      <label className="block text-[11px] text-red-400 mb-1.5 font-semibold" title="Garrafas quebradas no transporte">
                         Avarias / Quebras
                       </label>
                       <input
@@ -412,13 +414,13 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
                         min="0"
                         value={item.avariasOuQuebras}
                         onChange={(e) => handleItemChange(idx, 'avariasOuQuebras', Number(e.target.value))}
-                        className="w-full bg-zinc-900 border border-red-900/50 rounded-lg px-2.5 py-1.5 text-xs text-center font-mono text-red-300 focus:outline-none focus:border-red-500"
+                        className="w-full bg-zinc-900 border border-red-900/60 rounded-xl px-2.5 py-2 text-xs text-center font-mono text-red-400 focus:outline-none focus:border-red-500"
                       />
                     </div>
                   </div>
 
                   {/* Resumo do Item */}
-                  <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-900">
+                  <div className="flex items-center justify-between text-xs text-zinc-400 pt-2 border-t border-zinc-800/60">
                     <div>
                       Entrada direta no estoque:{' '}
                       <span className="font-bold font-mono text-emerald-400">
@@ -427,7 +429,7 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
                     </div>
                     <div>
                       Subtotal NF-e:{' '}
-                      <span className="font-bold font-mono text-zinc-200">
+                      <span className="font-bold font-mono text-zinc-100">
                         R$ {(item.quantidadeRecebida * item.precoCustoUnitario).toFixed(2)}
                       </span>
                     </div>
@@ -438,8 +440,8 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
           </div>
 
           {/* Integração Financeira Automática */}
-          <div className="p-4 bg-zinc-950/70 border border-zinc-800 rounded-xl space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="p-4 sm:p-5 bg-zinc-900/50 border border-zinc-800/90 rounded-2xl space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-amber-400" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
@@ -451,9 +453,9 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
                   type="checkbox"
                   checked={gerarContaPagar}
                   onChange={(e) => setGerarContaPagar(e.target.checked)}
-                  className="rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-amber-500 w-4 h-4"
+                  className="rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-amber-500 w-4 h-4 cursor-pointer"
                 />
-                <span className="text-xs font-semibold text-zinc-300">
+                <span className="text-xs font-semibold text-zinc-200">
                   Gerar lançamento de Conta a Pagar automaticamente
                 </span>
               </label>
@@ -462,26 +464,27 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
             {gerarContaPagar && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">
                     Condição de Pagamento do Fornecedor
                   </label>
                   <input
                     type="text"
                     value={condicaoPagamento}
                     onChange={(e) => setCondicaoPagamento(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none focus:border-amber-500"
+                    placeholder="Ex: 28 Dias (Boleto)"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1 flex items-center gap-1.5">
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-zinc-400" /> Data de Vencimento do Boleto
                   </label>
                   <input
                     type="date"
                     value={dataVencimentoBoleto}
                     onChange={(e) => setDataVencimentoBoleto(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
@@ -489,12 +492,12 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
           </div>
 
           {/* Resumo Final & Validações */}
-          <div className="p-4 bg-emerald-950/20 border border-emerald-800/40 rounded-xl flex items-center justify-between">
+          <div className="p-4 sm:p-5 bg-emerald-950/20 border border-emerald-800/40 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-1">
-              <span className="text-xs text-emerald-400 font-bold block">
+              <span className="text-xs sm:text-sm text-emerald-400 font-bold block">
                 Resumo da Conferência de Entrada
               </span>
-              <p className="text-[11px] text-zinc-400">
+              <p className="text-xs text-zinc-400">
                 Total de <span className="text-zinc-100 font-bold">{itens.length}</span> produtos conferidos •{' '}
                 <span className="text-emerald-300 font-bold">+{totalEstoqueEntrada} un</span> prontas para venda
                 {totalAvarias > 0 && (
@@ -503,25 +506,25 @@ export const NovoRecebimentoModal: React.FC<NovoRecebimentoModalProps> = ({
               </p>
             </div>
             <div className="text-right">
-              <span className="text-[10px] text-zinc-500 uppercase font-mono block">Valor Total NF-e</span>
-              <span className="text-base font-bold font-mono text-emerald-400">
+              <span className="text-[10px] text-zinc-400 uppercase font-mono tracking-wider block">Valor Total NF-e</span>
+              <span className="text-lg sm:text-xl font-bold font-mono text-emerald-400">
                 R$ {valorTotalNf.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </span>
             </div>
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800/80">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+              className="px-5 py-2.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 flex items-center gap-2 transition-all shadow-lg shadow-emerald-950/40"
+              className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 flex items-center gap-2 transition-all shadow-lg shadow-emerald-950/40 cursor-pointer active:scale-[0.99]"
             >
               <PackageCheck className="w-4 h-4" />
               <span>Concluir Recebimento & Integrar Estoque</span>

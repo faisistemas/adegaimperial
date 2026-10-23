@@ -271,19 +271,7 @@ export const PdvView: React.FC = () => {
       {/* Products Selection Section (Left / Center) */}
       <div className={`${mobileTab === 'CATALOG' ? 'flex' : 'hidden lg:flex'} flex-1 flex-col min-w-0 border-r border-zinc-800/80`}>
         {/* Cash Status & Peripheral Quick Actions Bar */}
-        <div className="px-3 sm:px-4 py-2 border-b border-zinc-800/80 bg-zinc-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <span className="flex items-center gap-1.5 font-mono text-zinc-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Caixa 01: <strong className="text-emerald-400 font-bold">R$ {cashSession.currentCash.toFixed(2)}</strong>
-            </span>
-            <span className="text-zinc-600 hidden sm:inline">|</span>
-            <span className="text-zinc-400 hidden sm:flex items-center gap-1">
-              <Cpu className="w-3.5 h-3.5 text-amber-400" />
-              Balança: <strong className="text-zinc-200">{peripheralSettings?.scale?.protocol || 'TOLEDO'}</strong>
-            </span>
-          </div>
-
+        <div className="px-3 sm:px-4 py-2 border-b border-zinc-800/80 bg-zinc-950 flex items-center justify-end gap-2 text-xs">
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
             <button
               onClick={() => setSangriaModalOpen(true)}
@@ -421,7 +409,7 @@ export const PdvView: React.FC = () => {
         </div>
 
         {/* Product Touch Grid */}
-        <div className="flex-1 p-3 sm:p-4 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 content-start">
+        <div className="flex-1 p-2.5 sm:p-4 pb-24 lg:pb-4 overflow-y-auto grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5 sm:gap-3 content-start">
           {(filteredProducts || []).map((product) => {
             const hasOpenBottle = product.isFractionable && (product.openBottleVolumeMl ?? 0) > 0;
             const openBottlePercent = product.isFractionable && product.bottleVolumeMl 
@@ -528,7 +516,7 @@ export const PdvView: React.FC = () => {
         </div>
         {/* Floating Mobile Cart Bar when in Catalog mode */}
         {cartItems.length > 0 && (
-          <div className="lg:hidden p-3 bg-zinc-950/95 border-t border-zinc-800 flex items-center justify-between gap-3 shadow-2xl shrink-0 backdrop-blur-md">
+          <div className="lg:hidden p-3 mb-14 sm:mb-16 bg-zinc-950/95 border-t border-zinc-800 flex items-center justify-between gap-3 shadow-2xl shrink-0 backdrop-blur-md">
             <div>
               <div className="text-[11px] text-zinc-400 font-medium">
                 {cartItems.reduce((acc, it) => acc + (it.weightKg ? 1 : it.quantity), 0)} itens no carrinho
@@ -666,7 +654,7 @@ export const PdvView: React.FC = () => {
         </div>
 
         {/* Cart Summary & Checkout Action */}
-        <div className="p-3 sm:p-4 border-t border-zinc-800 bg-zinc-950 space-y-2 sm:space-y-3 shrink-0">
+        <div className="p-3 sm:p-4 pb-24 lg:pb-4 border-t border-zinc-800 bg-zinc-950 space-y-2 sm:space-y-3 shrink-0">
           {/* Quick Discounts */}
           <div className="flex items-center justify-between text-xs">
             <span className="text-zinc-400 flex items-center gap-1">

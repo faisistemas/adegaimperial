@@ -102,18 +102,8 @@ export const PerdasAvariasTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Header & Button */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-zinc-900/50 p-4 border border-zinc-800 rounded-xl">
-        <div>
-          <h4 className="text-base font-bold text-white flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-amber-500" />
-            Livro de Auditoria de Avarias e Desvios
-          </h4>
-          <p className="text-xs text-zinc-400">
-            Registro com validade fiscal e contábil para dedução de perdas e créditos no Sped Fiscal.
-          </p>
-        </div>
-
+      {/* Action Button */}
+      <div className="flex items-center justify-end">
         <button
           onClick={() => setModalOpen(true)}
           className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-lg text-sm flex items-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"

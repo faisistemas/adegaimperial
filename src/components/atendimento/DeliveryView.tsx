@@ -123,16 +123,11 @@ export const DeliveryView: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-zinc-950 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-20">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4">
-        <div>
-          <h2 className="text-base sm:text-lg font-bold text-zinc-100 font-serif">Delivery & Motoboys</h2>
-          <p className="text-xs text-zinc-400">Despacho, rotas em lote e controle financeiro de entregadores</p>
-        </div>
-
+    <div className="flex-1 overflow-y-auto bg-zinc-950 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-24 lg:pb-6">
+      {/* Header Tabs */}
+      <div className="flex items-center justify-between gap-3 border-b border-zinc-800 pb-3 flex-wrap">
         {/* Sub-tabs switcher */}
-        <div className="flex items-center bg-zinc-900 p-1 rounded-2xl border border-zinc-800 shrink-0 overflow-x-auto scrollbar-none self-start sm:self-auto max-w-full">
+        <div className="flex items-center bg-zinc-900 p-1 rounded-2xl border border-zinc-800 shrink-0 overflow-x-auto scrollbar-none max-w-full">
           <button
             onClick={() => setActiveTab('PEDIDOS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
@@ -412,14 +407,7 @@ export const DeliveryView: React.FC = () => {
       {/* ========================================================================= */}
       {activeTab === 'MOTOBOYS' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-sm text-zinc-100">Controle de Diárias & Acerto de Caixa do Motoboy</h3>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Cálculo de taxas de entrega a pagar ao entregador vs valores recebidos em dinheiro a devolver para o caixa da adega.
-              </p>
-            </div>
-
+          <div className="flex items-center justify-end">
             <button
               onClick={() => setNovoMotoboyModal(true)}
               className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold flex items-center gap-2 transition-all shadow-md shadow-amber-950/40"

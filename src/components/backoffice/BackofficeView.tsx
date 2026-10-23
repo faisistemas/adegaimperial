@@ -28,25 +28,7 @@ export const BackofficeView: React.FC = () => {
   ] as const;
 
   return (
-    <div className="flex-1 overflow-y-auto w-full p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-20">
-      {/* Header do Módulo Backoffice */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-900/90 border border-zinc-800 p-4 sm:px-6 sm:py-3.5 rounded-2xl sm:rounded-3xl shadow-xl">
-        <div className="flex items-center gap-3">
-          <div className="p-2 sm:p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-base sm:text-lg font-bold text-white">Backoffice & Controladoria</h1>
-            <p className="text-xs text-zinc-400">DRE Gerencial, Curva ABC, Conciliação OFX e Inteligência</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="sm:text-right">
-            <span className="text-[10px] font-mono uppercase text-zinc-500 block">Rede Conectada</span>
-            <span className="text-xs font-bold font-mono text-emerald-400">3 Lojas Ativas • Sincronizado</span>
-          </div>
-        </div>
-      </div>
+    <div className="flex-1 overflow-y-auto w-full p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-24 lg:pb-6">
 
       {/* Tabs Navigation */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">

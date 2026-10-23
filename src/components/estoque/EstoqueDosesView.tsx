@@ -57,7 +57,7 @@ export const EstoqueDosesView: React.FC = () => {
   const lotesAlerta = produtoLotes.filter(l => l.status === 'ALERTA_VENCIMENTO' || (l.diasAteVencer !== undefined && l.diasAteVencer <= 30)).length;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-zinc-950 p-4 md:p-6 space-y-6">
+    <div className="flex-1 overflow-y-auto bg-zinc-950 p-3 sm:p-4 md:p-6 pb-24 lg:pb-6 space-y-4 sm:space-y-6">
       {/* Navegação por Sub-Abas do Módulo de Produtos & Estoque */}
       <div className="overflow-x-auto pb-1">
         <div className="flex items-center gap-1.5 min-w-max border-b border-zinc-800/80 pb-2">

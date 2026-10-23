@@ -122,7 +122,7 @@ export const PeripheralConfigView: React.FC = () => {
   const effectiveNetWeight = Math.max(0, testWeight - testTare);
 
   return (
-    <div className="flex-1 overflow-y-auto w-full p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-20 animate-in fade-in duration-300">
+    <div className="flex-1 overflow-y-auto w-full p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-24 lg:pb-6 animate-in fade-in duration-300">
       {/* Top Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800">
         <div>

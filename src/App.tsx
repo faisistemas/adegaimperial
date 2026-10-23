@@ -22,6 +22,7 @@ import { DashboardView } from './components/dashboard/DashboardView';
 import { MultilojasView } from './components/multilojas/MultilojasView';
 import { PeripheralConfigView } from './components/peripherals/PeripheralConfigView';
 import { ImpressorasTermicasView } from './components/impressao/ImpressorasTermicasView';
+import { ConfiguracoesView } from './components/config/ConfiguracoesView';
 import { ScreenLockOverlay } from './components/pdv/ScreenLockOverlay';
 import { SalesLandingPageView } from './components/sales/SalesLandingPageView';
 import { MobileBottomNav } from './components/common/MobileBottomNav';
@@ -46,7 +47,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ onOpenSalesPage }) => {
         setActiveTab('mesas');
       }
     } else if (currentUser.role === 'CASHIER') {
-      if (['fiscal', 'backoffice', 'dashboard', 'multiloja', 'multilojas'].includes(activeTab)) {
+      if (['fiscal', 'backoffice', 'dashboard', 'multiloja', 'multilojas', 'configuracoes'].includes(activeTab)) {
         setActiveTab('vendas');
       }
     }
@@ -87,13 +88,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ onOpenSalesPage }) => {
         return <ImpressorasTermicasView />;
       case 'perifericos':
         return <PeripheralConfigView />;
+      case 'configuracoes':
+        return <ConfiguracoesView />;
       default:
         return <PdvView />;
     }
   };
 
   return (
-    <div className="flex h-screen bg-zinc-950 text-zinc-100 overflow-hidden select-none font-sans antialiased">
+    <div className="flex h-screen h-[100dvh] w-full bg-zinc-950 text-zinc-100 overflow-hidden select-none font-sans antialiased">
       {/* Screen Lock Security Overlay */}
       <ScreenLockOverlay />
 
@@ -110,7 +113,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ onOpenSalesPage }) => {
       />
 
       {/* Main Workspace */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         <Header
           onOpenRoleModal={() => setRoleModalOpen(true)}
           onOpenCardapioModal={() => setQrModalOpen(true)}
@@ -120,7 +123,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ onOpenSalesPage }) => {
         />
 
         {/* Dynamic View Container */}
-        <main className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-20 lg:pb-0 relative">
+        <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative">
           {renderActiveView()}
         </main>
       </div>

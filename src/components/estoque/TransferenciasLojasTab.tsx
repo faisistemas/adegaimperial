@@ -66,22 +66,8 @@ export const TransferenciasLojasTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/30">
-            Logística Multilojas
-          </span>
-          <h3 className="text-xl font-bold text-white mt-1.5 flex items-center gap-2">
-            <Truck className="w-5 h-5 text-blue-400" />
-            Transferências de Estoque Entre Lojas
-          </h3>
-          <p className="text-xs text-zinc-400 max-w-xl mt-1">
-            Controle de remessas entre matriz e filiais com conferência de recebimento cega, 
-            garantindo que o estoque só seja acrescido após confirmação do gerente de destino.
-          </p>
-        </div>
-
+      {/* Top Action */}
+      <div className="flex items-center justify-end">
         <button
           onClick={() => setModalOpen(true)}
           className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm flex items-center gap-2 shadow-lg shadow-blue-500/20 cursor-pointer"

@@ -161,55 +161,40 @@ export const ReservasNotificacoesTab: React.FC = () => {
   return (
     <div id="reservas-notificacoes-container" className="flex-1 flex flex-col h-full bg-zinc-950 text-zinc-100 overflow-hidden">
       {/* Top Header & Métricas */}
-      <div className="bg-zinc-900/90 border-b border-zinc-800/80 px-6 py-4 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="w-6 h-6 text-amber-500" />
-              <h2 className="text-xl font-bold tracking-tight text-white">Reservas & Notificações</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                {reservas.filter(r => r.status !== 'CANCELADA').length} ativas
-              </span>
-            </div>
-            <p className="text-xs text-zinc-400 mt-1">
-              Agendamento de mesas, experiências de degustação guiada, lockers e confirmação via WhatsApp.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Alternância de Sub-aba */}
-            <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800">
-              <button
-                onClick={() => setSubView('reservas')}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  subView === 'reservas' ? 'bg-amber-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                Reservas ({reservas.length})
-              </button>
-              <button
-                onClick={() => setSubView('notificacoes_historico')}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  subView === 'notificacoes_historico' ? 'bg-amber-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                Notificações ({todasNotificacoes.length})
-              </button>
-            </div>
-
+      <div className="bg-zinc-900/90 border-b border-zinc-800/80 px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          {/* Alternância de Sub-aba */}
+          <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800">
             <button
-              id="btn-nova-reserva"
-              onClick={() => {
-                setFormData(initialReservaForm);
-                setFormError(null);
-                setIsNewReservaModalOpen(true);
-              }}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-2"
+              onClick={() => setSubView('reservas')}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                subView === 'reservas' ? 'bg-amber-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+              }`}
             >
-              <Plus className="w-4 h-4" />
-              Nova Reserva
+              Reservas ({reservas.length})
+            </button>
+            <button
+              onClick={() => setSubView('notificacoes_historico')}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                subView === 'notificacoes_historico' ? 'bg-amber-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              Notificações ({todasNotificacoes.length})
             </button>
           </div>
+
+          <button
+            id="btn-nova-reserva"
+            onClick={() => {
+              setFormData(initialReservaForm);
+              setFormError(null);
+              setIsNewReservaModalOpen(true);
+            }}
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nova Reserva
+          </button>
         </div>
 
         {/* Feedback Alert */}
@@ -262,7 +247,7 @@ export const ReservasNotificacoesTab: React.FC = () => {
 
       {/* VIEW 1: RESERVAS */}
       {subView === 'reservas' && (
-        <div className="flex-1 flex flex-col overflow-hidden p-6">
+        <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-6 pb-24 lg:pb-6">
           {/* Filtros */}
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3.5 mb-4 flex flex-col md:flex-row gap-3 items-center justify-between">
             <div className="relative flex-1 w-full">
@@ -509,7 +494,7 @@ export const ReservasNotificacoesTab: React.FC = () => {
 
       {/* VIEW 2: HISTÓRICO DE NOTIFICAÇÕES */}
       {subView === 'notificacoes_historico' && (
-        <div className="flex-1 flex flex-col overflow-hidden p-6">
+        <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-6 pb-24 lg:pb-6">
           <div className="flex-1 overflow-auto rounded-xl border border-zinc-800/80 bg-zinc-900/40">
             {todasNotificacoes.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-zinc-500">
@@ -518,7 +503,7 @@ export const ReservasNotificacoesTab: React.FC = () => {
                 <p className="text-xs text-zinc-600 mt-1">Ao confirmar ou enviar lembretes aos clientes, os disparos serão registrados aqui.</p>
               </div>
             ) : (
-              <table className="w-full text-left text-xs text-zinc-300 border-collapse">
+              <table className="w-full text-left text-xs text-zinc-300 border-collapse min-w-[650px]">
                 <thead className="bg-zinc-950/80 text-zinc-400 font-semibold border-b border-zinc-800 sticky top-0 uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="py-3 px-4">Data / Hora</th>

@@ -95,22 +95,8 @@ export const FichasTecnicasCombosTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Overview Banner */}
-      <div className="bg-gradient-to-r from-zinc-900 via-zinc-900 to-amber-950/20 border border-zinc-800 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
-            Engenharia de Bebidas & Combos
-          </span>
-          <h3 className="text-xl font-bold text-white mt-1.5 flex items-center gap-2">
-            <Layers className="w-5 h-5 text-amber-500" />
-            Fichas Técnicas & Copões Fracionados
-          </h3>
-          <p className="text-xs text-zinc-400 max-w-xl mt-1">
-            Cada venda de Combo ou Copão dá baixa automática multi-item no PDV: 
-            desconta as doses em ML da garrafa aberta e as unidades de energético, copo e gelo de sabor.
-          </p>
-        </div>
-
+      {/* Top Actions */}
+      <div className="flex items-center justify-end">
         <button
           onClick={() => setModalOpen(true)}
           className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-lg text-sm flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"

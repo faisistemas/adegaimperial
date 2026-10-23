@@ -45,16 +45,11 @@ export const DashboardView: React.FC = () => {
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto bg-zinc-950 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-20">
+    <div className="flex-1 overflow-y-auto bg-zinc-950 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-24 lg:pb-6">
       {/* Top Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4">
-        <div>
-          <h2 className="text-base sm:text-lg font-bold text-zinc-100 font-serif">Rentabilidade & Doses vs Garrafas</h2>
-          <p className="text-xs text-zinc-400">Análise de margem por dose, curva ABC e horários de pico</p>
-        </div>
-
+      <div className="flex items-center justify-end gap-3 border-b border-zinc-800 pb-3">
         {/* Period filter buttons */}
-        <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 p-1 rounded-xl shrink-0 self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 p-1 rounded-xl shrink-0">
           {(['HOJE', 'SEMANA', 'MES'] as const).map((p) => (
             <button
               key={p}

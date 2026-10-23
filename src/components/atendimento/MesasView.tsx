@@ -375,7 +375,7 @@ export const MesasView: React.FC = () => {
   const draggedTableObj = draggedTableId ? ((tables || []).find((t) => t.id === draggedTableId) || null) : null;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-zinc-950 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
+    <div className="flex-1 overflow-y-auto bg-zinc-950 p-3 sm:p-4 md:p-6 pb-24 lg:pb-6 space-y-4 sm:space-y-6">
       {/* Header com controles de visualização */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-3">
         {/* Alternador de Modo */}

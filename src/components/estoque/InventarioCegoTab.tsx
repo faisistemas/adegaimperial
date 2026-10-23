@@ -45,22 +45,8 @@ export const InventarioCegoTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Banner */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-            Prevenção de Perdas & Auditoria
-          </span>
-          <h3 className="text-xl font-bold text-white mt-1.5 flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-emerald-400" />
-            Inventário Cego de Estoque
-          </h3>
-          <p className="text-xs text-zinc-400 max-w-xl mt-1">
-            A contagem cega impede fraudes: os operadores contam os itens nas prateleiras sem visualizar a quantidade do sistema.
-            O sistema faz o confronto automático apontando sobras, faltas e o impacto financeiro.
-          </p>
-        </div>
-
+      {/* Top Action */}
+      <div className="flex items-center justify-end">
         {!activeSession ? (
           <button
             onClick={handleStart}

@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   ShoppingCart, Droplets, LayoutGrid, FileText, 
   Bike, ReceiptText, BarChart3, Users, Building2,
-  Lock, Cpu, UtensilsCrossed, TrendingUp, QrCode, X, Printer, Truck, DollarSign
+  Lock, Cpu, UtensilsCrossed, TrendingUp, QrCode, X, Printer, Truck, DollarSign, Settings
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
 import { UserRole } from '../../types';
@@ -23,7 +23,8 @@ export type NavTab =
   | 'crm' 
   | 'multiloja'
   | 'impressoras'
-  | 'perifericos';
+  | 'perifericos'
+  | 'configuracoes';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -156,6 +157,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       allowedRoles: ['SUPER_ADMIN', 'STORE_MANAGER'],
       badge: 'Módulo 2',
     },
+    {
+      id: 'configuracoes',
+      label: 'Configuracoes',
+      description: 'Dados da Adega Imperial, horários e notificações',
+      icon: Settings,
+      allowedRoles: ['SUPER_ADMIN', 'STORE_MANAGER'],
+      badge: 'Geral',
+    },
   ];
 
   const handleItemClick = (item: typeof navItems[0]) => {
@@ -217,6 +226,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             const allowed = isRoleAllowed(item.allowedRoles);
             const isActive = activeTab === item.id;
             const Icon = item.icon;
+            const isConfig = item.id === 'configuracoes';
 
             return (
               <button
@@ -225,9 +235,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => handleItemClick(item)}
                 className={`w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all relative group ${
                   isActive
-                    ? 'bg-amber-500/15 text-amber-300 font-semibold border border-amber-500/30 shadow-sm'
+                    ? isConfig
+                      ? 'bg-emerald-950/50 text-emerald-400 font-semibold border border-emerald-500/40 shadow-sm'
+                      : 'bg-amber-500/15 text-amber-300 font-semibold border border-amber-500/30 shadow-sm'
                     : allowed
-                    ? 'text-zinc-300 hover:bg-zinc-900/80 hover:text-zinc-100'
+                    ? isConfig
+                      ? 'text-zinc-300 hover:bg-zinc-900/80 hover:text-emerald-400'
+                      : 'text-zinc-300 hover:bg-zinc-900/80 hover:text-zinc-100'
                     : 'text-zinc-400 hover:bg-zinc-900/40 cursor-not-allowed opacity-60'
                 }`}
               >
@@ -235,9 +249,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div
                     className={`p-1.5 rounded-lg shrink-0 ${
                       isActive
-                        ? 'bg-amber-500/20 text-amber-300'
+                        ? isConfig
+                          ? 'bg-emerald-500/20 text-emerald-400'
+                          : 'bg-amber-500/20 text-amber-300'
                         : allowed
-                        ? 'bg-zinc-900 text-zinc-400 group-hover:text-zinc-200'
+                        ? isConfig
+                          ? 'bg-zinc-900 text-emerald-400/80 group-hover:text-emerald-300'
+                          : 'bg-zinc-900 text-zinc-400 group-hover:text-zinc-200'
                         : 'bg-zinc-900/50 text-zinc-400'
                     }`}
                   >
@@ -248,7 +266,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <span className="truncate">{item.label}</span>
                       {item.badge && (
                         <span className={`text-[9px] px-1.5 py-0.2 rounded font-medium ${
-                          isActive ? 'bg-amber-500/20 text-amber-300' : 'bg-zinc-800 text-zinc-400'
+                          isActive
+                            ? isConfig
+                              ? 'bg-emerald-500/20 text-emerald-300'
+                              : 'bg-amber-500/20 text-amber-300'
+                            : 'bg-zinc-800 text-zinc-400'
                         }`}>
                           {item.badge}
                         </span>

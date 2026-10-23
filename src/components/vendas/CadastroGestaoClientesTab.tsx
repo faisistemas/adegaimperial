@@ -192,25 +192,12 @@ export const CadastroGestaoClientesTab: React.FC = () => {
   return (
     <div id="cadastro-gestao-clientes-container" className="flex-1 flex flex-col h-full bg-zinc-950 text-zinc-100 overflow-hidden">
       {/* Header & Métricas */}
-      <div className="bg-zinc-900/90 border-b border-zinc-800/80 px-6 py-4 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Users className="w-6 h-6 text-amber-500" />
-              <h2 className="text-xl font-bold tracking-tight text-white">Cadastro e Gestão de Clientes</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                {customers.length} cadastrados
-              </span>
-            </div>
-            <p className="text-xs text-zinc-400 mt-1">
-              CRM, limites de crédito, níveis de fidelidade, preferências de consumo e controle cadastral.
-            </p>
-          </div>
-
+      <div className="bg-zinc-900/90 border-b border-zinc-800/80 px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+        <div className="flex items-center justify-end gap-3">
           <button
             id="btn-novo-cliente"
             onClick={handleOpenCreateModal}
-            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-2 self-start sm:self-auto"
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-2"
           >
             <UserPlus className="w-4 h-4" />
             Novo Cliente
@@ -264,7 +251,7 @@ export const CadastroGestaoClientesTab: React.FC = () => {
       </div>
 
       {/* Tabela de Clientes */}
-      <div className="flex-1 flex flex-col overflow-hidden p-6">
+      <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-6 pb-24 lg:pb-6">
         {/* Filtros */}
         <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3.5 mb-4 flex flex-col md:flex-row gap-3 items-center justify-between">
           <div className="relative flex-1 w-full">
@@ -330,7 +317,7 @@ export const CadastroGestaoClientesTab: React.FC = () => {
               <p className="text-xs text-zinc-600 mt-1">Cadastre um novo cliente clicando no botão acima.</p>
             </div>
           ) : (
-            <table className="w-full text-left text-xs text-zinc-300 border-collapse">
+            <table className="w-full text-left text-xs text-zinc-300 border-collapse min-w-[700px]">
               <thead className="bg-zinc-950/80 text-zinc-400 font-semibold border-b border-zinc-800 sticky top-0 uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3 px-4">Cliente</th>

@@ -48,7 +48,7 @@ export const ComprasFornecedoresView: React.FC<ComprasFornecedoresViewProps> = (
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto w-full p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-20">
+    <div className="flex-1 overflow-y-auto w-full p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-24 lg:pb-6">
 
 
       {/* Tabs Navigation */}

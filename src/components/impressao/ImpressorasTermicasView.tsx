@@ -410,7 +410,7 @@ export const ImpressorasTermicasView: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-950 overflow-y-auto select-none pb-20 lg:pb-0">
+    <div className="flex-1 flex flex-col h-full bg-zinc-950 overflow-y-auto select-none pb-24 lg:pb-6">
       
       {/* Top Banner Header */}
       <div className="p-3 sm:p-5 bg-zinc-900 border-b border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
