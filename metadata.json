@@ -1,0 +1,7 @@
+{
+  "name": "Adega SaaS - Gestão, PDV & Fracionado",
+  "description": "Sistema completo para adegas e distribuidoras com PDV touch, controle de doses, compras e gestão de fornecedores, recebimento com NF-e e lote, mapa de mesas, delivery, fiscal NFC-e e backoffice financeiro.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
