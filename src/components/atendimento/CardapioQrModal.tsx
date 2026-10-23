@@ -44,7 +44,10 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
     items: [],
   };
 
-  const tableQrUrl = `https://${window.location.host || 'adegaimperial.app'}/cardapio?mesa=${currentTable.number}&loja=${activeStore?.id || 'matriz'}`;
+  // Generate robust URL using the current origin (handles both http://localhost and https:// in production)
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const tableQrUrl = `${origin}/?cardapio=true&mesa=${currentTable.number}&loja=${activeStore?.id || 'matriz'}`;
+
 
   // Filter products
   const filteredProducts = (products || []).filter((p) => {
@@ -137,10 +140,33 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
   };
 
   const handleCopyLink = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(tableQrUrl);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(tableQrUrl).then(() => {
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 2500);
+      }).catch(() => {
+        fallbackCopy();
+      });
+    } else {
+      fallbackCopy();
+    }
+  };
+
+  const fallbackCopy = () => {
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = tableQrUrl;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
       setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
+      setTimeout(() => setCopiedLink(false), 2500);
+    } catch (err) {
+      console.warn('Erro ao copiar link:', err);
     }
   };
 

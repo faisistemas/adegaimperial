@@ -180,8 +180,45 @@ const MainLayout: React.FC<MainLayoutProps> = ({ onOpenSalesPage }) => {
   );
 };
 
+import { CustomerCardapioPage } from './components/atendimento/CustomerCardapioPage';
+
 const AppContent: React.FC = () => {
-  const [viewMode, setViewMode] = useState<'SYSTEM' | 'SALES_PAGE'>('SYSTEM');
+  const [viewMode, setViewMode] = useState<'SYSTEM' | 'SALES_PAGE' | 'CARDAPIO'>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const search = window.location.search;
+      if (path.startsWith('/cardapio') || search.includes('cardapio=') || search.includes('mesa=')) {
+        return 'CARDAPIO';
+      }
+    }
+    return 'SYSTEM';
+  });
+
+  // Listen to popstate or url changes
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const path = window.location.pathname;
+      const search = window.location.search;
+      if (path.startsWith('/cardapio') || search.includes('cardapio=') || search.includes('mesa=')) {
+        setViewMode('CARDAPIO');
+      }
+    };
+    window.addEventListener('popstate', handleUrlChange);
+    return () => window.removeEventListener('popstate', handleUrlChange);
+  }, []);
+
+  if (viewMode === 'CARDAPIO') {
+    return (
+      <CustomerCardapioPage 
+        onBackToSystem={() => {
+          if (typeof window !== 'undefined') {
+            window.history.pushState({}, '', '/');
+          }
+          setViewMode('SYSTEM');
+        }} 
+      />
+    );
+  }
 
   if (viewMode === 'SALES_PAGE') {
     return <SalesLandingPageView onEnterSystem={() => setViewMode('SYSTEM')} />;
@@ -197,3 +234,4 @@ export default function App() {
     </AdegaProvider>
   );
 }
+
