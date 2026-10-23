@@ -880,11 +880,10 @@ export const SalesLandingPageView: React.FC<SalesLandingPageViewProps> = ({
       <footer className="py-12 px-4 sm:px-8 max-w-7xl mx-auto border-t border-zinc-800 text-xs text-zinc-500 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <img src="/logo.jpg" alt="Adega Imperial" className="w-5 h-5 rounded-md object-cover border border-amber-500/30" />
-          <span className="font-bold text-zinc-300 font-serif">ADEGAPRO</span>
-          <span>— Sistema Especializado para Gestão de Adegas e Bebidas</span>
+          <span>Sistema Especializado para Gestão de Adegas e Bebidas</span>
         </div>
         <div>
-          © {new Date().getFullYear()} AdegaPro Software. Todos os direitos reservados.
+          © {new Date().getFullYear()} Adega Imperial. Todos os direitos reservados.
         </div>
       </footer>
 
