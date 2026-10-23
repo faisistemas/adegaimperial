@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { 
-  X, Lock, User, KeyRound, ArrowRight, ShieldCheck, 
-  Wine, CheckCircle2, AlertCircle, Sparkles, LogIn
+  X, Lock, Mail, LogIn, UserPlus, Eye, EyeOff, 
+  Crown, AlertCircle, CheckCircle2, ShieldCheck, ArrowRight
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
-import { User as UserType } from '../../types';
+import { User, UserRole } from '../../types';
 
 interface LoginPortalModalProps {
   isOpen: boolean;
@@ -17,12 +17,24 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
   onClose,
   onLoginSuccess,
 }) => {
-  const { users, switchUserRole, currentUser } = useAdega();
+  const { users, switchUserRole, setUsers, currentUser } = useAdega();
 
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Modais de Apoio: Criar Conta e Esqueceu Senha
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+
+  // Estado Cadastro Rápido (Criar conta)
+  const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPin, setRegPin] = useState('');
+  const [regRole, setRegRole] = useState<UserRole>('STORE_MANAGER');
+  const [regSuccess, setRegSuccess] = useState('');
 
   if (!isOpen) return null;
 
@@ -32,175 +44,417 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
     setIsLoading(true);
 
     setTimeout(() => {
-      // Find matching user or allow demo credential
-      const trimmedUser = username.trim().toLowerCase();
+      const trimmed = email.trim().toLowerCase();
+      // Encontra usuário correspondente por e-mail, nome ou cargo
       const matched = users.find(
-        (u) => u.name.toLowerCase().includes(trimmedUser) || u.role.toLowerCase() === trimmedUser
+        (u) =>
+          u.email.toLowerCase() === trimmed ||
+          u.name.toLowerCase().includes(trimmed) ||
+          u.role.toLowerCase() === trimmed
       );
 
       if (matched) {
         switchUserRole(matched);
         setIsLoading(false);
         onLoginSuccess();
-      } else if (username.length >= 3 && password.length >= 4) {
-        // Fallback demo login as Admin
-        switchUserRole(users[0]);
+      } else if (email.length >= 2) {
+        // Fallback demo: conecta como Administrador padrão se preencheu
+        const adminUser = users.find((u) => u.role === 'SUPER_ADMIN') || users[0];
+        switchUserRole(adminUser);
         setIsLoading(false);
         onLoginSuccess();
       } else {
-        setErrorMsg('Usuário ou senha inválidos. Utilize os acessos rápidos abaixo ou digite ao menos 3 letras.');
+        setErrorMsg('Por favor, informe seu e-mail e senha de acesso.');
         setIsLoading(false);
       }
+    }, 500);
+  };
+
+  const handleGoogleLogin = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      // Login direto simulado Google OAuth com Administrador
+      const adminUser = users.find((u) => u.role === 'SUPER_ADMIN') || users[0];
+      switchUserRole(adminUser);
+      setIsLoading(false);
+      onLoginSuccess();
     }, 600);
   };
 
-  const handleQuickLogin = (user: UserType) => {
-    switchUserRole(user);
-    onLoginSuccess();
+  const handleCreateAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regName.trim()) {
+      setErrorMsg('Informe seu nome completo.');
+      return;
+    }
+    if (!regPin || regPin.length < 4) {
+      setErrorMsg('A senha/PIN deve ter no mínimo 4 dígitos.');
+      return;
+    }
+
+    const newUser: User = {
+      id: `u-${Date.now()}`,
+      name: regName.trim(),
+      email: regEmail.trim() || `${regName.toLowerCase().replace(/\s+/g, '.')}@adegaimperial.com.br`,
+      role: regRole,
+      pin: regPin.replace(/\D/g, '') || '1234',
+      avatar: '/logo.jpg',
+      storeId: currentUser.storeId || 'store-1',
+    };
+
+    setUsers((prev) => [...prev, newUser]);
+    switchUserRole(newUser);
+    setRegSuccess('Conta criada com sucesso! Conectando...');
+
+    setTimeout(() => {
+      setShowRegisterModal(false);
+      onLoginSuccess();
+    }, 1000);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-6 bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
       <div 
-        className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-zinc-100 overflow-hidden"
+        className="relative w-full max-w-5xl bg-zinc-950 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col lg:flex-row min-h-[580px] max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Glow ambient accent */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Close Button */}
+        {/* Botão Fechar no canto superior direito */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          className="absolute top-4 right-4 z-30 p-2 rounded-full text-zinc-400 hover:text-white bg-black/60 hover:bg-zinc-800 transition-colors cursor-pointer border border-zinc-800"
+          title="Fechar janela"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Header */}
-        <div className="text-center space-y-2 pt-2">
-          <div className="mx-auto w-16 h-16 rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-xl shadow-amber-950/50 bg-zinc-950 ring-1 ring-amber-500/30 p-0.5">
-            <img
-              src="/logo.jpg"
-              alt="Adega Imperial"
-              className="w-full h-full object-cover rounded-xl"
-            />
-          </div>
-          <h3 className="text-xl font-bold font-serif text-zinc-100 tracking-tight">
-            Acesso ao Sistema Adega Imperial
-          </h3>
-          <p className="text-xs text-zinc-400">
-            Entre com suas credenciais ou escolha um perfil de demonstração
-          </p>
-        </div>
-
-        {/* Error Alert */}
-        {errorMsg && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
-        {/* Credentials Form */}
-        <form onSubmit={handleCustomLogin} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-300 block">
-              Usuário ou E-mail
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-              <input
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Ex: admin@adegaimperial.com.br"
-                className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-100 placeholder:text-zinc-600 outline-none transition-colors"
-              />
+        {/* LADO ESQUERDO: Card do Formulário de Acesso */}
+        <div className="w-full lg:w-[48%] p-6 sm:p-8 md:p-10 flex flex-col justify-between bg-[#0e1015] border-r border-zinc-800/80 overflow-y-auto">
+          
+          <div className="space-y-6">
+            {/* 1. Header com Logo Adega Imperial */}
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-amber-500/50 shadow-xl shadow-amber-950/50 bg-zinc-950 ring-1 ring-amber-500/30 p-0.5 shrink-0">
+                <img
+                  src="/logo.jpg"
+                  alt="Adega Imperial"
+                  className="w-full h-full object-cover rounded-xl"
+                />
+              </div>
+              <div className="w-[1.5px] h-10 bg-amber-500/40 shrink-0"></div>
+              <div>
+                <h2 className="text-base sm:text-lg font-black tracking-wider text-zinc-100 font-serif leading-tight">
+                  ADEGA <span className="text-amber-400">IMPERIAL</span>
+                </h2>
+                <span className="text-xs text-zinc-400 font-medium block">
+                  Gestão & PDV
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-zinc-300">
-                Senha de Acesso
-              </label>
-              <span className="text-[11px] text-amber-400/80 hover:text-amber-300 cursor-pointer">
-                Esqueceu a senha?
+            {/* 2. Subtítulo Bem-vindo */}
+            <div className="space-y-1 pt-1">
+              <h3 className="text-sm sm:text-base font-bold text-zinc-100 flex items-center gap-2">
+                <Crown className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+                <span>Bem-vindo de volta!</span>
+              </h3>
+              <p className="text-xs text-zinc-400">
+                Faça login para acessar o sistema.
+              </p>
+            </div>
+
+            {/* Mensagem de Erro */}
+            {errorMsg && (
+              <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-800/80 text-rose-300 text-xs flex items-center gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            {/* 3. Formulário de Credenciais */}
+            <form onSubmit={handleCustomLogin} className="space-y-4">
+              
+              {/* Campo E-mail */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>E-mail</span>
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                  <input
+                    type="text"
+                    required
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errorMsg) setErrorMsg(null);
+                    }}
+                    placeholder="Digite seu e-mail"
+                    className="w-full bg-[#08090c] border border-zinc-800 focus:border-amber-500/80 rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Campo Senha */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>Senha</span>
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (errorMsg) setErrorMsg(null);
+                    }}
+                    placeholder="Digite sua senha"
+                    className="w-full bg-[#08090c] border border-zinc-800 focus:border-amber-500/80 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                    title={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                <div className="flex justify-end pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(true)}
+                    className="text-[11px] text-amber-400 hover:text-amber-300 cursor-pointer transition-colors"
+                  >
+                    Esqueceu sua senha?
+                  </button>
+                </div>
+              </div>
+
+              {/* Botão Entrar no sistema */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-[0.99] text-zinc-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/20 disabled:opacity-60 cursor-pointer mt-2"
+              >
+                {isLoading ? (
+                  <span>Acessando...</span>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4 text-zinc-950" />
+                    <span>Entrar no sistema</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Divisor OU */}
+            <div className="relative flex items-center justify-center py-1">
+              <div className="border-t border-zinc-800 w-full"></div>
+              <span className="bg-[#0e1015] px-3 text-[11px] font-semibold text-zinc-500 uppercase tracking-widest absolute">
+                OU
               </span>
             </div>
-            <div className="relative">
-              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-100 placeholder:text-zinc-600 outline-none transition-colors"
-              />
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
-          >
-            {isLoading ? (
-              <span>Conectando...</span>
-            ) : (
-              <>
-                <span>Entrar no Sistema</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Quick Access Profiles */}
-        <div className="pt-2 border-t border-zinc-800/80 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-              Acesso Rápido de Demonstração
-            </span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-mono">
-              1-Clique
-            </span>
-          </div>
-
-          <div className={`grid ${users.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
-            {users.slice(0, 4).map((u) => (
-              <button
-                key={u.id}
-                type="button"
-                onClick={() => handleQuickLogin(u)}
-                className="p-2 rounded-xl bg-zinc-950 hover:bg-zinc-850 border border-zinc-800 hover:border-amber-500/40 text-left transition-all flex items-center gap-2 group"
-              >
-                <img
-                  src={u.avatar}
-                  alt={u.name}
-                  className="w-7 h-7 rounded-lg object-cover border border-zinc-700 shrink-0"
+            {/* Botão Entrar com Google */}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              className="w-full py-2.5 px-4 rounded-xl bg-[#08090c] hover:bg-zinc-800/80 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2.5 transition-all cursor-pointer"
+            >
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 />
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-zinc-200 group-hover:text-amber-400 truncate">
-                    {u.name.split(' ')[0]}
-                  </div>
-                  <div className="text-[10px] text-zinc-500 truncate">
-                    {u.role}
-                  </div>
-                </div>
-              </button>
-            ))}
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+              <span>Entrar com Google</span>
+            </button>
+          </div>
+
+          {/* 4. Footer: Ainda não tem uma conta? Criar conta */}
+          <div className="pt-5 mt-4 border-t border-zinc-800/60 flex items-center justify-between text-xs text-zinc-400">
+            <span>Ainda não tem uma conta?</span>
+            <button
+              type="button"
+              onClick={() => {
+                setErrorMsg(null);
+                setShowRegisterModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/70 hover:border-amber-400 text-amber-400 hover:text-amber-300 text-xs font-semibold transition-all hover:bg-amber-500/10 cursor-pointer"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Criar conta</span>
+            </button>
+          </div>
+
+        </div>
+
+        {/* LADO DIREITO: Foto da Loja Adega Imperial + Citação */}
+        <div 
+          className="hidden lg:flex lg:w-[52%] relative bg-cover bg-center overflow-hidden flex-col justify-end p-8 sm:p-12 select-none"
+          style={{
+            backgroundImage: `url('/adega-store-login-bg.jpg')`,
+            backgroundPosition: 'center right',
+          }}
+        >
+          {/* Sombra e Vinheta Gradiente */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/30 pointer-events-none" />
+
+          {/* Citação no Canto Inferior (Conforme Imagem) */}
+          <div className="relative z-10 text-center max-w-sm mx-auto space-y-2">
+            <Crown className="w-6 h-6 text-amber-400 fill-amber-400 mx-auto" />
+            <div className="w-52 h-[1px] bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto"></div>
+            <p className="text-zinc-100 font-serif text-xs sm:text-sm font-bold tracking-widest uppercase">
+              GRANDES MOMENTOS
+            </p>
+            <p className="text-zinc-200 font-serif text-[11px] sm:text-xs font-semibold tracking-widest uppercase">
+              COMEÇAM COM BOAS ESCOLHAS
+            </p>
+            <div className="w-24 h-[1.5px] bg-amber-400 mx-auto mt-2"></div>
           </div>
         </div>
 
-        {/* Footer info */}
-        <div className="flex items-center justify-center gap-2 text-[11px] text-zinc-500 pt-1">
-          <ShieldCheck className="w-4 h-4 text-emerald-500" />
-          <span>Conexão Segura SSL • Sessão Criptografada</span>
-        </div>
       </div>
+
+      {/* Modal Criar Conta (Cadastro Rápido) */}
+      {showRegisterModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-amber-400" />
+                <h4 className="font-bold text-sm text-zinc-100">Criar Nova Conta</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRegisterModal(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {regSuccess && (
+              <div className="p-2.5 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>{regSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleCreateAccount} className="space-y-3">
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Nome Completo</label>
+                <input
+                  type="text"
+                  required
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  placeholder="Ex: Carlos Oliveira"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">E-mail</label>
+                <input
+                  type="email"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  placeholder="Ex: carlos@adegaimperial.com.br"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">Cargo / Função</label>
+                  <select
+                    value={regRole}
+                    onChange={(e) => setRegRole(e.target.value as UserRole)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none"
+                  >
+                    <option value="STORE_MANAGER">Gerente de Loja</option>
+                    <option value="CASHIER">Operador de Caixa</option>
+                    <option value="WAITER">Atendente / Garçom</option>
+                    <option value="SUPER_ADMIN">Administrador</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">PIN / Senha (4 dígitos)</label>
+                  <input
+                    type="password"
+                    required
+                    maxLength={6}
+                    value={regPin}
+                    onChange={(e) => setRegPin(e.target.value)}
+                    placeholder="1234"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 font-mono focus:border-amber-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowRegisterModal(false)}
+                  className="px-3 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-xs hover:bg-zinc-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs"
+                >
+                  Confirmar Cadastro
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Esqueceu Senha */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-zinc-100">Recuperação de Acesso</h4>
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                Para redefinir sua senha, solicite ao <strong>Administrador da Loja</strong> na janela de <em>Gestão de Usuários</em> ou utilize a credencial mestre do operador Administrador (PIN: <strong>1234</strong>).
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowForgotModal(false)}
+              className="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-semibold transition-colors"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
