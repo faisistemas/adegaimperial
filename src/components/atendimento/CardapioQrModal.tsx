@@ -174,42 +174,42 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
   const cartItemCount = customerCart.reduce((acc, item) => acc + (item.quantity ?? 1), 0);
 
   return (
-    <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <div className={`bg-zinc-900 border border-zinc-800 rounded-3xl w-full shadow-2xl overflow-hidden my-auto flex flex-col transition-all duration-300 ${
+    <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-0 sm:p-3 md:p-6 overflow-y-auto">
+      <div className={`bg-zinc-900 border border-zinc-800 sm:rounded-3xl rounded-none w-full shadow-2xl overflow-hidden my-auto flex flex-col transition-all duration-300 ${
         activeMode === 'PRINT_QR'
-          ? 'max-w-md max-h-[92vh]'
-          : 'max-w-4xl lg:max-w-5xl h-[90vh] max-h-[880px]'
+          ? 'max-w-md max-h-[96vh] sm:max-h-[92vh] h-full sm:h-auto'
+          : 'max-w-4xl lg:max-w-5xl xl:max-w-6xl h-full sm:h-[92vh] max-h-[960px]'
       }`}>
         
         {/* Top Header Bar */}
-        <div className="px-5 py-3.5 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between text-zinc-400 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="p-1 rounded-lg bg-amber-500/15 text-amber-400">
+        <div className="px-3.5 py-3 sm:px-5 sm:py-3.5 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between text-zinc-400 text-xs shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-400 shrink-0">
               <QrCode className="w-4 h-4" />
             </div>
-            <div>
-              <span className="font-semibold text-zinc-100 block text-xs sm:text-sm">Cardápio QR Code na Mesa</span>
-              <span className="text-[10px] sm:text-xs text-zinc-400">Autoatendimento do cliente pelo smartphone</span>
+            <div className="min-w-0">
+              <span className="font-semibold text-zinc-100 block text-xs sm:text-sm truncate">Cardápio QR Code na Mesa</span>
+              <span className="text-[10px] sm:text-xs text-zinc-400 truncate block">Autoatendimento do cliente pelo smartphone</span>
             </div>
           </div>
           <button 
             type="button"
             onClick={onClose} 
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors shrink-0 ml-2"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Mode Selector & Table Dropdown */}
-        <div className="p-3 sm:p-3.5 bg-zinc-950/80 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="p-2.5 sm:p-3.5 bg-zinc-950/80 border-b border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 shrink-0">
           {/* Table Selector */}
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-zinc-400 text-xs font-medium">Mesa:</span>
+          <div className="flex items-center gap-2 text-xs w-full sm:w-auto">
+            <span className="text-zinc-400 text-xs font-medium shrink-0">Mesa:</span>
             <select
               value={selectedTableId}
               onChange={(e) => setSelectedTableId(Number(e.target.value))}
-              className="bg-zinc-900 border border-zinc-750 text-zinc-100 text-xs sm:text-sm rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-semibold"
+              className="bg-zinc-900 border border-zinc-750 text-zinc-100 text-xs sm:text-sm rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-500 font-semibold w-full sm:w-auto truncate"
             >
               {(tables || []).map((tbl) => (
                 <option key={tbl.id} value={tbl.id}>
@@ -220,11 +220,11 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
           </div>
 
           {/* Mode Switcher */}
-          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-xs">
+          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-xs shrink-0 self-stretch sm:self-auto justify-center">
             <button
               type="button"
               onClick={() => setActiveMode('SIMULATOR')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
                 activeMode === 'SIMULATOR'
                   ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200'
@@ -236,7 +236,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
             <button
               type="button"
               onClick={() => setActiveMode('PRINT_QR')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
                 activeMode === 'PRINT_QR'
                   ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200'
@@ -247,6 +247,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
             </button>
           </div>
         </div>
+
 
         {/* Content Body */}
         {activeMode === 'PRINT_QR' ? (
@@ -314,24 +315,24 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
           /* Mobile Customer Simulator */
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {/* Store Brand Banner */}
-            <div className="p-4 sm:p-5 bg-gradient-to-br from-amber-950/70 via-zinc-950 to-zinc-950 border-b border-zinc-800 text-center relative shrink-0">
-              <div className="w-14 h-14 rounded-2xl overflow-hidden border border-amber-500/40 shadow-md shadow-amber-950/60 mx-auto mb-2 bg-zinc-950 ring-1 ring-amber-500/25">
+            <div className="p-3 sm:p-4 md:p-5 bg-gradient-to-br from-amber-950/70 via-zinc-950 to-zinc-950 border-b border-zinc-800 text-center relative shrink-0">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden border border-amber-500/40 shadow-md shadow-amber-950/60 mx-auto mb-1.5 sm:mb-2 bg-zinc-950 ring-1 ring-amber-500/25">
                 <img
                   src="/logo.jpg"
                   alt="Adega Imperial"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30 mb-1.5">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-amber-500/20 text-amber-300 text-[11px] sm:text-xs font-bold border border-amber-500/30 mb-1">
                 <QrCode className="w-3.5 h-3.5" />
                 <span>Mesa 0{currentTable.number} Conectada</span>
               </div>
-              <h2 className="font-bold text-base sm:text-lg text-amber-200 font-serif tracking-wide">{activeStore?.name || 'Adega Imperial'}</h2>
-              <p className="text-xs text-zinc-400 mt-0.5">Cardápio interativo: peça garrafas, doses e petiscos</p>
+              <h2 className="font-bold text-sm sm:text-base md:text-lg text-amber-200 font-serif tracking-wide">{activeStore?.name || 'Adega Imperial'}</h2>
+              <p className="text-[11px] sm:text-xs text-zinc-400 mt-0.5">Cardápio interativo: peça garrafas, doses e petiscos</p>
             </div>
 
             {/* Categories & Search Filter */}
-            <div className="p-3 sm:p-4 bg-zinc-950 border-b border-zinc-800/80 space-y-3 shrink-0">
+            <div className="p-2.5 sm:p-3.5 md:p-4 bg-zinc-950 border-b border-zinc-800/80 space-y-2.5 sm:space-y-3 shrink-0">
               <div className="relative">
                 <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -339,11 +340,11 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
                   placeholder="Buscar no cardápio (ex: Black Label, Heineken, Vinho, Porções)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-xs sm:text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full pl-9 pr-4 py-2 sm:py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-xs sm:text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition-colors"
                 />
               </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs scrollbar-none">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 text-xs scrollbar-none touch-pan-x">
                 {[
                   { id: 'TODOS', label: 'Todos' },
                   { id: 'DESTILADOS', label: 'Doses & Whiskies' },
@@ -356,7 +357,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3.5 py-1.5 rounded-xl shrink-0 transition-all font-semibold ${
+                    className={`px-3 py-1.5 sm:px-3.5 rounded-xl shrink-0 transition-all font-semibold text-xs whitespace-nowrap ${
                       selectedCategory === cat.id
                         ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm'
                         : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
@@ -369,7 +370,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
             </div>
 
             {/* Menu Items List */}
-            <div className="flex-1 p-4 sm:p-5 overflow-y-auto min-h-0">
+            <div className="flex-1 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-0">
               {orderSent ? (
                 <div className="py-16 text-center space-y-3 bg-zinc-950/60 rounded-3xl border border-emerald-500/30 p-8 my-4 max-w-md mx-auto">
                   <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto animate-pulse">
@@ -385,28 +386,28 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
                   Nenhum item encontrado no cardápio.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3.5">
                   {filteredProducts.map((product) => (
                     <div
                       key={product.id}
-                      className="p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800/80 flex flex-col justify-between gap-2.5 hover:border-zinc-700 transition-colors shadow-sm"
+                      className="p-3 sm:p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800/80 flex flex-col justify-between gap-2.5 hover:border-zinc-700 transition-colors shadow-sm"
                     >
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center justify-between gap-2.5 sm:gap-3">
                         <img 
                           src={product.image} 
                           alt={product.name} 
-                          className="w-14 h-14 rounded-xl object-cover shrink-0 bg-zinc-900 border border-zinc-800" 
+                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover shrink-0 bg-zinc-900 border border-zinc-800" 
                         />
                         
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-xs sm:text-sm text-zinc-100 truncate">{product.name}</h4>
-                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1">
                             {product.isFractionable ? (
                               <>
-                                <span className="text-xs font-bold text-amber-400 font-mono">
+                                <span className="text-[11px] sm:text-xs font-bold text-amber-400 font-mono">
                                   Dose: R$ {(product.pricePerDose ?? 20).toFixed(2)}
                                 </span>
-                                <span className="text-[11px] text-zinc-400 font-mono">
+                                <span className="text-[10px] sm:text-[11px] text-zinc-400 font-mono">
                                   Garrafa: R$ {(product.price ?? 0).toFixed(2)}
                                 </span>
                               </>
@@ -425,7 +426,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
                               <button
                                 type="button"
                                 onClick={() => handleAddItem(product, true)}
-                                className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-zinc-950 text-xs font-bold transition-colors border border-amber-500/40"
+                                className="px-2 sm:px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-zinc-950 text-xs font-bold transition-colors border border-amber-500/40"
                                 title="Adicionar 1 Dose fracionada (50ml)"
                               >
                                 + Dose
@@ -433,7 +434,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
                               <button
                                 type="button"
                                 onClick={() => handleAddItem(product, false)}
-                                className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-750 text-zinc-200 text-xs font-semibold transition-colors"
+                                className="px-2 sm:px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-750 text-zinc-200 text-xs font-semibold transition-colors"
                                 title="Adicionar Garrafa Completa"
                               >
                                 + Garrafa
@@ -443,7 +444,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
                             <button
                               type="button"
                               onClick={() => handleAddItem(product, false)}
-                              className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold transition-colors"
+                              className="px-3 sm:px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold transition-colors"
                             >
                               + Pedir
                             </button>
@@ -458,7 +459,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
                           placeholder="Observação (ex: com gelo e limão, bem gelada)..."
                           value={itemNoteInput[product.id] || ''}
                           onChange={(e) => setItemNoteInput({ ...itemNoteInput, [product.id]: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-zinc-900/80 border border-zinc-850 rounded-lg text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-zinc-700"
+                          className="w-full px-2.5 py-1 rounded-lg bg-zinc-900/60 border border-zinc-800/80 text-[11px] text-zinc-300 placeholder-zinc-500 focus:outline-none focus:border-amber-500/50"
                         />
                       </div>
                     </div>
