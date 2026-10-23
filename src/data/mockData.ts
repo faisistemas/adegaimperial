@@ -28,8 +28,8 @@ export const INITIAL_STORES: Store[] = [
 export const INITIAL_USERS: User[] = [
   {
     id: 'u-1',
-    name: 'Carlos Albuquerque',
-    email: 'carlos.proprietario@adegaimperial.com.br',
+    name: 'Administrador',
+    email: 'admin@adegaimperial.com.br',
     role: 'SUPER_ADMIN',
     avatar: '/logo.jpg',
     pin: '1234',

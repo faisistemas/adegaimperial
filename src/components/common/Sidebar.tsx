@@ -294,15 +294,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-3 border-t border-zinc-800/70 bg-zinc-950/60">
           <div className="rounded-xl p-3 bg-zinc-900/60 border border-zinc-800/80 text-[11px]">
             <div className="flex items-center justify-between text-zinc-300 font-medium mb-1">
-              <span>Perfil Ativo:</span>
-              <span className="font-semibold text-amber-400">{currentUser.role}</span>
+              <span>Operador:</span>
+              <span className="font-semibold text-amber-400">Administrador (admin)</span>
             </div>
             <p className="text-zinc-400 text-[10px] leading-relaxed">
-              {currentUser.role === 'SUPER_ADMIN' && 'Acesso total irrestrito (Retaguarda, Fiscal & Multiloja).'}
-              {currentUser.role === 'STORE_MANAGER' && 'Gerência de salão, estoque, caixa e auditoria de doses.'}
-              {currentUser.role === 'CASHIER' && 'Operação frente de caixa, PDV touch e emissão de NFC-e.'}
-              {currentUser.role === 'WAITER' && 'Lançamento ágil em mesas e comandas via terminal/mobile.'}
-              {currentUser.role === 'DELIVERY_COURIER' && 'Acesso ao despacho e confirmação de rotas de entrega.'}
+              Acesso total irrestrito (Retaguarda, Fiscal & Multiloja).
             </p>
           </div>
         </div>

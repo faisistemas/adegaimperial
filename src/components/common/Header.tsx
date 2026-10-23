@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { 
-  Wine, Store, UserCircle, Bell, ChevronDown, 
-  CircleDollarSign, ShieldCheck, QrCode, CheckCircle2,
+  Wine, Store, Bell, ChevronDown, 
+  CircleDollarSign, QrCode, CheckCircle2,
   X, AlertTriangle, Menu, Sparkles
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
+import { AdminDropdown } from '../admin/AdminDropdown';
 
 interface HeaderProps {
-  onOpenRoleModal: () => void;
+  onOpenUsuarios: () => void;
+  onOpenFidelidade: () => void;
+  onOpenFichas: () => void;
+  onOpenCreditoDigital: () => void;
+  onOpenConfiguracoes: () => void;
+  onOpenRoleModal?: () => void;
   onOpenCardapioModal?: () => void;
   onOpenQrCardapio?: () => void;
   onToggleMobileMenu?: () => void;
@@ -15,6 +21,11 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
+  onOpenUsuarios,
+  onOpenFidelidade,
+  onOpenFichas,
+  onOpenCreditoDigital,
+  onOpenConfiguracoes,
   onOpenRoleModal, 
   onOpenCardapioModal,
   onOpenQrCardapio,
@@ -31,25 +42,6 @@ export const Header: React.FC<HeaderProps> = ({
   } = useAdega();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case 'SUPER_ADMIN':
-        return { label: 'Proprietário / Admin', color: 'bg-purple-900/40 text-purple-300 border-purple-700/50' };
-      case 'STORE_MANAGER':
-        return { label: 'Gerente de Loja', color: 'bg-blue-900/40 text-blue-300 border-blue-700/50' };
-      case 'CASHIER':
-        return { label: 'Operador de Caixa', color: 'bg-emerald-900/40 text-emerald-300 border-emerald-700/50' };
-      case 'WAITER':
-        return { label: 'Atendente / Garçom', color: 'bg-amber-900/40 text-amber-300 border-amber-700/50' };
-      case 'DELIVERY_COURIER':
-        return { label: 'Motoboy / Delivery', color: 'bg-orange-900/40 text-orange-300 border-orange-700/50' };
-      default:
-        return { label: role, color: 'bg-zinc-800 text-zinc-300 border-zinc-700' };
-    }
-  };
-
-  const roleInfo = getRoleLabel(currentUser.role);
 
   return (
     <header className="h-16 bg-zinc-950 border-b border-zinc-800/80 px-3 sm:px-4 md:px-6 flex items-center justify-between text-zinc-100 z-30 sticky top-0">
@@ -82,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
           id="btn-open-cardapio-qr"
           type="button"
           onClick={handleOpenCardapio}
-          className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-750 text-zinc-200 hover:text-white border border-zinc-800 hover:border-amber-500/40 text-xs transition-all cursor-pointer shadow-sm group select-none"
+          className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-850 active:bg-zinc-750 text-zinc-200 hover:text-white border border-zinc-800 hover:border-amber-500/40 text-xs transition-all cursor-pointer shadow-sm group select-none"
           title="Ver como o cliente enxerga no celular ao escanear o QR Code da mesa"
         >
           <div className="p-1 rounded-md bg-amber-500/10 group-hover:bg-amber-500/20 text-amber-400 shrink-0">
@@ -160,32 +152,16 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* User Role Switcher Trigger (RBAC) */}
-        <button
-          id="btn-user-role-switcher"
-          onClick={onOpenRoleModal}
-          className="flex items-center gap-1.5 sm:gap-2 p-1 sm:pl-2 sm:pr-3 sm:py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 transition-all hover:border-zinc-700"
-          title="Clique para alternar operador ou perfil de acesso (RBAC)"
-        >
-          <img
-            src={currentUser.avatar}
-            alt={currentUser.name}
-            className="w-7 h-7 rounded-full object-cover ring-1 ring-zinc-700"
-          />
-          <div className="text-left hidden md:block">
-            <div className="text-xs font-semibold text-zinc-200 leading-tight flex items-center gap-1.5">
-              <span>{currentUser.name.split(' ')[0]}</span>
-              <ShieldCheck className="w-3 h-3 text-amber-400" />
-            </div>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span className={`text-[9px] px-1.5 py-0.2 rounded border font-medium uppercase tracking-wider ${roleInfo.color}`}>
-                {roleInfo.label}
-              </span>
-            </div>
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 text-zinc-400 hidden sm:block ml-1" />
-        </button>
+        {/* Admin Dropdown com Administrador admin 🌙 (Substituindo o antigo seletor por este da imagem) */}
+        <AdminDropdown
+          onOpenUsuarios={onOpenUsuarios}
+          onOpenFidelidade={onOpenFidelidade}
+          onOpenFichas={onOpenFichas}
+          onOpenCreditoDigital={onOpenCreditoDigital}
+          onOpenConfiguracoes={onOpenConfiguracoes}
+        />
       </div>
     </header>
   );
 };
+

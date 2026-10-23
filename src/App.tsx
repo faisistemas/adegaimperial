@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { AdegaProvider, useAdega } from './context/AdegaContext';
 import { Header } from './components/common/Header';
 import { Sidebar } from './components/common/Sidebar';
-import { UserRoleSwitcherModal } from './components/auth/UserRoleSwitcherModal';
+import { UsuariosModal } from './components/admin/UsuariosModal';
+import { CreditoDigitalModal } from './components/admin/CreditoDigitalModal';
+import { FidelidadeModal } from './components/admin/FidelidadeModal';
 import { CardapioQrModal } from './components/atendimento/CardapioQrModal';
 
 // Views
@@ -34,7 +36,9 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ onOpenSalesPage }) => {
   const { currentUser } = useAdega();
   const [activeTab, setActiveTab] = useState<any>('vendas');
-  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [usuariosModalOpen, setUsuariosModalOpen] = useState(false);
+  const [creditoDigitalModalOpen, setCreditoDigitalModalOpen] = useState(false);
+  const [fidelidadeModalOpen, setFidelidadeModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -115,7 +119,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ onOpenSalesPage }) => {
       {/* Main Workspace */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         <Header
-          onOpenRoleModal={() => setRoleModalOpen(true)}
+          onOpenUsuarios={() => setUsuariosModalOpen(true)}
+          onOpenFidelidade={() => setFidelidadeModalOpen(true)}
+          onOpenFichas={() => {
+            setActiveTab('comandas');
+            setMobileMenuOpen(false);
+          }}
+          onOpenCreditoDigital={() => setCreditoDigitalModalOpen(true)}
+          onOpenConfiguracoes={() => {
+            setActiveTab('configuracoes');
+            setMobileMenuOpen(false);
+          }}
           onOpenCardapioModal={() => setQrModalOpen(true)}
           onOpenQrCardapio={() => setQrModalOpen(true)}
           onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -138,10 +152,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({ onOpenSalesPage }) => {
         onOpenMobileMenu={() => setMobileMenuOpen(true)}
       />
 
-      {/* RBAC & Self-service Modals */}
-      <UserRoleSwitcherModal
-        isOpen={roleModalOpen}
-        onClose={() => setRoleModalOpen(false)}
+      {/* Modais do Menu Admin */}
+      <UsuariosModal
+        isOpen={usuariosModalOpen}
+        onClose={() => setUsuariosModalOpen(false)}
+      />
+
+      <CreditoDigitalModal
+        isOpen={creditoDigitalModalOpen}
+        onClose={() => setCreditoDigitalModalOpen(false)}
+      />
+
+      <FidelidadeModal
+        isOpen={fidelidadeModalOpen}
+        onClose={() => setFidelidadeModalOpen(false)}
+        onOpenFullCrm={() => {
+          setActiveTab('crm');
+          setMobileMenuOpen(false);
+        }}
       />
 
       <CardapioQrModal
