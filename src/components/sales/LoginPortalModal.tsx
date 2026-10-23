@@ -39,12 +39,12 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
       );
 
       if (matched) {
-        switchUserRole(matched.id);
+        switchUserRole(matched);
         setIsLoading(false);
         onLoginSuccess();
       } else if (username.length >= 3 && password.length >= 4) {
         // Fallback demo login as Admin
-        switchUserRole(users[0].id);
+        switchUserRole(users[0]);
         setIsLoading(false);
         onLoginSuccess();
       } else {
@@ -55,7 +55,7 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
   };
 
   const handleQuickLogin = (user: UserType) => {
-    switchUserRole(user.id);
+    switchUserRole(user);
     onLoginSuccess();
   };
 
@@ -86,7 +86,7 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
             />
           </div>
           <h3 className="text-xl font-bold font-serif text-zinc-100 tracking-tight">
-            Acesso ao Sistema AdegaPro
+            Acesso ao Sistema Adega Imperial
           </h3>
           <p className="text-xs text-zinc-400">
             Entre com suas credenciais ou escolha um perfil de demonstração
@@ -114,7 +114,7 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Ex: admin@adegapro.com"
+                placeholder="Ex: admin@adegaimperial.com.br"
                 className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-100 placeholder:text-zinc-600 outline-none transition-colors"
               />
             </div>
