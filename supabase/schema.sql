@@ -116,25 +116,31 @@ ALTER TABLE public.caixa_movimentacoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mesas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comandas ENABLE ROW LEVEL SECURITY;
 
--- Políticas de Acesso (Leitura e Gravação para chaves Anon e Service Role)
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Permitir leitura anonima produtos') THEN
-        CREATE POLICY "Permitir leitura anonima produtos" ON public.produtos FOR ALL USING (true) WITH CHECK (true);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Permitir escrita pedidos') THEN
-        CREATE POLICY "Permitir escrita pedidos" ON public.pedidos FOR ALL USING (true) WITH CHECK (true);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Permitir caixa sessoes') THEN
-        CREATE POLICY "Permitir caixa sessoes" ON public.caixa_sessoes FOR ALL USING (true) WITH CHECK (true);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Permitir movimentacoes caixa') THEN
-        CREATE POLICY "Permitir movimentacoes caixa" ON public.caixa_movimentacoes FOR ALL USING (true) WITH CHECK (true);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Permitir mesas') THEN
-        CREATE POLICY "Permitir mesas" ON public.mesas FOR ALL USING (true) WITH CHECK (true);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Permitir comandas') THEN
-        CREATE POLICY "Permitir comandas" ON public.comandas FOR ALL USING (true) WITH CHECK (true);
-    END IF;
-END $$;
+-- Políticas de Acesso Idempotentes (recria de forma segura se já existirem)
+DROP POLICY IF EXISTS "Acesso total produtos" ON public.produtos;
+DROP POLICY IF EXISTS "Permitir leitura anonima produtos" ON public.produtos;
+CREATE POLICY "Acesso total produtos" ON public.produtos FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total pedidos" ON public.pedidos;
+DROP POLICY IF EXISTS "Permitir escrita pedidos" ON public.pedidos;
+CREATE POLICY "Acesso total pedidos" ON public.pedidos FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total caixa_sessoes" ON public.caixa_sessoes;
+DROP POLICY IF EXISTS "Permitir caixa sessoes" ON public.caixa_sessoes;
+CREATE POLICY "Acesso total caixa_sessoes" ON public.caixa_sessoes FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total caixa_movimentacoes" ON public.caixa_movimentacoes;
+DROP POLICY IF EXISTS "Permitir movimentacoes caixa" ON public.caixa_movimentacoes;
+CREATE POLICY "Acesso total caixa_movimentacoes" ON public.caixa_movimentacoes FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total mesas" ON public.mesas;
+DROP POLICY IF EXISTS "Permitir mesas" ON public.mesas;
+CREATE POLICY "Acesso total mesas" ON public.mesas FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total comandas" ON public.comandas;
+DROP POLICY IF EXISTS "Permitir comandas" ON public.comandas;
+CREATE POLICY "Acesso total comandas" ON public.comandas FOR ALL USING (true) WITH CHECK (true);
+
+-- Notificar a API do Supabase para atualizar o cache de schemas imediatamente
+NOTIFY pgrst, 'reload schema';
+
