@@ -31,6 +31,7 @@ export const STORAGE_KEYS = {
   CASH_SESSION: `${STORAGE_PREFIX}cash_session`,
   APP_SETTINGS: `${STORAGE_PREFIX}app_settings`,
   AUDIT_LOGS: `${STORAGE_PREFIX}audit_logs`,
+  USERS: `${STORAGE_PREFIX}users`,
 } as const;
 
 /**

@@ -96,6 +96,7 @@ interface AdegaContextType {
   currentUser: User;
   setCurrentUser: (user: User) => void;
   users: User[];
+  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   stores: Store[];
   activeStore: Store;
   setActiveStore: (store: Store) => void;
@@ -480,7 +481,7 @@ const DEFAULT_INITIAL_ORDERS: Order[] = [
 ];
 
 export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [users] = useState<User[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<User[]>(() => loadFromStorage(STORAGE_KEYS.USERS, INITIAL_USERS));
   const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0]); // Começa com Super Admin
   const [stores] = useState<Store[]>(INITIAL_STORES);
   const [activeStore, setActiveStore] = useState<Store>(INITIAL_STORES[0]);
@@ -701,6 +702,10 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     saveToStorage(STORAGE_KEYS.VASILHAMES, vasilhames);
   }, [vasilhames]);
 
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.USERS, users);
+  }, [users]);
+
   const resetarDadosParaPadrao = () => {
     clearAllAdegaStorage();
     setProducts(INITIAL_PRODUCTS);
@@ -713,6 +718,7 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setMovimentacoesEstoque(INITIAL_MOVIMENTACOES_ESTOQUE);
     setDevolucoesVendas(INITIAL_DEVOLUCOES);
     setReservas(INITIAL_RESERVAS);
+    setUsers(INITIAL_USERS);
     setContasPagar(INITIAL_CONTAS_PAGAR);
     setContasReceber(INITIAL_CONTAS_RECEBER);
     setComandas(DEFAULT_INITIAL_COMANDAS);
@@ -4068,6 +4074,7 @@ Acerto Liquidado por: ${currentUser.name}
         currentUser,
         setCurrentUser,
         users,
+        setUsers,
         stores,
         activeStore,
         setActiveStore,
