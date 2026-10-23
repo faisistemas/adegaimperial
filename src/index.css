@@ -83,3 +83,17 @@ button, a, input, select {
   -webkit-backdrop-filter: blur(12px);
 }
 
+/* Light Mode Engine */
+html.light {
+  filter: invert(0.92) hue-rotate(180deg);
+  background-color: #f8fafc;
+}
+
+html.light img,
+html.light video,
+html.light canvas,
+html.light [data-no-invert] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+

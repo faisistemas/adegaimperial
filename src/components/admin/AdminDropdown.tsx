@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users, Star, Ticket, CreditCard, Settings, 
-  ChevronDown, Moon, LogOut
+  ChevronDown, Moon, Sun, LogOut
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
 
@@ -25,6 +25,45 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
   const { setScreenLocked } = useAdega();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Dark/Light Theme state with localStorage persistence
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('adega_theme');
+      if (saved) return saved === 'dark';
+      return document.documentElement.classList.contains('dark') || !document.documentElement.classList.contains('light');
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const saved = localStorage.getItem('adega_theme');
+    if (saved === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+      setIsDark(false);
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+      setIsDark(true);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextDark = !isDark;
+    setIsDark(nextDark);
+    if (typeof window !== 'undefined') {
+      if (nextDark) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        localStorage.setItem('adega_theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        localStorage.setItem('adega_theme', 'light');
+      }
+    }
+  };
 
   const handleLogout = () => {
     if (onLogout) {
@@ -159,13 +198,22 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
         </span>
       </div>
 
-      {/* Ícone de Dark Mode / Lua (conforme imagem) */}
+      {/* Ícone de Dark / Light Mode (Lua / Sol funcional) */}
       <button
         type="button"
-        className="p-1.5 sm:p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
-        title="Modo Escuro Ativo"
+        onClick={toggleTheme}
+        className={`p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer ${
+          isDark 
+            ? 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-850' 
+            : 'bg-amber-500/20 border-amber-500/50 text-amber-300 hover:bg-amber-500/30'
+        }`}
+        title={isDark ? 'Alternar para Modo Claro' : 'Alternar para Modo Escuro'}
       >
-        <Moon className="w-4 h-4 text-zinc-300" />
+        {isDark ? (
+          <Moon className="w-4 h-4 text-zinc-300" />
+        ) : (
+          <Sun className="w-4 h-4 text-amber-400" />
+        )}
       </button>
     </div>
   );
