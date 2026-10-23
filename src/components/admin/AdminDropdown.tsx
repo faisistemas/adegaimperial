@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users, Star, Ticket, CreditCard, Settings, 
-  ChevronDown, Moon
+  ChevronDown, Moon, LogOut
 } from 'lucide-react';
+import { useAdega } from '../../context/AdegaContext';
 
 interface AdminDropdownProps {
   onOpenUsuarios: () => void;
@@ -10,6 +11,7 @@ interface AdminDropdownProps {
   onOpenFichas: () => void;
   onOpenCreditoDigital: () => void;
   onOpenConfiguracoes: () => void;
+  onLogout?: () => void;
 }
 
 export const AdminDropdown: React.FC<AdminDropdownProps> = ({
@@ -18,9 +20,19 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
   onOpenFichas,
   onOpenCreditoDigital,
   onOpenConfiguracoes,
+  onLogout,
 }) => {
+  const { setScreenLocked } = useAdega();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      setScreenLocked(true);
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -122,6 +134,18 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
                 <Settings className="w-4 h-4 text-zinc-400 group-hover:text-zinc-200 shrink-0" />
                 <span className="font-medium">Configurações</span>
               </button>
+
+              {/* 6. Sair (Logout / Bloquear Terminal) */}
+              <div className="pt-1 mt-1 border-t border-zinc-800/60">
+                <button
+                  type="button"
+                  onClick={() => handleSelect(handleLogout)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-sm text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 transition-all text-left cursor-pointer group"
+                >
+                  <LogOut className="w-4 h-4 text-rose-400 group-hover:text-rose-300 shrink-0" />
+                  <span className="font-medium">Sair</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
