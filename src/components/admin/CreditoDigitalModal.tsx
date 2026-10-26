@@ -19,12 +19,7 @@ export const CreditoDigitalModal: React.FC<CreditoDigitalModalProps> = ({ isOpen
   const [rechargeSuccess, setRechargeSuccess] = useState(false);
 
   // Digital credits state in memory/localStorage demo
-  const [balances, setBalances] = useState<Record<string, number>>({
-    'cust-1': 150.00,
-    'cust-2': 45.50,
-    'cust-3': 320.00,
-    'cust-4': 0.00,
-  });
+  const [balances, setBalances] = useState<Record<string, number>>({});
 
   const [history, setHistory] = useState<Array<{
     id: string;
@@ -33,11 +28,7 @@ export const CreditoDigitalModal: React.FC<CreditoDigitalModalProps> = ({ isOpen
     amount: number;
     method?: string;
     date: string;
-  }>>([
-    { id: 'cd-1', customerId: 'cust-1', type: 'RECHARGE', amount: 100.00, method: 'PIX', date: 'Hoje às 14:10' },
-    { id: 'cd-2', customerId: 'cust-1', type: 'CONSUMPTION', amount: 35.00, method: 'Dose Whisky Black', date: 'Hoje às 14:25' },
-    { id: 'cd-3', customerId: 'cust-3', type: 'RECHARGE', amount: 300.00, method: 'Cartão de Crédito', date: 'Ontem às 21:00' },
-  ]);
+  }>>([]);
 
   if (!isOpen) return null;
 

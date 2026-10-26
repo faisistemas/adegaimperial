@@ -487,7 +487,10 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [activeStore, setActiveStore] = useState<Store>(INITIAL_STORES[0]);
   const [products, setProducts] = useState<Product[]>(() => loadFromStorage(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS));
   const [tables, setTables] = useState<Table[]>(() => loadFromStorage(STORAGE_KEYS.TABLES, INITIAL_TABLES));
-  const [customers, setCustomers] = useState<Customer[]>(() => loadFromStorage(STORAGE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS));
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    const loaded = loadFromStorage(STORAGE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
+    return (loaded || []).filter(c => !['cust-1', 'cust-2', 'cust-3', 'cust-4'].includes(c.id));
+  });
   const [devolucoesVendas, setDevolucoesVendas] = useState<DevolucaoVenda[]>(() => loadFromStorage(STORAGE_KEYS.DEVOLUCOES, INITIAL_DEVOLUCOES));
   const [reservas, setReservas] = useState<ReservaMesaAmbiente[]>(() => loadFromStorage(STORAGE_KEYS.RESERVAS, INITIAL_RESERVAS));
 
@@ -943,7 +946,7 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 
   const [notifications, setNotifications] = useState<string[]>([
-    'Adega Imperial: Caixa do turno da noite aberto com sucesso (Fundo: R$ 200,00).',
+    'AdeGaswg: Caixa do turno da noite aberto com sucesso (Fundo: R$ 200,00).',
     'Estoque: Gin Tanqueray atingiu nível de atenção na garrafa aberta (550ml restantes).',
     'Novo pedido de delivery despachado para Motoboy Thiago.',
   ]);
@@ -2021,7 +2024,7 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       canal: 'WHATSAPP',
       destinatarioNome: reservaData.clienteNome,
       destinatarioTelefone: reservaData.clienteTelefone,
-      mensagem: `🍷 Adega Imperial: Olá ${reservaData.clienteNome}! Sua reserva [${codigo}] para ${reservaData.quantidadePessoas} pessoas no dia ${reservaData.dataReserva} às ${reservaData.horario} foi registrada com sucesso!`,
+      mensagem: `🍷 AdeGaswg: Olá ${reservaData.clienteNome}! Sua reserva [${codigo}] para ${reservaData.quantidadePessoas} pessoas no dia ${reservaData.dataReserva} às ${reservaData.horario} foi registrada com sucesso!`,
       dataHora: agora,
       status: 'ENVIADA'
     };
@@ -2097,7 +2100,7 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       canal: 'WHATSAPP',
       destinatarioNome: reserva.clienteNome,
       destinatarioTelefone: reserva.clienteTelefone,
-      mensagem: `🍷 Adega Imperial: Sua reserva [${reserva.codigo}] foi cancelada. ${motivo ? 'Motivo: ' + motivo : ''}`,
+      mensagem: `🍷 AdeGaswg: Sua reserva [${reserva.codigo}] foi cancelada. ${motivo ? 'Motivo: ' + motivo : ''}`,
       dataHora: agora,
       status: 'ENVIADA'
     };
@@ -2129,13 +2132,13 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let texto = mensagemCustom;
     if (!texto) {
       if (tipo === 'CONFIRMACAO') {
-        texto = `🍷 Adega Imperial: Olá ${reserva.clienteNome}! Confirmamos sua reserva [${reserva.codigo}] para o dia ${reserva.dataReserva} às ${reserva.horario}. Mesa: ${reserva.mesaNumero || 'A definir'}.`;
+        texto = `🍷 AdeGaswg: Olá ${reserva.clienteNome}! Confirmamos sua reserva [${reserva.codigo}] para o dia ${reserva.dataReserva} às ${reserva.horario}. Mesa: ${reserva.mesaNumero || 'A definir'}.`;
       } else if (tipo === 'LEMBRETE_2H') {
-        texto = `🍷 Adega Imperial: Olá ${reserva.clienteNome}! Lembramos da sua reserva hoje às ${reserva.horario} para ${reserva.quantidadePessoas} pessoas. Esperamos por você!`;
+        texto = `🍷 AdeGaswg: Olá ${reserva.clienteNome}! Lembramos da sua reserva hoje às ${reserva.horario} para ${reserva.quantidadePessoas} pessoas. Esperamos por você!`;
       } else if (tipo === 'ALTERACAO') {
-        texto = `🍷 Adega Imperial: Olá ${reserva.clienteNome}! Sua reserva [${reserva.codigo}] teve seus detalhes atualizados com sucesso.`;
+        texto = `🍷 AdeGaswg: Olá ${reserva.clienteNome}! Sua reserva [${reserva.codigo}] teve seus detalhes atualizados com sucesso.`;
       } else {
-        texto = `🍷 Adega Imperial: Comunicamos o cancelamento da reserva [${reserva.codigo}].`;
+        texto = `🍷 AdeGaswg: Comunicamos o cancelamento da reserva [${reserva.codigo}].`;
       }
     }
 

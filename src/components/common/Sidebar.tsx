@@ -160,7 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'configuracoes',
       label: 'Configuracoes',
-      description: 'Dados da Adega Imperial, horários e notificações',
+      description: 'Dados da AdeGaswg, horários e notificações',
       icon: Settings,
       allowedRoles: ['SUPER_ADMIN', 'STORE_MANAGER'],
       badge: 'Geral',
@@ -194,16 +194,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Sidebar Brand Header */}
         <div className="p-3.5 sm:p-4 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-950/95 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl overflow-hidden border border-amber-500/40 shadow-md shadow-amber-950/50 bg-zinc-950 shrink-0 ring-1 ring-amber-500/25">
+            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl overflow-hidden border border-amber-500/40 shadow-md shadow-amber-950/50 bg-zinc-950 shrink-0 ring-1 ring-amber-500/25">
               <img
                 src="/logo.jpg"
-                alt="Adega Imperial"
+                alt="AdeGaswg"
                 className="h-full w-full object-cover object-center"
               />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-xs uppercase tracking-wider text-amber-200 font-serif">Adega Imperial</span>
+                <span className="font-bold text-xs uppercase tracking-wider text-amber-200 font-serif">AdeGaswg</span>
                 <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
                   PRO
                 </span>

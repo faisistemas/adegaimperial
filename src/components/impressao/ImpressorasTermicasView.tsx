@@ -57,7 +57,7 @@ export const ImpressorasTermicasView: React.FC = () => {
       isConnected: true,
       enabled: true,
       autoPrint: true,
-      headerTitle: 'ADEGA IMPERIAL - PDV',
+      headerTitle: 'ADEGASWG - PDV',
     },
     kitchen: {
       sector: 'COZINHA',
@@ -139,7 +139,7 @@ export const ImpressorasTermicasView: React.FC = () => {
       timestamp: '14:35:50',
       title: 'Cupom de Venda NFC-e - Pedido #2040',
       sector: 'PDV',
-      contentRaw: 'ADEGA IMPERIAL\nCUPOM FISCAL NFC-E\nTOTAL R$ 245.00',
+      contentRaw: 'ADEGASWG\nCUPOM FISCAL NFC-E\nTOTAL R$ 245.00',
       paperWidthMm: 80,
       orderCode: '#2040',
       tableOrComanda: 'Balcão',

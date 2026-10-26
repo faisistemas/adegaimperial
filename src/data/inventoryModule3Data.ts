@@ -429,9 +429,9 @@ export const INITIAL_TRANSFERENCIAS_LOJAS: TransferenciaLojas[] = [
   {
     id: 'transf-101',
     lojaOrigemId: 'store-1',
-    lojaOrigemNome: 'Adega Imperial - Matriz Jardins',
+    lojaOrigemNome: 'AdeGaswg - Matriz Jardins',
     lojaDestinoId: 'store-2',
-    lojaDestinoNome: 'Adega Imperial - Filial Vila Madalena',
+    lojaDestinoNome: 'AdeGaswg - Filial Vila Madalena',
     usuarioEnvioId: 'u-1',
     usuarioEnvioNome: 'Carlos Albuquerque (Super Admin)',
     usuarioRecebimentoId: 'u-2',
@@ -460,9 +460,9 @@ export const INITIAL_TRANSFERENCIAS_LOJAS: TransferenciaLojas[] = [
   {
     id: 'transf-100',
     lojaOrigemId: 'store-1',
-    lojaOrigemNome: 'Adega Imperial - Matriz Jardins',
+    lojaOrigemNome: 'AdeGaswg - Matriz Jardins',
     lojaDestinoId: 'store-3',
-    lojaDestinoNome: 'Adega Imperial - Moema Express',
+    lojaDestinoNome: 'AdeGaswg - Moema Express',
     usuarioEnvioId: 'u-2',
     usuarioEnvioNome: 'Mariana Souza',
     usuarioRecebimentoId: 'u-3',

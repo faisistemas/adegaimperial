@@ -59,10 +59,10 @@ export const Header: React.FC<HeaderProps> = ({
         )}
         <div className="flex lg:hidden items-center gap-2 min-w-0">
           <div className="w-8 h-8 rounded-lg overflow-hidden border border-amber-500/30 bg-zinc-950 shrink-0">
-            <img src="/logo.jpg" alt="Adega Imperial" className="w-full h-full object-cover" />
+            <img src="/logo.jpg" alt="AdeGaswg" className="w-full h-full object-cover" />
           </div>
           <span className="font-serif font-black text-xs sm:text-sm text-zinc-100 tracking-tight truncate">
-            {activeStore?.name || 'Adega Imperial'}
+            {activeStore?.name || 'AdeGaswg'}
           </span>
         </div>
       </div>

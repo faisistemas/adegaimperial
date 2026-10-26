@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   X, Lock, Mail, LogIn, UserPlus, Eye, EyeOff, 
-  Crown, AlertCircle, CheckCircle2, ShieldCheck, ArrowRight
+  Crown, AlertCircle, CheckCircle2, ShieldCheck, ArrowRight,
+  Sparkles, Wine
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
 import { User, UserRole } from '../../types';
@@ -31,7 +32,10 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
 
   // Estado Cadastro Rápido (Criar conta)
   const [regName, setRegName] = useState('');
+  const [regCpfCnpj, setRegCpfCnpj] = useState('');
   const [regEmail, setRegEmail] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regWhatsapp, setRegWhatsapp] = useState('');
   const [regPin, setRegPin] = useState('');
   const [regRole, setRegRole] = useState<UserRole>('STORE_MANAGER');
   const [regSuccess, setRegSuccess] = useState('');
@@ -95,7 +99,10 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
     const newUser: User = {
       id: `u-${Date.now()}`,
       name: regName.trim(),
-      email: regEmail.trim() || `${regName.toLowerCase().replace(/\s+/g, '.')}@adegaimperial.com.br`,
+      email: regEmail.trim() || `${regName.toLowerCase().replace(/\s+/g, '.')}@adegaswg.com.br`,
+      cpfCnpj: regCpfCnpj.trim(),
+      phone: regPhone.trim(),
+      whatsapp: regWhatsapp.trim(),
       role: regRole,
       pin: regPin.replace(/\D/g, '') || '1234',
       avatar: '/logo.jpg',
@@ -131,30 +138,30 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
         <div className="w-full lg:w-[48%] p-6 sm:p-8 md:p-10 flex flex-col justify-between bg-[#0e1015] border-r border-zinc-800/80 overflow-y-auto">
           
           <div className="space-y-6">
-            {/* 1. Header com Logo Adega Imperial */}
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-amber-500/50 shadow-xl shadow-amber-950/50 bg-zinc-950 ring-1 ring-amber-500/30 p-0.5 shrink-0">
+            {/* 1. Header com Logo AdeGaswg (Centralizado) */}
+            <div className="flex items-center justify-center gap-3.5 mx-auto py-1">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-amber-500/50 shadow-xl shadow-amber-950/50 bg-zinc-950 ring-1 ring-amber-500/30 p-1 shrink-0 flex items-center justify-center">
                 <img
                   src="/logo.jpg"
-                  alt="Adega Imperial"
+                  alt="AdeGaswg"
                   className="w-full h-full object-cover rounded-xl"
                 />
               </div>
-              <div className="w-[1.5px] h-10 bg-amber-500/40 shrink-0"></div>
+              <div className="w-[1.5px] h-12 bg-amber-500/40 shrink-0"></div>
               <div>
-                <h2 className="text-base sm:text-lg font-black tracking-wider text-zinc-100 font-serif leading-tight">
-                  ADEGA <span className="text-amber-400">IMPERIAL</span>
+                <h2 className="text-lg sm:text-xl font-black tracking-wider text-zinc-100 font-serif leading-tight">
+                  ADE<span className="text-amber-400">GASWG</span>
                 </h2>
-                <span className="text-xs text-zinc-400 font-medium block">
+                <span className="text-xs sm:text-sm text-zinc-400 font-medium block text-left">
                   Gestão & PDV
                 </span>
               </div>
             </div>
 
             {/* 2. Subtítulo Bem-vindo */}
-            <div className="space-y-1 pt-1">
-              <h3 className="text-sm sm:text-base font-bold text-zinc-100 flex items-center gap-2">
-                <Crown className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+            <div className="space-y-1 pt-1 text-center">
+              <h3 className="text-sm sm:text-base font-bold text-zinc-100 flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
                 <span>Bem-vindo de volta!</span>
               </h3>
               <p className="text-xs text-zinc-400">
@@ -307,7 +314,7 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
 
         </div>
 
-        {/* LADO DIREITO: Foto da Loja Adega Imperial + Citação */}
+        {/* LADO DIREITO: Foto da Loja AdeGaswg + Citação */}
         <div 
           className="hidden lg:flex lg:w-[52%] relative bg-cover bg-center overflow-hidden flex-col justify-end p-8 sm:p-12 select-none"
           style={{
@@ -318,9 +325,11 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
           {/* Sombra e Vinheta Gradiente */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/30 pointer-events-none" />
 
-          {/* Citação no Canto Inferior (Conforme Imagem) */}
+          {/* Citação no Canto Inferior */}
           <div className="relative z-10 text-center max-w-sm mx-auto space-y-2">
-            <Crown className="w-6 h-6 text-amber-400 fill-amber-400 mx-auto" />
+            <div className="flex items-center justify-center gap-1.5 text-amber-400">
+              <Wine className="w-5 h-5 text-amber-400" />
+            </div>
             <div className="w-52 h-[1px] bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto"></div>
             <p className="text-zinc-100 font-serif text-xs sm:text-sm font-bold tracking-widest uppercase">
               GRANDES MOMENTOS
@@ -337,7 +346,7 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
       {/* Modal Criar Conta (Cadastro Rápido) */}
       {showRegisterModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
               <div className="flex items-center gap-2">
                 <UserPlus className="w-4 h-4 text-amber-400" />
@@ -372,15 +381,50 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
                 />
               </div>
 
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1">E-mail</label>
-                <input
-                  type="email"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  placeholder="Ex: carlos@adegaimperial.com.br"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">CNPJ ou CPF</label>
+                  <input
+                    type="text"
+                    value={regCpfCnpj}
+                    onChange={(e) => setRegCpfCnpj(e.target.value)}
+                    placeholder="000.000.000-00 ou CNPJ"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 font-mono focus:border-amber-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">E-mail</label>
+                  <input
+                    type="email"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    placeholder="Ex: carlos@adegaswg.com.br"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">Telefone</label>
+                  <input
+                    type="tel"
+                    value={regPhone}
+                    onChange={(e) => setRegPhone(e.target.value)}
+                    placeholder="(11) 3333-3333"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 font-mono focus:border-amber-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">WhatsApp</label>
+                  <input
+                    type="tel"
+                    value={regWhatsapp}
+                    onChange={(e) => setRegWhatsapp(e.target.value)}
+                    placeholder="(11) 99999-9999"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 font-mono focus:border-amber-500 outline-none"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -389,7 +433,7 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
                   <select
                     value={regRole}
                     onChange={(e) => setRegRole(e.target.value as UserRole)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none cursor-pointer"
                   >
                     <option value="STORE_MANAGER">Gerente de Loja</option>
                     <option value="CASHIER">Operador de Caixa</option>
@@ -398,14 +442,14 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-400 block mb-1">PIN / Senha (4 dígitos)</label>
+                  <label className="text-xs text-zinc-400 block mb-1">Senha</label>
                   <input
                     type="password"
                     required
-                    maxLength={6}
+                    maxLength={10}
                     value={regPin}
                     onChange={(e) => setRegPin(e.target.value)}
-                    placeholder="1234"
+                    placeholder="Mín. 4 dígitos"
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 font-mono focus:border-amber-500 outline-none"
                   />
                 </div>
@@ -415,13 +459,13 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowRegisterModal(false)}
-                  className="px-3 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-xs hover:bg-zinc-700"
+                  className="px-3 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-xs hover:bg-zinc-700 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs cursor-pointer shadow-md"
                 >
                   Confirmar Cadastro
                 </button>

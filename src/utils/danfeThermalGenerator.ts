@@ -194,7 +194,7 @@ export function generateDanfeThermalText(
   }
 
   lines.push(lineSeparator);
-  lines.push(center('ADEGA IMPERIAL - SISTEMA FISCAL SEFAZ'));
+  lines.push(center('ADEGASWG - SISTEMA FISCAL SEFAZ'));
   lines.push(center('Obrigado pela preferencia!'));
   lines.push('\n\n\n'); // Espaço para corte de papel
 

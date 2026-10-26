@@ -65,7 +65,7 @@ export const ScreenLockOverlay: React.FC = () => {
           <div className="w-16 h-16 rounded-2xl overflow-hidden border border-amber-500/40 shadow-xl shadow-amber-950/60 mx-auto bg-zinc-950 ring-1 ring-amber-500/25">
             <img
               src="/logo.jpg"
-              alt="Adega Imperial"
+              alt="AdeGaswg"
               className="w-full h-full object-cover"
             />
           </div>

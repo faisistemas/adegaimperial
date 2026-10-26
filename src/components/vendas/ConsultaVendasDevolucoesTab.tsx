@@ -777,7 +777,7 @@ export const ConsultaVendasDevolucoesTab: React.FC = () => {
 
             <div className="p-5 overflow-y-auto space-y-4 font-mono text-xs bg-zinc-950/60 text-zinc-300">
               <div className="text-center border-b border-zinc-800 pb-3">
-                <div className="font-bold text-white text-sm">ADEGA IMPERIAL LTDA</div>
+                <div className="font-bold text-white text-sm">ADEGASWG LTDA</div>
                 <div className="text-[11px] text-zinc-400">DANFE NFC-e - Documento Auxiliar da Nota Fiscal</div>
                 <div className="text-[10px] text-zinc-500 mt-0.5">Emissão: {selectedOrderDetails.createdAt}</div>
               </div>
@@ -872,8 +872,8 @@ export const ConsultaVendasDevolucoesTab: React.FC = () => {
             </div>
 
             <div className="p-5 space-y-3 text-xs bg-zinc-950/60 font-mono">
-              <div className="text-center pb-2 border-b border-zinc-800">
-                <div className="font-bold text-white">ADEGA IMPERIAL - ESTORNO</div>
+              <div className="text-center pb-2 border-zinc-800 border-b">
+                <div className="font-bold text-white">ADEGASWG - ESTORNO</div>
                 <div className="text-[10px] text-zinc-400">Registro: {viewDevolucaoDetails.id}</div>
                 <div className="text-[10px] text-zinc-500">{viewDevolucaoDetails.dataHora}</div>
               </div>

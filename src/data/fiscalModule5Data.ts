@@ -77,8 +77,8 @@ export const INITIAL_PERFIS_FISCAIS: PerfilFiscal[] = [
 export const INITIAL_CERTIFICADO_A1: CertificadoDigitalA1 = {
   id: 'cert-1',
   lojaId: 'store-1',
-  arquivoPfxNome: 'ADEGA_IMPERIAL_CERT_2026.pfx',
-  titular: 'ADEGA IMPERIAL BEBIDAS EIRELI',
+  arquivoPfxNome: 'ADEGASWG_CERT_2026.pfx',
+  titular: 'ADEGASWG BEBIDAS EIRELI',
   cnpj: '12.345.678/0001-99',
   dataValidade: '15/12/2026 23:59',
   diasParaVencer: 91,
@@ -112,7 +112,7 @@ export const INITIAL_DOCUMENTOS_FISCAIS: DocumentoFiscalCompleto[] = [
   <NFe>
     <infNFe Id="NFe35260912345678000190650010000001011128392109" versao="4.00">
       <ide><cUF>35</cUF><cNF>11283921</cNF><natOp>VENDA MERC. ADQ. TERC.</natOp><mod>65</mod><serie>1</serie><nNF>101</nNF><dhEmi>2026-09-15T21:30:00-03:00</dhEmi><tpNF>1</tpNF><idDest>1</idDest><cMunFG>3550308</cMunFG><tpImp>4</tpImp><tpEmis>1</tpEmis><tpAmb>1</tpAmb><finNFe>1</finNFe><indFinal>1</indFinal><indPres>1</indPres></ide>
-      <emit><CNPJ>12345678000199</CNPJ><xNome>ADEGA IMPERIAL BEBIDAS EIRELI</xNome><xFant>Adega Imperial</xFant><IE>112233445566</IE><CRT>1</CRT></emit>
+      <emit><CNPJ>12345678000199</CNPJ><xNome>ADEGASWG BEBIDAS EIRELI</xNome><xFant>AdeGaswg</xFant><IE>112233445566</IE><CRT>1</CRT></emit>
       <total><ICMSTot><vBC>0.00</vBC><vICMS>0.00</vICMS><vBCST>0.00</vBCST><vST>0.00</vST><vProd>81.60</vProd><vFrete>0.00</vFrete><vSeg>0.00</vSeg><vDesc>0.00</vDesc><vII>0.00</vII><vIPI>0.00</vIPI><vPIS>0.00</vPIS><vCOFINS>0.00</vCOFINS><vOutro>0.00</vOutro><vNF>81.60</vNF><vTotTrib>18.77</vTotTrib></ICMSTot></total>
     </infNFe>
   </NFe>

@@ -219,7 +219,7 @@ export const DanfeNfceModal: React.FC<DanfeNfceModalProps> = ({ doc, store, onCl
 
               {/* Paper Bottom Cut Graphic */}
               <div className="border-t-2 border-dashed border-zinc-400 mt-4 pt-2 text-center text-[8px] text-zinc-600">
-                ADEGA IMPERIAL - SISTEMA EMISSOR NFC-e 4.00
+                ADEGASWG - SISTEMA EMISSOR NFC-e 4.00
               </div>
             </div>
           </div>

@@ -49,7 +49,7 @@ export function generateSpedFiscalText(store: Store, orders: Order[], products: 
   // Bloco 0: Abertura e Identificação
   lines.push(`|0000|015|0|01092026|30092026|${store.name.toUpperCase()}|${cnpjClean}|SP|${store.ie.replace(/\D/g, '')}|3550308|||A|1|`);
   lines.push('|0001|0|');
-  lines.push('|0005|ADEGA IMPERIAL BEBIDAS LTDA|01415000|ALAMEDA LORENA|1420||JARDINS|1130889900||contato@adegaimperial.com.br|');
+  lines.push('|0005|ADEGASWG BEBIDAS LTDA|01415000|ALAMEDA LORENA|1420||JARDINS|1130889900||contato@adegaswg.com.br|');
   lines.push('|0100|MARCOS VINICIUS CONTABILIDADE|12345678000199|123456|1199998888|fiscal@contabilidade.com.br|3550308|');
 
   // Cadastro de Participantes / Clientes (0150)

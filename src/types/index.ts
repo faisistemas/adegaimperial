@@ -13,6 +13,9 @@ export interface User {
   avatar: string;
   pin: string; // PIN para login rápido no terminal PDV
   storeId: string;
+  phone?: string;
+  whatsapp?: string;
+  cpfCnpj?: string;
 }
 
 export interface Store {

@@ -296,7 +296,7 @@ export const MultilojasView: React.FC = () => {
                   type="text"
                   value={newStoreName}
                   onChange={(e) => setNewStoreName(e.target.value)}
-                  placeholder="Ex: Adega Imperial - Filial Moema"
+                  placeholder="Ex: AdeGaswg - Filial Moema"
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-xs text-zinc-100"
                 />
               </div>

@@ -61,7 +61,7 @@ export const FiscalView: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<FiscalTabType>('documentos');
   const [selectedMonth, setSelectedMonth] = useState('2026-09');
-  const [emailContadorInput, setEmailContadorInput] = useState('contabilidade@imperial.com.br');
+  const [emailContadorInput, setEmailContadorInput] = useState('contabilidade@adegaswg.com.br');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Modals state

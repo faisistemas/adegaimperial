@@ -492,7 +492,7 @@ export function generatePdvReceipt(
   lines.push(`Tributos Totais (Lei 12.741/12): R$ ${(((order.total ?? 0) * 0.28)).toFixed(2)} (28%)`);
   lines.push(line);
   lines.push(`     OBRIGADO PELA PREFERENCIA! VOLTE SEMPRE!   `);
-  lines.push(`       SISTEMA ADEGA IMPERIAL ERP V4.0          `);
+  lines.push(`       SISTEMA ADEGASWG ERP V4.0                `);
   lines.push(`\n\n\n`);
 
   const text = lines.join('\n');
@@ -558,7 +558,7 @@ export function generatePdvReceipt(
     </div>
     <div class="double-divider"></div>
     <div class="center bold" style="font-size: 11px; margin-top: 6px;">OBRIGADO PELA PREFERÊNCIA!</div>
-    <div class="center" style="font-size: 9px; color: #555;">Adega Imperial ERP - Módulo PDV</div>
+    <div class="center" style="font-size: 9px; color: #555;">AdeGaswg ERP - Módulo PDV</div>
     <div style="height: 15mm;"></div>
   `;
 

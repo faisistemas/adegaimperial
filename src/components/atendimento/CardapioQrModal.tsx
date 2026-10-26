@@ -259,13 +259,13 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
               <div className="w-12 h-12 rounded-xl overflow-hidden border border-amber-500/40 shadow-lg mx-auto mb-1.5 bg-zinc-900 ring-1 ring-amber-500/20">
                 <img
                   src="/logo.jpg"
-                  alt="Adega Imperial"
+                  alt="AdeGaswg"
                   className="w-full h-full object-cover"
                 />
               </div>
 
               <h3 className="font-serif font-bold text-sm text-zinc-100 uppercase tracking-wide mt-0.5">
-                {activeStore?.name || 'ADEGA IMPERIAL'}
+                {activeStore?.name || 'ADEGASWG'}
               </h3>
               <p className="text-[10px] text-zinc-400">Cardápio & Pedidos Digitais</p>
 
@@ -319,7 +319,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden border border-amber-500/40 shadow-md shadow-amber-950/60 mx-auto mb-1.5 sm:mb-2 bg-zinc-950 ring-1 ring-amber-500/25">
                 <img
                   src="/logo.jpg"
-                  alt="Adega Imperial"
+                  alt="AdeGaswg"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -327,7 +327,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
                 <QrCode className="w-3.5 h-3.5" />
                 <span>Mesa 0{currentTable.number} Conectada</span>
               </div>
-              <h2 className="font-bold text-sm sm:text-base md:text-lg text-amber-200 font-serif tracking-wide">{activeStore?.name || 'Adega Imperial'}</h2>
+              <h2 className="font-bold text-sm sm:text-base md:text-lg text-amber-200 font-serif tracking-wide">{activeStore?.name || 'AdeGaswg'}</h2>
               <p className="text-[11px] sm:text-xs text-zinc-400 mt-0.5">Cardápio interativo: peça garrafas, doses e petiscos</p>
             </div>
 

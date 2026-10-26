@@ -1,5 +1,5 @@
 -- ========================================================
--- Schema do Banco de Dados Supabase para Adega Imperial PDV
+-- Schema do Banco de Dados Supabase para AdeGaswg PDV
 -- Execute este script no SQL Editor do seu projeto Supabase
 -- ========================================================
 

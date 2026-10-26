@@ -4,7 +4,7 @@ import {
   Shield, Save, CheckCircle2, Plus, Trash2, Wine
 } from 'lucide-react';
 
-interface DadosAdegaImperial {
+interface DadosAdeGaswg {
   nome: string;
   cnpj: string;
   telefone: string;
@@ -26,22 +26,22 @@ interface FeriadoItem {
   aberto: boolean;
 }
 
-const STORAGE_KEY = 'adega_imperial_configuracoes';
+const STORAGE_KEY = 'adegaswg_configuracoes';
 
 export const ConfiguracoesView: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'geral' | 'horarios' | 'feriados' | 'notificacoes' | 'auditoria'>('geral');
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  // 1. Dados Gerais da Adega Imperial
-  const [dados, setDados] = useState<DadosAdegaImperial>(() => {
+  // 1. Dados Gerais da AdeGaswg
+  const [dados, setDados] = useState<DadosAdeGaswg>(() => {
     try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_dados`);
+      const saved = localStorage.getItem(`${STORAGE_KEY}_dados`) || localStorage.getItem(`adega_imperial_configuracoes_dados`);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       // fallback
     }
     return {
-      nome: 'Adega Imperial LTDA',
+      nome: 'AdeGaswg LTDA',
       cnpj: '12.345.678/0001-90',
       telefone: '(11) 98765-4321',
       horarioFuncionamento: 'Seg a Dom: 10:00 - 02:00',
@@ -98,7 +98,7 @@ export const ConfiguracoesView: React.FC = () => {
       localStorage.setItem(`${STORAGE_KEY}_dados`, JSON.stringify(dados));
       localStorage.setItem(`${STORAGE_KEY}_horarios`, JSON.stringify(horarios));
       localStorage.setItem(`${STORAGE_KEY}_feriados`, JSON.stringify(feriados));
-      setFeedback('Configurações da Adega Imperial salvas com sucesso!');
+      setFeedback('Configurações da AdeGaswg salvas com sucesso!');
       setTimeout(() => setFeedback(null), 3000);
     } catch (err) {
       setFeedback('Erro ao salvar configurações.');
@@ -108,13 +108,13 @@ export const ConfiguracoesView: React.FC = () => {
 
   return (
     <div id="modulo-configuracoes-sistema" className="flex-1 flex flex-col h-full bg-zinc-950 text-zinc-100 overflow-y-auto p-3 sm:p-6 pb-24 lg:pb-6 space-y-4 sm:space-y-6">
-      {/* Cabeçalho da Tela (Adaptado para Adega Imperial) */}
+      {/* Cabeçalho da Tela (Adaptado para AdeGaswg) */}
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight text-white font-sans flex items-center gap-2">
           Configurações
         </h1>
         <p className="text-xs sm:text-sm text-zinc-400">
-          Dados da Adega Imperial, horários de atendimento, feriados e notificações
+          Dados da AdeGaswg, horários de atendimento, feriados e notificações
         </p>
       </div>
 
@@ -191,7 +191,7 @@ export const ConfiguracoesView: React.FC = () => {
         </div>
       )}
 
-      {/* CONTEÚDO DA ABA GERAL (Adega Imperial) */}
+      {/* CONTEÚDO DA ABA GERAL (AdeGaswg) */}
       {activeSubTab === 'geral' && (
         <form onSubmit={handleSalvar} className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 sm:p-7 space-y-6 max-w-4xl shadow-xl">
           {/* Card Header com Ícone de Engrenagem Verde */}
@@ -200,7 +200,7 @@ export const ConfiguracoesView: React.FC = () => {
               <Settings className="w-4 h-4" />
             </div>
             <h2 className="font-bold text-sm text-white font-sans">
-              Dados da Adega Imperial
+              Dados da AdeGaswg
             </h2>
           </div>
 
@@ -216,7 +216,7 @@ export const ConfiguracoesView: React.FC = () => {
                   type="text"
                   value={dados.nome}
                   onChange={(e) => setDados({ ...dados, nome: e.target.value })}
-                  placeholder="Adega Imperial LTDA"
+                  placeholder="AdeGaswg LTDA"
                   className="w-full bg-zinc-950 border border-zinc-800/90 rounded-lg px-3.5 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
@@ -524,7 +524,7 @@ export const ConfiguracoesView: React.FC = () => {
               <Shield className="w-4 h-4" />
             </div>
             <h2 className="font-bold text-sm text-white">
-              Trilha de Auditoria de Parâmetros da Adega Imperial
+              Trilha de Auditoria de Parâmetros da AdeGaswg
             </h2>
           </div>
 

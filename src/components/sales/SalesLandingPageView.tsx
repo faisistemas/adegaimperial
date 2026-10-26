@@ -81,7 +81,7 @@ export const SalesLandingPageView: React.FC<SalesLandingPageViewProps> = ({
           <div className="relative h-11 w-11 sm:h-12 sm:w-12 rounded-xl overflow-hidden border border-amber-500/40 shadow-lg shadow-amber-950/50 bg-zinc-950 shrink-0 ring-1 ring-amber-500/25">
             <img
               src="/logo.jpg"
-              alt="Adega Imperial"
+              alt="AdeGaswg"
               className="h-full w-full object-cover object-center"
             />
           </div>
@@ -879,11 +879,11 @@ export const SalesLandingPageView: React.FC<SalesLandingPageViewProps> = ({
       {/* 11. FOOTER */}
       <footer className="py-12 px-4 sm:px-8 max-w-7xl mx-auto border-t border-zinc-800 text-xs text-zinc-500 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <img src="/logo.jpg" alt="Adega Imperial" className="w-5 h-5 rounded-md object-cover border border-amber-500/30" />
+          <img src="/logo.jpg" alt="AdeGaswg" className="w-5 h-5 rounded-md object-cover border border-amber-500/30" />
           <span>Sistema Especializado para Gestão de Adegas e Bebidas</span>
         </div>
         <div>
-          © {new Date().getFullYear()} Adega Imperial. Todos os direitos reservados.
+          © {new Date().getFullYear()} AdeGaswg. Todos os direitos reservados.
         </div>
       </footer>
 
