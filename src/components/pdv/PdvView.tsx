@@ -269,9 +269,9 @@ export const PdvView: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col lg:flex-row h-full min-h-0 overflow-hidden bg-zinc-950">
       {/* Products Selection Section (Left / Center) */}
-      <div className={`${mobileTab === 'CATALOG' ? 'flex' : 'hidden lg:flex'} flex-1 flex-col min-w-0 border-r border-zinc-800/80`}>
+      <div className={`${mobileTab === 'CATALOG' ? 'flex' : 'hidden lg:flex'} flex-1 flex-col min-w-0 min-h-0 h-full overflow-hidden border-r border-zinc-800/80`}>
         {/* Cash Status & Peripheral Quick Actions Bar */}
-        <div className="px-3 sm:px-4 py-2 border-b border-zinc-800/80 bg-zinc-950 flex items-center justify-end gap-2 text-xs">
+        <div className="px-3 sm:px-4 py-2 border-b border-zinc-800/80 bg-zinc-950 flex items-center justify-end gap-2 text-xs shrink-0">
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
             <button
               onClick={() => setSangriaModalOpen(true)}
@@ -348,7 +348,7 @@ export const PdvView: React.FC = () => {
         </div>
 
         {/* Top Search & Filter Bar */}
-        <div className="p-4 border-b border-zinc-800 bg-zinc-900/50 flex flex-col sm:flex-row items-center gap-3">
+        <div className="p-4 border-b border-zinc-800 bg-zinc-900/50 flex flex-col sm:flex-row items-center gap-3 shrink-0">
           <div className="relative flex-1 w-full">
             <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -388,7 +388,7 @@ export const PdvView: React.FC = () => {
         </div>
 
         {/* Categories Bar */}
-        <div className="px-4 py-2.5 border-b border-zinc-800/80 bg-zinc-950 overflow-x-auto flex items-center gap-2 scrollbar-none">
+        <div className="px-4 py-2.5 border-b border-zinc-800/80 bg-zinc-950 overflow-x-auto flex items-center gap-2 scrollbar-none shrink-0">
           {(categories || []).map((cat) => {
             const isSelected = selectedCategory === cat.id;
             return (
@@ -409,7 +409,7 @@ export const PdvView: React.FC = () => {
         </div>
 
         {/* Product Touch Grid */}
-        <div className="flex-1 p-2.5 sm:p-4 pb-24 lg:pb-4 overflow-y-auto grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5 sm:gap-3 content-start">
+        <div className="flex-1 min-h-0 p-2.5 sm:p-4 pb-28 sm:pb-32 lg:pb-4 overflow-y-auto overscroll-contain grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5 sm:gap-3 content-start">
           {(filteredProducts || []).map((product) => {
             const hasOpenBottle = product.isFractionable && (product.openBottleVolumeMl ?? 0) > 0;
             const openBottlePercent = product.isFractionable && product.bottleVolumeMl 
@@ -576,7 +576,7 @@ export const PdvView: React.FC = () => {
         </div>
 
         {/* Cart Item List */}
-        <div className="flex-1 min-h-0 p-2.5 sm:p-3 overflow-y-auto space-y-2">
+        <div className="flex-1 min-h-0 p-2.5 sm:p-3 overflow-y-auto overscroll-contain space-y-2">
           {cartItems.length === 0 ? (
             <div className="h-full min-h-[100px] flex flex-col items-center justify-center text-center p-3 sm:p-4 text-zinc-500 space-y-1.5">
               <ShoppingCart className="w-8 h-8 sm:w-10 sm:h-10 text-zinc-700 stroke-[1.5]" />
