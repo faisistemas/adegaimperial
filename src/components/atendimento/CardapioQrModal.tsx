@@ -171,11 +171,238 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
     }
   };
 
+  const handlePrintDisplay = () => {
+    const qrSvgElement = document.getElementById('totem-mesa-qr-svg');
+    const qrSvgMarkup = qrSvgElement 
+      ? qrSvgElement.outerHTML 
+      : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(tableQrUrl)}" alt="QR Code" style="width: 155px; height: 155px; display: block; margin: 0 auto;" />`;
+
+    const storeName = activeStore?.name || 'ADEGASWG';
+    const tableNum = String(currentTable.number).padStart(2, '0');
+
+    const printHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Display de Mesa - MESA ${tableNum}</title>
+          <style>
+            @page {
+              size: auto;
+              margin: 15mm auto;
+            }
+            body {
+              margin: 0;
+              padding: 20px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 90vh;
+              background: #ffffff;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .display-card {
+              width: 300px;
+              background: #ffffff;
+              border: 2.5px solid #f59e0b;
+              border-radius: 30px;
+              padding: 34px 22px 28px 22px;
+              text-align: center;
+              box-sizing: border-box;
+              margin: auto;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            }
+            .logo-box {
+              width: 58px;
+              height: 58px;
+              background: #000000;
+              border-radius: 18px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 10px auto;
+              padding: 6px;
+              box-sizing: border-box;
+              border: 1px solid #e5e7eb;
+            }
+            .logo-box img {
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+            }
+            .store-name {
+              font-size: 15px;
+              font-weight: 800;
+              color: #1f2937;
+              text-transform: uppercase;
+              letter-spacing: 0.8px;
+              margin: 0 0 2px 0;
+            }
+            .subtitle {
+              font-size: 11px;
+              color: #6b7280;
+              margin: 0 0 14px 0;
+              font-weight: 500;
+            }
+            .qr-box {
+              background: #ffffff;
+              border: 1px solid #e5e7eb;
+              border-radius: 20px;
+              padding: 12px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 14px auto;
+              box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+            }
+            .qr-box svg, .qr-box img {
+              display: block;
+              width: 155px;
+              height: 155px;
+              margin: 0 auto;
+            }
+            .mesa-pill {
+              display: inline-block;
+              border: 1.5px solid #d1d5db;
+              background: #ffffff;
+              border-radius: 9999px;
+              padding: 4px 24px;
+              font-size: 13px;
+              font-weight: 900;
+              color: #111827;
+              letter-spacing: 1px;
+              margin: 0 auto 12px auto;
+            }
+            .instruction {
+              font-size: 10.5px;
+              color: #6b7280;
+              line-height: 1.35;
+              max-width: 215px;
+              margin: 0 auto;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="display-card">
+            <div class="logo-box">
+              <img src="/logo.jpg" alt="Logo" />
+            </div>
+            <div class="store-name">${storeName}</div>
+            <div class="subtitle">Cardápio & Pedidos Digitais</div>
+            <div class="qr-box">
+              ${qrSvgMarkup}
+            </div>
+            <div class="mesa-pill">MESA ${tableNum}</div>
+            <div class="instruction">
+              Aponte a câmera do seu smartphone para fazer pedidos sem esperar o garçom.
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const existing = document.getElementById('table-display-print-iframe');
+    if (existing) {
+      existing.remove();
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'table-display-print-iframe';
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      window.print();
+      return;
+    }
+
+    doc.open();
+    doc.write(printHtml);
+    doc.close();
+
+    const triggerPrint = () => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch {
+        window.print();
+      } finally {
+        setTimeout(() => {
+          iframe.remove();
+        }, 3000);
+      }
+    };
+
+    const images = doc.images;
+    if (images && images.length > 0) {
+      let loaded = 0;
+      const total = images.length;
+      const onReady = () => {
+        loaded++;
+        if (loaded >= total) {
+          setTimeout(triggerPrint, 100);
+        }
+      };
+      for (let i = 0; i < total; i++) {
+        if (images[i].complete) {
+          loaded++;
+        } else {
+          images[i].onload = onReady;
+          images[i].onerror = onReady;
+        }
+      }
+      if (loaded >= total) {
+        setTimeout(triggerPrint, 150);
+      } else {
+        setTimeout(triggerPrint, 600);
+      }
+    } else {
+      setTimeout(triggerPrint, 250);
+    }
+  };
+
   const cartTotal = customerCart.reduce((acc, item) => acc + (item.totalPrice ?? 0), 0);
   const cartItemCount = customerCart.reduce((acc, item) => acc + (item.quantity ?? 1), 0);
 
   return (
     <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-0 sm:p-3 md:p-6 overflow-y-auto">
+      {/* Estilos dedicados para impressão do Display de Mesa */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #totem-display-card, #totem-display-card * {
+            visibility: visible !important;
+          }
+          #totem-display-card {
+            position: fixed !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
+            border: 2.5px solid #f59e0b !important;
+            background: #ffffff !important;
+            box-shadow: none !important;
+            display: flex !important;
+            z-index: 999999 !important;
+          }
+        }
+      `}</style>
+
       <div className={`bg-zinc-900 border border-zinc-800 sm:rounded-3xl rounded-none w-full shadow-2xl overflow-hidden my-auto flex flex-col transition-all duration-300 ${
         activeMode === 'PRINT_QR'
           ? 'max-w-md max-h-[96vh] sm:max-h-[92vh] h-full sm:h-auto'
@@ -255,7 +482,10 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
           /* Printable QR Code Totem View */
           <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-center flex-1 flex flex-col justify-center items-center">
             {/* Totem Card idêntico à imagem enviada pelo usuário */}
-            <div className="w-full max-w-[285px] mx-auto p-6 sm:p-7 rounded-3xl bg-white border-2 border-amber-300 shadow-2xl flex flex-col items-center justify-center text-center select-none">
+            <div 
+              id="totem-display-card"
+              className="w-full max-w-[285px] mx-auto p-6 sm:p-7 rounded-3xl bg-white border-2 border-amber-300 shadow-2xl flex flex-col items-center justify-center text-center select-none"
+            >
               
               {/* Logomarca da Adega com fundo preto e bordas arredondadas */}
               <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-md mx-auto mb-2 bg-black flex items-center justify-center p-1.5 border border-zinc-200/80">
@@ -277,6 +507,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
               {/* QR Code Nítido e Centralizado com moldura suave */}
               <div className="my-3.5 p-3.5 bg-white border border-zinc-200/70 rounded-2xl shadow-xs inline-flex items-center justify-center">
                 <QRCodeSVG
+                  id="totem-mesa-qr-svg"
                   value={tableQrUrl}
                   size={150}
                   level="M"
@@ -303,15 +534,16 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-colors"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-colors cursor-pointer"
               >
                 {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 <span>{copiedLink ? 'Link Copiado!' : 'Copiar Link'}</span>
               </button>
               <button
                 type="button"
-                onClick={() => window.print()}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold transition-colors"
+                id="btn-print-table-display"
+                onClick={handlePrintDisplay}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold transition-colors cursor-pointer shadow-sm"
               >
                 <Printer className="w-4 h-4" />
                 <span>Imprimir Display de Mesa</span>
