@@ -39,6 +39,7 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
   const [regPin, setRegPin] = useState('');
   const [regRole, setRegRole] = useState<UserRole>('STORE_MANAGER');
   const [regSuccess, setRegSuccess] = useState('');
+  const [regError, setRegError] = useState('');
 
   if (!isOpen) return null;
 
@@ -87,12 +88,13 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
 
   const handleCreateAccount = (e: React.FormEvent) => {
     e.preventDefault();
+    setRegError('');
     if (!regName.trim()) {
-      setErrorMsg('Informe seu nome completo.');
+      setRegError('Informe seu nome completo.');
       return;
     }
-    if (!regPin || regPin.length < 4) {
-      setErrorMsg('A senha/PIN deve ter no mínimo 4 dígitos.');
+    if (!regPin.trim()) {
+      setRegError('Informe a senha.');
       return;
     }
 
@@ -104,7 +106,7 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
       phone: regPhone.trim(),
       whatsapp: regWhatsapp.trim(),
       role: regRole,
-      pin: regPin.replace(/\D/g, '') || '1234',
+      pin: regPin.trim(),
       avatar: '/logo.jpg',
       storeId: currentUser.storeId || 'store-1',
     };
@@ -368,6 +370,13 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
               </div>
             )}
 
+            {regError && (
+              <div className="p-2.5 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400" />
+                <span>{regError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleCreateAccount} className="space-y-3">
               <div>
                 <label className="text-xs text-zinc-400 block mb-1">Nome Completo</label>
@@ -446,10 +455,13 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
                   <input
                     type="password"
                     required
-                    maxLength={10}
+                    maxLength={30}
                     value={regPin}
-                    onChange={(e) => setRegPin(e.target.value)}
-                    placeholder="Mín. 4 dígitos"
+                    onChange={(e) => {
+                      setRegPin(e.target.value);
+                      if (regError) setRegError('');
+                    }}
+                    placeholder=""
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 font-mono focus:border-amber-500 outline-none"
                   />
                 </div>
