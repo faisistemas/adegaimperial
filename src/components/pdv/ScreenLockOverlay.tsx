@@ -1,232 +1,238 @@
-import React, { useState, useEffect } from 'react';
-import { Delete, ShieldCheck, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles, AlertCircle, ShieldCheck } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
 import { playSuccessBeep, playErrorBuzz } from '../../utils/peripheralUtils';
 
 export const ScreenLockOverlay: React.FC = () => {
-  const { isScreenLocked, unlockScreen, currentUser, users } = useAdega();
-  const [pin, setPin] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState<string>('');
-  const [selectedUserId, setSelectedUserId] = useState<string>(currentUser?.id || '');
-
-  useEffect(() => {
-    if (currentUser?.id) {
-      setSelectedUserId(currentUser.id);
-    }
-  }, [currentUser?.id]);
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleDigit = (digit: string) => {
-    if (pin.length < 30) {
-      setPin((prev) => prev + digit);
-      setError(null);
-    }
-  };
-
-  const handleBackspace = () => {
-    setPin((prev) => prev.slice(0, -1));
-    setError(null);
-  };
-
-  const handleClear = () => {
-    setPin('');
-    setError(null);
-  };
-
-  const handleUnlock = () => {
-    if (!pin.trim()) {
-      setError('Digite a senha ou PIN.');
-      playErrorBuzz();
-      return;
-    }
-
-    const result = unlockScreen(pin);
-    if (result.success) {
-      playSuccessBeep();
-      setPin('');
-      setError(null);
-    } else {
-      playErrorBuzz();
-      setError(result.message || 'Senha ou PIN incorreto.');
-      setPin('');
-    }
-  };
-
-  // Keyboard navigation for PIN entry
-  useEffect(() => {
-    if (!isScreenLocked) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (/^[0-9]$/.test(e.key)) {
-        e.preventDefault();
-        handleDigit(e.key);
-      } else if (e.key === 'Backspace') {
-        e.preventDefault();
-        handleBackspace();
-      } else if (e.key === 'Escape' || e.key === 'Delete') {
-        e.preventDefault();
-        handleClear();
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        handleUnlock();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isScreenLocked, pin]);
+  const { isScreenLocked, setScreenLocked, users, switchUserRole, verifyManagerPin } = useAdega();
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showForgotModal, setShowForgotModal] = useState<boolean>(false);
 
   if (!isScreenLocked) return null;
 
-  // Reconhece dinamicamente se o PIN digitado já bate com algum usuário cadastrado
-  const matchedUserByPin = users?.find((u) => u.pin === pin);
-  const displayUser = matchedUserByPin || users?.find((u) => u.id === selectedUserId) || currentUser || users?.[0];
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setIsLoading(true);
+
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPass = password.trim();
+
+    if (!trimmedPass) {
+      setErrorMsg('Por favor, digite sua senha.');
+      playErrorBuzz();
+      setIsLoading(false);
+      return;
+    }
+
+    setTimeout(() => {
+      // 1. Se informou e-mail ou nome de usuário
+      if (trimmedEmail) {
+        const matched = users.find(
+          (u) =>
+            u.email.toLowerCase() === trimmedEmail ||
+            u.name.toLowerCase() === trimmedEmail ||
+            u.role.toLowerCase() === trimmedEmail ||
+            (u.id && u.id.toLowerCase() === trimmedEmail)
+        );
+
+        if (matched) {
+          if (matched.pin === trimmedPass || verifyManagerPin(trimmedPass).valid) {
+            switchUserRole(matched);
+            setScreenLocked(false);
+            playSuccessBeep();
+            setEmail('');
+            setPassword('');
+            setIsLoading(false);
+            return;
+          } else {
+            setErrorMsg('Senha incorreta para este usuário.');
+            playErrorBuzz();
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+
+      // 2. Busca se a senha digitada pertence diretamente a algum usuário cadastrado
+      const userByPass = users.find((u) => u.pin === trimmedPass);
+      if (userByPass) {
+        switchUserRole(userByPass);
+        setScreenLocked(false);
+        playSuccessBeep();
+        setEmail('');
+        setPassword('');
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Verifica credencial mestre (PIN mestre / Administrador)
+      const managerAuth = verifyManagerPin(trimmedPass);
+      if (managerAuth.valid) {
+        const adminUser = managerAuth.manager || users.find((u) => u.role === 'SUPER_ADMIN') || users[0];
+        switchUserRole(adminUser);
+        setScreenLocked(false);
+        playSuccessBeep();
+        setEmail('');
+        setPassword('');
+        setIsLoading(false);
+        return;
+      }
+
+      // 4. Se não encontrou
+      setErrorMsg(trimmedEmail ? 'E-mail ou senha incorretos.' : 'Senha incorreta. Tente novamente.');
+      playErrorBuzz();
+      setIsLoading(false);
+    }, 350);
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 select-none">
-      <div className="w-full max-w-[360px] bg-[#16181b] border border-[#26282d] rounded-[32px] p-6 sm:p-7 shadow-2xl shadow-black/90 text-center flex flex-col">
-        {/* Glowing Top Logo */}
-        <div className="w-16 h-16 rounded-2xl bg-[#0c0e11] border border-amber-500/70 shadow-[0_0_22px_rgba(245,158,11,0.25)] flex items-center justify-center p-1.5 mx-auto">
-          <img
-            src="/logo.jpg"
-            alt="AdeGaswg"
-            className="w-full h-full object-contain rounded-xl"
-          />
-        </div>
-
-        {/* Digital Time & Status Subtitle */}
-        <div className="mt-3.5 space-y-1">
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold text-white tracking-wide">
-            <Clock className="w-5 h-5 text-amber-400 stroke-[2.5]" />
-            <span>{currentTime}</span>
-          </div>
-          <p className="text-xs text-zinc-400 font-normal">Terminal Bloqueado por Segurança</p>
-        </div>
-
-        {/* Operator Card (com seletor inteligente para trocar de operador) */}
-        <div className="mt-4 p-3.5 rounded-2xl bg-[#0e1013] border border-zinc-800/80 flex items-center gap-3.5 text-left relative group">
-          <div className="w-12 h-12 rounded-full overflow-hidden border border-amber-500/60 bg-zinc-950 shrink-0 p-0.5">
+      <div className="w-full max-w-[390px] bg-[#111317] border border-[#26282d] rounded-[28px] p-6 sm:p-7 shadow-2xl shadow-black/95 flex flex-col relative animate-in zoom-in-95 duration-200">
+        
+        {/* Header com Logo ADEGASWG Gestão & PDV */}
+        <div className="flex items-center justify-center gap-3.5 mx-auto py-1">
+          <div className="w-16 h-16 rounded-2xl bg-[#0c0e11] border border-amber-500/70 shadow-[0_0_20px_rgba(245,158,11,0.25)] flex items-center justify-center p-1.5 shrink-0">
             <img
-              src={displayUser?.avatar || '/logo.jpg'}
-              alt={displayUser?.name || 'Administrador'}
-              className="w-full h-full object-cover rounded-full"
+              src="/logo.jpg"
+              alt="AdeGaswg"
+              className="w-full h-full object-contain rounded-xl"
             />
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-white truncate leading-snug">
-                {displayUser?.name || 'Administrador'}
-              </span>
-              {users && users.length > 1 && (
-                <span className="text-[10px] text-amber-400/80 font-medium">Trocar</span>
-              )}
+          <div className="w-[1.5px] h-11 bg-amber-500/40 shrink-0"></div>
+          <div>
+            <h2 className="text-xl font-black tracking-wider text-zinc-100 leading-tight">
+              ADE<span className="text-amber-500">GASWG</span>
+            </h2>
+            <span className="text-xs text-zinc-400 font-medium block text-left">
+              Gestão & PDV
+            </span>
+          </div>
+        </div>
+
+        {/* Subtítulo Bem-vindo */}
+        <div className="space-y-1 pt-4 pb-2 text-center">
+          <h3 className="text-base font-bold text-zinc-100 flex items-center justify-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>Bem-vindo de volta!</span>
+          </h3>
+          <p className="text-xs text-zinc-400">
+            Faça login para acessar o sistema.
+          </p>
+        </div>
+
+        {/* Mensagem de Erro */}
+        {errorMsg && (
+          <div className="my-2 p-2.5 rounded-xl bg-rose-950/50 border border-rose-800/80 text-rose-300 text-xs flex items-center gap-2 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {/* Formulário de Login */}
+        <form onSubmit={handleLogin} className="space-y-3.5 mt-2">
+          
+          {/* Campo E-mail */}
+          <div className="space-y-1.5 text-left">
+            <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-zinc-400" />
+              <span>E-mail</span>
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+              <input
+                type="text"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errorMsg) setErrorMsg(null);
+                }}
+                placeholder="Digite seu e-mail"
+                className="w-full bg-[#08090c] border border-zinc-800 focus:border-amber-500/80 rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-colors"
+              />
             </div>
-            <div className="text-xs font-semibold text-amber-500 tracking-wider">
-              {displayUser?.role || 'SUPER_ADMIN'}
-            </div>
-            <div className="text-[11px] text-zinc-400 mt-0.5">Terminal: Caixa 01 • Sessão Ativa</div>
           </div>
 
-          {users && users.length > 1 && (
-            <select
-              value={displayUser?.id}
-              onChange={(e) => {
-                setSelectedUserId(e.target.value);
-                setPin('');
-                setError(null);
-              }}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              title="Clique para alternar o usuário selecionado"
-            >
-              {users.map((u) => (
-                <option key={u.id} value={u.id} className="bg-zinc-900 text-white">
-                  {u.name} ({u.role})
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+          {/* Campo Senha */}
+          <div className="space-y-1.5 text-left">
+            <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-zinc-400" />
+              <span>Senha</span>
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                maxLength={30}
+                required
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errorMsg) setErrorMsg(null);
+                }}
+                placeholder="Digite sua senha"
+                className="w-full bg-[#08090c] border border-zinc-800 focus:border-amber-500/80 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                title={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
 
-        {/* Masked PIN Display */}
-        <div className="mt-5 space-y-2">
-          <div className="flex justify-center gap-3.5 py-1">
-            {[0, 1, 2, 3].map((idx) => {
-              const filled = pin.length > idx;
-              return (
-                <div
-                  key={idx}
-                  className={`w-3.5 h-3.5 rounded-full border transition-all duration-150 ${
-                    filled
-                      ? 'bg-amber-400 border-amber-400 scale-110 shadow-[0_0_10px_rgba(251,191,36,0.6)]'
-                      : 'border-zinc-700 bg-zinc-800/60'
-                  }`}
-                />
-              );
-            })}
+            <div className="flex justify-end pt-0.5">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="text-[11px] text-amber-500 hover:text-amber-400 cursor-pointer transition-colors font-medium"
+              >
+                Esqueceu sua senha?
+              </button>
+            </div>
           </div>
-          {error ? (
-            <p className="text-xs text-rose-400 font-medium">{error}</p>
-          ) : (
-            <p className="text-xs text-zinc-400">Digite o PIN do operador ou gerente</p>
-          )}
-        </div>
 
-        {/* Touch Keypad */}
-        <div className="grid grid-cols-3 gap-2.5 mt-4">
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-            <button
-              key={digit}
-              type="button"
-              onClick={() => handleDigit(digit)}
-              className="h-12 sm:h-13 py-3 rounded-2xl bg-[#0e1013] hover:bg-zinc-800/90 border border-zinc-800/90 active:scale-95 text-lg font-bold text-white transition-all shadow-sm flex items-center justify-center cursor-pointer"
-            >
-              {digit}
-            </button>
-          ))}
+          {/* Botão Entrar no sistema */}
           <button
-            type="button"
-            onClick={handleClear}
-            className="h-12 sm:h-13 py-3 rounded-2xl bg-[#0e1013] hover:bg-zinc-800/90 border border-zinc-800/90 active:scale-95 text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-all flex items-center justify-center cursor-pointer"
+            type="submit"
+            disabled={isLoading}
+            className="w-full mt-2 py-3 rounded-xl bg-[#ea7e00] hover:bg-[#d97300] active:scale-[0.99] text-zinc-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-black/40 cursor-pointer disabled:opacity-50"
           >
-            Limpar
+            <LogIn className="w-4 h-4 text-zinc-950 stroke-[2.5]" />
+            <span>{isLoading ? 'Entrando...' : 'Entrar no sistema'}</span>
           </button>
-          <button
-            type="button"
-            onClick={() => handleDigit('0')}
-            className="h-12 sm:h-13 py-3 rounded-2xl bg-[#0e1013] hover:bg-zinc-800/90 border border-zinc-800/90 active:scale-95 text-lg font-bold text-white transition-all shadow-sm flex items-center justify-center cursor-pointer"
-          >
-            0
-          </button>
-          <button
-            type="button"
-            onClick={handleBackspace}
-            className="h-12 sm:h-13 py-3 rounded-2xl bg-[#0e1013] hover:bg-zinc-800/90 border border-zinc-800/90 active:scale-95 text-zinc-400 hover:text-zinc-200 transition-all flex items-center justify-center cursor-pointer"
-            title="Apagar dígito"
-            aria-label="Apagar dígito"
-          >
-            <Delete className="w-5 h-5 text-zinc-400" />
-          </button>
-        </div>
-
-        {/* Desbloquear Terminal Button */}
-        <button
-          type="button"
-          id="btn-unlock-screen"
-          onClick={handleUnlock}
-          className="w-full mt-4 py-3 sm:py-3.5 rounded-2xl bg-[#85581b] hover:bg-[#976420] active:scale-[0.99] border border-amber-500/30 text-zinc-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-black/40 cursor-pointer"
-        >
-          <ShieldCheck className="w-4 h-4 text-zinc-950 stroke-[2.5]" />
-          <span>Desbloquear Terminal</span>
-        </button>
+        </form>
       </div>
+
+      {/* Modal Esqueceu a Senha */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#111317] border border-zinc-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-zinc-100">Recuperação de Acesso</h4>
+              <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+                Para redefinir sua senha, solicite ao <strong>Administrador da Loja</strong> na janela de <em>Gestão de Usuários</em> ou utilize a senha mestre de Administrador (PIN: <strong>1234</strong>).
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowForgotModal(false)}
+              className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
