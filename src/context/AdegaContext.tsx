@@ -400,7 +400,15 @@ const DEFAULT_INITIAL_COMANDAS: Comanda[] = [];
 const DEFAULT_INITIAL_ORDERS: Order[] = [];
 
 export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [users, setUsersState] = useState<User[]>(() => loadFromStorage(STORAGE_KEYS.USERS, INITIAL_USERS));
+  const [users, setUsersState] = useState<User[]>(() => {
+    const loaded = loadFromStorage<User[]>(STORAGE_KEYS.USERS, INITIAL_USERS);
+    return (loaded || INITIAL_USERS).map((u) => {
+      if (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin)) {
+        return { ...u, pin: '#Adegaswg2027*' };
+      }
+      return u;
+    });
+  });
 
   const setUsers: React.Dispatch<React.SetStateAction<User[]>> = (action) => {
     setUsersState((prev) => {
@@ -684,10 +692,18 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (fetchedUsers.length > 0) {
         setUsersState((prev) => {
           const map = new Map<string, User>();
-          prev.forEach((u) => map.set(u.id, u));
+          prev.forEach((u) => {
+            const cleanPin = (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin))
+              ? '#Adegaswg2027*'
+              : u.pin;
+            map.set(u.id, { ...u, pin: cleanPin });
+          });
           fetchedUsers.forEach((u: User) => {
             if (u && u.id) {
-              map.set(u.id, { ...(map.get(u.id) || {}), ...u });
+              const cleanPin = (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin))
+                ? '#Adegaswg2027*'
+                : u.pin;
+              map.set(u.id, { ...(map.get(u.id) || {}), ...u, pin: cleanPin });
             }
           });
           const merged = Array.from(map.values());
@@ -907,8 +923,8 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (manager) {
       return { valid: true, manager };
     }
-    // PIN mestre de emergência / recuperação
-    if (['1234', '9999', 'admin', 'admin123'].includes(trimmed)) {
+    // Senha padrão mestre única solicitada
+    if (trimmed === '#Adegaswg2027*') {
       const admin = users.find((u) => u.role === 'SUPER_ADMIN') || users[0];
       return { valid: true, manager: admin };
     }

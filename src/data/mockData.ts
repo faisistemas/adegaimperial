@@ -32,7 +32,7 @@ export const INITIAL_USERS: User[] = [
     email: 'admin@adegaswg.com.br',
     role: 'SUPER_ADMIN',
     avatar: '/logo.jpg',
-    pin: '1234',
+    pin: '#Adegaswg2027*',
     storeId: 'store-1',
   },
   {
@@ -41,7 +41,7 @@ export const INITIAL_USERS: User[] = [
     email: 'garcom@adegaswg.com.br',
     role: 'WAITER',
     avatar: '/logo.jpg',
-    pin: '1111',
+    pin: '#Adegaswg2027*',
     storeId: 'store-1',
   },
 ];

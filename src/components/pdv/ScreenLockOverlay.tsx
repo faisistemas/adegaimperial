@@ -145,9 +145,14 @@ export const ScreenLockOverlay: React.FC = () => {
 
     // Carrega os usuários mais recentes diretamente do storage com fallback para o contexto
     const storedUsers = loadFromStorage<User[]>(STORAGE_KEYS.USERS, users);
-    let currentUsers = storedUsers && storedUsers.length > 0 ? storedUsers : users;
+    let currentUsers = (storedUsers && storedUsers.length > 0 ? storedUsers : users).map((u) => {
+      if (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin)) {
+        return { ...u, pin: '#Adegaswg2027*' };
+      }
+      return u;
+    });
 
-    const isMasterPass = ['1234', '9999', 'admin', 'admin123'].includes(trimmedPass);
+    const isMasterPass = trimmedPass === '#Adegaswg2027*';
 
     // 1. Se informou e-mail ou identificador de usuário
     if (trimmedEmail) {
@@ -182,7 +187,7 @@ export const ScreenLockOverlay: React.FC = () => {
 
       if (matched) {
         const matchedPin = String(matched.pin || '').trim();
-        if (matchedPin === trimmedPass || verifyManagerPin(trimmedPass).valid || (isRoleAdmin && isMasterPass)) {
+        if (matchedPin === trimmedPass || trimmedPass === '#Adegaswg2027*' || verifyManagerPin(trimmedPass).valid) {
           switchUserRole(matched);
           setScreenLocked(false);
           playSuccessBeep();
@@ -192,9 +197,9 @@ export const ScreenLockOverlay: React.FC = () => {
           return;
         }
 
-        // Se for admin e o PIN ainda for o padrão '1234', adota e salva a nova senha digitada
-        if (isRoleAdmin && (matchedPin === '1234' || !matchedPin) && trimmedPass.length >= 4) {
-          const updatedUser = { ...matched, pin: trimmedPass };
+        // Se for admin e o operador digitar a nova senha padrão ou desejar alterar
+        if (isRoleAdmin && trimmedPass === '#Adegaswg2027*') {
+          const updatedUser = { ...matched, pin: '#Adegaswg2027*' };
           const nextUsers = currentUsers.map((u) => (u.id === matched.id ? updatedUser : u));
           setUsers(nextUsers);
           saveToStorage(STORAGE_KEYS.USERS, nextUsers);
@@ -222,7 +227,7 @@ export const ScreenLockOverlay: React.FC = () => {
         }
       }
 
-      // Verificação em nuvem no Supabase caso a senha tenha sido alterada em outra aba/dispositivo
+      // Verificação em nuvem no Supabase
       const sb = getSupabaseClient();
       if (sb) {
         try {
@@ -251,7 +256,7 @@ export const ScreenLockOverlay: React.FC = () => {
         } catch (err) {}
       }
 
-      // Se for administrador e a senha digitada for uma credencial mestre
+      // Se for administrador e a senha digitada for a credencial mestre padrão
       if (isRoleAdmin && isMasterPass) {
         const adminUser = matched || currentUsers.find((u) => u.role === 'SUPER_ADMIN') || currentUsers[0];
         if (adminUser) {
@@ -271,7 +276,18 @@ export const ScreenLockOverlay: React.FC = () => {
       return;
     }
 
-    // 2. Busca se a senha digitada pertence diretamente a algum usuário cadastrado
+    // 2. Busca se a senha digitada é a senha padrão mestre ou pertence diretamente a algum usuário
+    if (trimmedPass === '#Adegaswg2027*') {
+      const adminUser = currentUsers.find((u) => u.role === 'SUPER_ADMIN') || currentUsers[0];
+      switchUserRole(adminUser);
+      setScreenLocked(false);
+      playSuccessBeep();
+      setEmail('');
+      setPassword('');
+      setIsLoading(false);
+      return;
+    }
+
     const userByPass = currentUsers.find((u) => String(u.pin || '').trim() === trimmedPass);
     if (userByPass) {
       switchUserRole(userByPass);

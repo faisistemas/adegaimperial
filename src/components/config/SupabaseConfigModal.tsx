@@ -328,9 +328,9 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
 
 INSERT INTO public.usuarios (id, name, email, role, avatar, pin, store_id)
 VALUES 
-    ('u-1', 'Administrador', 'admin@adegaswg.com.br', 'SUPER_ADMIN', '/logo.jpg', '1234', 'store-1'),
-    ('u-2', 'Garçom', 'garcom@adegaswg.com.br', 'WAITER', '/logo.jpg', '1111', 'store-1')
-ON CONFLICT (id) DO NOTHING;
+    ('u-1', 'Administrador', 'admin@adegaswg.com.br', 'SUPER_ADMIN', '/logo.jpg', '#Adegaswg2027*', 'store-1'),
+    ('u-2', 'Garçom', 'garcom@adegaswg.com.br', 'WAITER', '/logo.jpg', '#Adegaswg2027*', 'store-1')
+ON CONFLICT (id) DO UPDATE SET pin = EXCLUDED.pin;
 
 -- 8. Tabela de Clientes
 CREATE TABLE IF NOT EXISTS public.clientes (

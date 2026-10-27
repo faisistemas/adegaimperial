@@ -35,7 +35,7 @@ export const ManagerAuthModal: React.FC<ManagerAuthModalProps> = ({
       onClose();
     } else {
       playErrorBuzz();
-      setError('PIN de Gerente ou Super Admin incorreto! (Ex: Mariana 2222, Carlos 1234)');
+      setError('Senha de Gerente ou Super Admin incorreta!');
       setPin('');
     }
   };
@@ -71,18 +71,17 @@ export const ManagerAuthModal: React.FC<ManagerAuthModalProps> = ({
 
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-zinc-400">
-              Digite o PIN de 4 dígitos do Gerente / Admin:
+              Digite a senha do Gerente / Admin:
             </label>
             <input
               type="password"
-              maxLength={4}
               value={pin}
               autoFocus
               onChange={(e) => {
                 setPin(e.target.value);
                 setError(null);
               }}
-              placeholder="PIN"
+              placeholder="••••••••••••"
               className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-center font-mono font-bold tracking-widest text-base text-zinc-100 focus:outline-none focus:border-amber-500"
               required
             />

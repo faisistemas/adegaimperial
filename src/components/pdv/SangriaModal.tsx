@@ -204,14 +204,13 @@ export const SangriaModal: React.FC<SangriaModalProps> = ({ isOpen, onClose }) =
                 <span className="text-xs font-bold">Autorização Obrigatória da Gerência</span>
               </div>
               <p className="text-[11px] text-zinc-400">
-                Digite o PIN de 4 dígitos de um Gerente (ex: Mariana Souza - PIN 2222 ou Admin 1234).
+                Digite a senha de um Gerente ou Super Admin para autorizar a sangria.
               </p>
               <input
                 type="password"
-                maxLength={4}
                 value={managerPin}
                 onChange={(e) => setManagerPin(e.target.value)}
-                placeholder="PIN Gerente"
+                placeholder="Senha de Autorização"
                 className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-center font-mono font-bold tracking-widest text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
                 required
               />

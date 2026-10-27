@@ -1538,13 +1538,12 @@ export const MesasView: React.FC = () => {
 
             <form onSubmit={handleConfirmIsencaoCouvert} className="space-y-3">
               <div>
-                <label className="text-xs text-zinc-300 font-medium block mb-1">PIN do Gerente (Padrão: 1234)</label>
+                <label className="text-xs text-zinc-300 font-medium block mb-1">Senha do Gerente / Admin (Padrão: #Adegaswg2027*)</label>
                 <input
                   type="password"
-                  maxLength={6}
                   value={managerPin}
                   onChange={(e) => setManagerPin(e.target.value)}
-                  placeholder="••••"
+                  placeholder="••••••••••••"
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-2.5 text-center text-lg font-mono text-amber-400 tracking-widest"
                   required
                 />
