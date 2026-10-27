@@ -572,20 +572,6 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
               </div>
 
               <div>
-                <label className="text-xs text-zinc-400 block mb-1">Função / Cargo no Sistema</label>
-                <select
-                  value={googleRole}
-                  onChange={(e) => setGoogleRole(e.target.value as UserRole)}
-                  className="w-full bg-[#08090c] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none cursor-pointer"
-                >
-                  <option value="STORE_MANAGER">Gerente de Loja</option>
-                  <option value="CASHIER">Operador de Caixa</option>
-                  <option value="WAITER">Garçom</option>
-                  <option value="SUPER_ADMIN">Administrador</option>
-                </select>
-              </div>
-
-              <div>
                 <label className="text-xs text-zinc-400 block mb-1">Senha de Acesso ao Terminal</label>
                 <div className="relative">
                   <input
@@ -737,35 +723,20 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-zinc-400 block mb-1">Cargo / Função</label>
-                  <select
-                    value={regRole}
-                    onChange={(e) => setRegRole(e.target.value as UserRole)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none cursor-pointer"
-                  >
-                    <option value="STORE_MANAGER">Gerente de Loja</option>
-                    <option value="CASHIER">Operador de Caixa</option>
-                    <option value="WAITER">Atendente / Garçom</option>
-                    <option value="SUPER_ADMIN">Administrador</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-zinc-400 block mb-1">Senha</label>
-                  <input
-                    type="password"
-                    required
-                    maxLength={30}
-                    value={regPin}
-                    onChange={(e) => {
-                      setRegPin(e.target.value);
-                      if (regError) setRegError('');
-                    }}
-                    placeholder=""
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 font-mono focus:border-amber-500 outline-none"
-                  />
-                </div>
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Senha</label>
+                <input
+                  type="password"
+                  required
+                  maxLength={30}
+                  value={regPin}
+                  onChange={(e) => {
+                    setRegPin(e.target.value);
+                    if (regError) setRegError('');
+                  }}
+                  placeholder=""
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 font-mono focus:border-amber-500 outline-none"
+                />
               </div>
 
               <div className="flex justify-end gap-2 pt-2">

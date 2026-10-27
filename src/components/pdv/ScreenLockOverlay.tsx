@@ -548,20 +548,6 @@ export const ScreenLockOverlay: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs text-zinc-400 block mb-1">Função / Cargo no Sistema</label>
-                <select
-                  value={googleRole}
-                  onChange={(e) => setGoogleRole(e.target.value as UserRole)}
-                  className="w-full bg-[#08090c] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none cursor-pointer"
-                >
-                  <option value="STORE_MANAGER">Gerente de Loja</option>
-                  <option value="CASHIER">Operador de Caixa</option>
-                  <option value="WAITER">Garçom</option>
-                  <option value="SUPER_ADMIN">Administrador</option>
-                </select>
-              </div>
-
-              <div>
                 <label className="text-xs text-zinc-400 block mb-1">Senha de Acesso ao Terminal</label>
                 <div className="relative">
                   <input
@@ -679,20 +665,6 @@ export const ScreenLockOverlay: React.FC = () => {
                   placeholder="Ex: carlos@adegaswg.com.br"
                   className="w-full bg-[#08090c] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none"
                 />
-              </div>
-
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1">Função / Cargo</label>
-                <select
-                  value={regRole}
-                  onChange={(e) => setRegRole(e.target.value as UserRole)}
-                  className="w-full bg-[#08090c] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none cursor-pointer"
-                >
-                  <option value="STORE_MANAGER">Gerente de Loja</option>
-                  <option value="CASHIER">Operador de Caixa</option>
-                  <option value="WAITER">Garçom</option>
-                  <option value="SUPER_ADMIN">Administrador</option>
-                </select>
               </div>
 
               <div>
