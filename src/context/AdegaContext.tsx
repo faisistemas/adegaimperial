@@ -765,17 +765,40 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return { valid: false };
   };
 
-  const unlockScreen = (pin: string): { success: boolean; message?: string } => {
-    // Permite desbloquear com o PIN do operador atual ou com PIN de Gerente/Admin
-    const isOwner = currentUser.pin === pin;
-    const managerAuth = verifyManagerPin(pin);
+  const unlockScreen = (pin: string): { success: boolean; message?: string; user?: User } => {
+    const trimmedPin = pin.trim();
 
-    if (isOwner || managerAuth.valid) {
+    // 1. Procura se algum usuário cadastrado possui este PIN/senha
+    const matchedUser = users.find((u) => u.pin === trimmedPin);
+
+    if (matchedUser) {
+      setCurrentUser(matchedUser); // Autentica e ativa o usuário digitado
       setScreenLocked(false);
-      addAccessLog('DESBLOQUEIO_TELA', `Terminal desbloqueado por ${isOwner ? currentUser.name : managerAuth.manager?.name}`);
-      return { success: true };
+      addAccessLog('DESBLOQUEIO_TELA', `Terminal desbloqueado por ${matchedUser.name} (${matchedUser.role})`);
+      setNotifications((prev) => [
+        `Terminal desbloqueado: ${matchedUser.name} (${matchedUser.role}) conectado.`,
+        ...prev,
+      ]);
+      return { success: true, user: matchedUser };
     }
-    return { success: false, message: 'PIN inválido! Digite o PIN do operador ou de um gerente.' };
+
+    // 2. Se a senha digitada for a do usuário logado atualmente
+    if (currentUser.pin === trimmedPin) {
+      setScreenLocked(false);
+      addAccessLog('DESBLOQUEIO_TELA', `Terminal desbloqueado por ${currentUser.name}`);
+      return { success: true, user: currentUser };
+    }
+
+    // 3. Verifica se é autorização de gerente/admin
+    const managerAuth = verifyManagerPin(trimmedPin);
+    if (managerAuth.valid && managerAuth.manager) {
+      setCurrentUser(managerAuth.manager);
+      setScreenLocked(false);
+      addAccessLog('DESBLOQUEIO_TELA', `Terminal desbloqueado por ${managerAuth.manager.name}`);
+      return { success: true, user: managerAuth.manager };
+    }
+
+    return { success: false, message: 'Senha/PIN incorreto! Digite a senha cadastrada do usuário.' };
   };
 
   const [fiscalDocuments, setFiscalDocuments] = useState<FiscalDocument[]>([

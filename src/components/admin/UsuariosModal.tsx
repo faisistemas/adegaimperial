@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   KeyRound, X, Plus, Check, AlertCircle, 
-  Eye, EyeOff, Edit3, Trash2, Shield, Mail, Lock, Phone 
+  Eye, EyeOff, Edit3, Trash2, Shield, Mail, Lock, Phone, LogIn 
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
 import { User, UserRole } from '../../types';
@@ -71,10 +71,6 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
     const newPassword = (passwords[user.id] || '').trim();
     if (!newPassword) {
       showNotification('error', `Digite a nova senha para ${user.name}.`);
-      return;
-    }
-    if (newPassword.length < 4) {
-      showNotification('error', 'A senha deve conter no mínimo 4 dígitos.');
       return;
     }
 
@@ -150,8 +146,8 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
       showNotification('error', 'Informe o nome do usuário.');
       return;
     }
-    if (!formPin || formPin.length < 4) {
-      showNotification('error', 'A senha deve conter no mínimo 4 dígitos.');
+    if (!formPin.trim()) {
+      showNotification('error', 'Informe a senha do usuário.');
       return;
     }
 
@@ -199,7 +195,8 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
       };
 
       setUsers([...users, newUser]);
-      showNotification('success', `Usuário "${newUser.name}" cadastrado com sucesso!`);
+      switchUserRole(newUser);
+      showNotification('success', `Usuário "${newUser.name}" cadastrado e conectado com sucesso!`);
     }
 
     handleCancelForm();
@@ -382,6 +379,30 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
                   </div>
                 </div>
 
+                {/* Botão Entrar / Status Conectado */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {currentUser.id === user.id ? (
+                    <span className="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Conectado</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        switchUserRole(user);
+                        showNotification('success', `Conectado como ${user.name}!`);
+                        onClose();
+                      }}
+                      className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-zinc-950 font-bold text-xs flex items-center gap-1 transition-all shadow-md shadow-amber-500/20 cursor-pointer"
+                      title={`Entrar no sistema como ${user.name}`}
+                    >
+                      <LogIn className="w-3.5 h-3.5" />
+                      <span>Entrar</span>
+                    </button>
+                  )}
+                </div>
+
                 {/* Lado Direito: Input Nova Senha + Chave + Opções (Olho, Lápis, Lixeira) */}
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   <input
@@ -538,14 +559,32 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
             </div>
 
             <div className="pt-3 border-t border-zinc-800 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => handleStartEdit(viewingUser)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-xl text-xs font-semibold cursor-pointer"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Editar Dados</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleStartEdit(viewingUser)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-xl text-xs font-semibold cursor-pointer"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Editar Dados</span>
+                </button>
+
+                {currentUser.id !== viewingUser.id && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      switchUserRole(viewingUser);
+                      showNotification('success', `Conectado como ${viewingUser.name}!`);
+                      setViewingUser(null);
+                      onClose();
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs cursor-pointer shadow-md"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>Entrar</span>
+                  </button>
+                )}
+              </div>
 
               <button
                 type="button"

@@ -4,10 +4,17 @@ import { useAdega } from '../../context/AdegaContext';
 import { playSuccessBeep, playErrorBuzz } from '../../utils/peripheralUtils';
 
 export const ScreenLockOverlay: React.FC = () => {
-  const { isScreenLocked, unlockScreen, currentUser } = useAdega();
+  const { isScreenLocked, unlockScreen, currentUser, users } = useAdega();
   const [pin, setPin] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<string>('');
+  const [selectedUserId, setSelectedUserId] = useState<string>(currentUser?.id || '');
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      setSelectedUserId(currentUser.id);
+    }
+  }, [currentUser?.id]);
 
   useEffect(() => {
     const updateTime = () => {
@@ -20,7 +27,7 @@ export const ScreenLockOverlay: React.FC = () => {
   }, []);
 
   const handleDigit = (digit: string) => {
-    if (pin.length < 4) {
+    if (pin.length < 30) {
       setPin((prev) => prev + digit);
       setError(null);
     }
@@ -37,8 +44,8 @@ export const ScreenLockOverlay: React.FC = () => {
   };
 
   const handleUnlock = () => {
-    if (pin.length !== 4) {
-      setError('O PIN deve conter 4 dígitos.');
+    if (!pin.trim()) {
+      setError('Digite a senha ou PIN.');
       playErrorBuzz();
       return;
     }
@@ -50,7 +57,7 @@ export const ScreenLockOverlay: React.FC = () => {
       setError(null);
     } else {
       playErrorBuzz();
-      setError(result.message || 'PIN incorreto.');
+      setError(result.message || 'Senha ou PIN incorreto.');
       setPin('');
     }
   };
@@ -79,6 +86,10 @@ export const ScreenLockOverlay: React.FC = () => {
 
   if (!isScreenLocked) return null;
 
+  // Reconhece dinamicamente se o PIN digitado já bate com algum usuário cadastrado
+  const matchedUserByPin = users?.find((u) => u.pin === pin);
+  const displayUser = matchedUserByPin || users?.find((u) => u.id === selectedUserId) || currentUser || users?.[0];
+
   return (
     <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 select-none">
       <div className="w-full max-w-[360px] bg-[#16181b] border border-[#26282d] rounded-[32px] p-6 sm:p-7 shadow-2xl shadow-black/90 text-center flex flex-col">
@@ -100,24 +111,48 @@ export const ScreenLockOverlay: React.FC = () => {
           <p className="text-xs text-zinc-400 font-normal">Terminal Bloqueado por Segurança</p>
         </div>
 
-        {/* User Card */}
-        <div className="mt-4 p-3.5 rounded-2xl bg-[#0e1013] border border-zinc-800/80 flex items-center gap-3.5 text-left">
+        {/* Operator Card (com seletor inteligente para trocar de operador) */}
+        <div className="mt-4 p-3.5 rounded-2xl bg-[#0e1013] border border-zinc-800/80 flex items-center gap-3.5 text-left relative group">
           <div className="w-12 h-12 rounded-full overflow-hidden border border-amber-500/60 bg-zinc-950 shrink-0 p-0.5">
             <img
-              src={currentUser?.avatar || '/logo.jpg'}
-              alt={currentUser?.name || 'Administrador'}
+              src={displayUser?.avatar || '/logo.jpg'}
+              alt={displayUser?.name || 'Administrador'}
               className="w-full h-full object-cover rounded-full"
             />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-bold text-white truncate leading-snug">
-              {currentUser?.name || 'Administrador'}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-white truncate leading-snug">
+                {displayUser?.name || 'Administrador'}
+              </span>
+              {users && users.length > 1 && (
+                <span className="text-[10px] text-amber-400/80 font-medium">Trocar</span>
+              )}
             </div>
             <div className="text-xs font-semibold text-amber-500 tracking-wider">
-              {currentUser?.role || 'SUPER_ADMIN'}
+              {displayUser?.role || 'SUPER_ADMIN'}
             </div>
             <div className="text-[11px] text-zinc-400 mt-0.5">Terminal: Caixa 01 • Sessão Ativa</div>
           </div>
+
+          {users && users.length > 1 && (
+            <select
+              value={displayUser?.id}
+              onChange={(e) => {
+                setSelectedUserId(e.target.value);
+                setPin('');
+                setError(null);
+              }}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              title="Clique para alternar o usuário selecionado"
+            >
+              {users.map((u) => (
+                <option key={u.id} value={u.id} className="bg-zinc-900 text-white">
+                  {u.name} ({u.role})
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Masked PIN Display */}
