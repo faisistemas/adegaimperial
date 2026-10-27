@@ -49,6 +49,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return allowedRoles.includes(currentUser.role);
   };
 
+  const getRoleHandle = (role?: UserRole) => {
+    switch (role) {
+      case 'SUPER_ADMIN':
+        return 'admin';
+      case 'STORE_MANAGER':
+        return 'gerente';
+      case 'CASHIER':
+        return 'caixa';
+      case 'WAITER':
+        return 'garçom';
+      case 'DELIVERY_COURIER':
+        return 'motoboy';
+      default:
+        return 'operador';
+    }
+  };
+
+  const getRoleDescription = (role?: UserRole) => {
+    switch (role) {
+      case 'SUPER_ADMIN':
+        return 'Acesso total irrestrito (Retaguarda, Fiscal & Multiloja).';
+      case 'STORE_MANAGER':
+        return 'Gerência da unidade, sangrias, fechamento e autorizações.';
+      case 'CASHIER':
+        return 'Frente de caixa (PDV Touch), emissão NFC-e e recebimentos.';
+      case 'WAITER':
+        return 'Atendimento a mesas, comandas e consulta rápida.';
+      case 'DELIVERY_COURIER':
+        return 'Despacho de pedidos de delivery e confirmação de rota.';
+      default:
+        return 'Acesso operacional padrão ao terminal.';
+    }
+  };
+
   const navItems: {
     id: NavTab;
     label: string;
@@ -295,10 +329,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="rounded-xl p-3 bg-zinc-900/60 border border-zinc-800/80 text-[11px]">
             <div className="flex items-center justify-between text-zinc-300 font-medium mb-1">
               <span>Operador:</span>
-              <span className="font-semibold text-amber-400">Administrador (admin)</span>
+              <span className="font-semibold text-amber-400 truncate max-w-[155px]">
+                {currentUser?.name || 'Administrador'} ({getRoleHandle(currentUser?.role)})
+              </span>
             </div>
             <p className="text-zinc-400 text-[10px] leading-relaxed">
-              Acesso total irrestrito (Retaguarda, Fiscal & Multiloja).
+              {getRoleDescription(currentUser?.role)}
             </p>
           </div>
         </div>

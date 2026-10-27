@@ -22,7 +22,7 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
   onOpenConfiguracoes,
   onLogout,
 }) => {
-  const { setScreenLocked } = useAdega();
+  const { setScreenLocked, currentUser } = useAdega();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -190,11 +190,21 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
         )}
       </div>
 
-      {/* Rótulo Administrador + Badge admin (conforme imagem) */}
+      {/* Rótulo Operador + Badge Dinâmico */}
       <div className="hidden md:flex items-center gap-1.5">
-        <span className="text-xs sm:text-sm font-semibold text-zinc-200">Administrador</span>
+        <span className="text-xs sm:text-sm font-semibold text-zinc-200 truncate max-w-[130px]">
+          {currentUser?.name || 'Administrador'}
+        </span>
         <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-md bg-zinc-800/90 text-zinc-300 border border-zinc-700/60 font-medium">
-          admin
+          {currentUser?.role === 'SUPER_ADMIN' 
+            ? 'admin' 
+            : currentUser?.role === 'STORE_MANAGER'
+            ? 'gerente'
+            : currentUser?.role === 'CASHIER'
+            ? 'caixa'
+            : currentUser?.role === 'WAITER'
+            ? 'garcom'
+            : (currentUser?.role || 'operador').toLowerCase()}
         </span>
       </div>
 
