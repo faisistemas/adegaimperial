@@ -336,7 +336,8 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
             />
             <input
               type="password"
-              placeholder="Senha (mín. 4 dígitos)"
+              placeholder="Senha"
+              maxLength={30}
               value={formPin}
               onChange={(e) => setFormPin(e.target.value)}
               className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-700 font-mono"
@@ -408,6 +409,7 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
                   <input
                     type="password"
                     placeholder="Nova senha"
+                    maxLength={30}
                     value={passwords[user.id] || ''}
                     onChange={(e) =>
                       setPasswords((prev) => ({ ...prev, [user.id]: e.target.value }))
