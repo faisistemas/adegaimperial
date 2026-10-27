@@ -113,89 +113,73 @@ export function generateDanfeThermalText(
 
   const lines: string[] = [];
 
-  // Cabeçalho
-  lines.push(center(store.name.toUpperCase()));
-  lines.push(center(`CNPJ: ${store.cnpj}`));
-  lines.push(center(`IE: ${store.ie}`));
-  lines.push(center(`${store.address}, ${store.city}-${store.state}`));
-  lines.push(lineSeparator);
-
-  // Identificação do Documento
-  if (doc.modelo === '65') {
-    lines.push(center('DANFE NFC-e - Documento Auxiliar da'));
-    lines.push(center('Nota Fiscal de Consumidor Eletronica'));
-    if (doc.tipoEmissao === 'CONTINGENCIA_OFFLINE') {
-      lines.push(center('*** EMITIDA EM CONTINGENCIA OFFLINE ***'));
-      lines.push(center('Pendente de autorizacao pela SEFAZ'));
-    } else {
-      lines.push(center('Nao permite aproveitamento de credito de ICMS'));
-    }
-  } else if (doc.modelo === '55') {
-    lines.push(center('DANFE NF-e - Documento Auxiliar'));
-    lines.push(center('da Nota Fiscal Eletronica'));
-  } else {
-    lines.push(center('NFS-e - NOTA FISCAL DE SERVICOS'));
-  }
-
-  lines.push(dashSeparator);
-  lines.push(justify(`Nr: ${doc.numeroNota} Serie: ${doc.serie}`, doc.dataEmissao));
-  lines.push(dashSeparator);
+  // Cabeçalho com Logomarca e dados da empresa
+  lines.push(`         [ LOGOMARCA: ${store.name.toUpperCase()} ]`);
+  lines.push(`${store.name.toUpperCase()} - #0103`);
+  lines.push(`CNPJ-${store.cnpj}  ${doc.dataEmissao.split(' ')[0]}`);
+  lines.push(`${store.address.toUpperCase()}, ${store.city.toUpperCase()}-${store.state.toUpperCase()}`);
+  lines.push(`DANFE NFC-e Documento Auxiliar`);
+  lines.push(`da Nota Fiscal de Consumidor Eletronica`);
 
   // Itens
-  lines.push(format === '80mm' ? '#  DESC                   QTD   UN   VL.UN    TOTAL' : '# DESC         QTDxVL       TOTAL');
-  lines.push(dashSeparator);
+  lines.push(format === '80mm' ? `ITEM CODIGO            DESCRICAO                TOT. ITEM(R$)` : `ITEM CODIGO        DESC   TOT(R$)`);
 
-  doc.itens.forEach((it) => {
-    const num = String(it.itemNumero).padStart(2, '0');
-    const total = it.valorTotal.toFixed(2);
+  doc.itens.forEach((it, idx) => {
+    const num = String(it.itemNumero || idx + 1).padStart(3, '0');
+    const barcode = (it.ncm ? `789${it.ncm.padEnd(9, '0').slice(0, 9)}2` : '7898279790417');
+    const total = it.valorTotal.toFixed(2).replace('.', ',');
+    const unit = it.unidade || 'UN';
+
     if (format === '80mm') {
-      const desc = it.produtoNome.substring(0, 20).padEnd(20, ' ');
-      const qtd = it.quantidade.toString().padStart(4, ' ');
-      const un = it.unidade.padEnd(3, ' ');
-      const vl = it.valorUnitario.toFixed(2).padStart(6, ' ');
-      lines.push(`${num} ${desc} ${qtd} ${un} ${vl}  ${total.padStart(7, ' ')}`);
+      const desc = `${it.produtoNome.toUpperCase()} ${unit}`.substring(0, 24).padEnd(24, ' ');
+      lines.push(`${num} ${barcode.padEnd(13, ' ')} ${desc} ${total.padStart(8, ' ')}`);
     } else {
-      const desc = it.produtoNome.substring(0, 14).padEnd(14, ' ');
-      const resumo = `${it.quantidade}x${it.valorUnitario.toFixed(2)}`;
-      lines.push(`${num} ${desc}`);
-      lines.push(justify(`   ${resumo}`, total));
+      const desc = `${it.produtoNome.toUpperCase()} ${unit}`.substring(0, 14).padEnd(14, ' ');
+      lines.push(`${num} ${barcode.substring(0, 11)} ${desc} ${total.padStart(6, ' ')}`);
+    }
+
+    if (it.quantidade > 1) {
+      lines.push(`    ${it.quantidade} ${unit} X ${it.valorUnitario.toFixed(2).replace('.', ',')}`);
     }
   });
 
-  lines.push(dashSeparator);
-
   // Totais
-  lines.push(justify('QTD. TOTAL DE ITENS:', doc.itens.length.toString()));
-  lines.push(justify('VALOR TOTAL R$:', doc.valorTotal.toFixed(2)));
-  if (doc.valorTributosAprox > 0) {
-    lines.push(justify('Trib. Aprox. (Lei 12.741):', `R$ ${doc.valorTributosAprox.toFixed(2)}`));
-  }
-  lines.push(lineSeparator);
+  lines.push(`QTD. TOTAL DE ITENS ${String(doc.itens.length).padStart(width - 20, ' ')}`);
+  lines.push(`VALOR TOTAL R$ ${String(doc.valorTotal.toFixed(2).replace('.', ',')).padStart(width - 15, ' ')}`);
+  lines.push(`FORMA DE PAGAMENTO ${'VALOR PAGO'.padStart(width - 19, ' ')}`);
+  lines.push(`${'Cartao de Credito'.padEnd(20, ' ')} ${String(doc.valorTotal.toFixed(2).replace('.', ',')).padStart(width - 21, ' ')}`);
 
-  // Consumidor
-  lines.push(justify('CONSUMIDOR:', doc.destinatarioNome || 'NAO IDENTIFICADO'));
-  if (doc.destinatarioCpfCnpj) {
-    lines.push(justify('CPF/CNPJ:', doc.destinatarioCpfCnpj));
-  }
-  lines.push(dashSeparator);
+  const fedTax = doc.valorTributosAprox > 0 ? doc.valorTributosAprox * 0.45 : doc.valorTotal * 0.1345;
+  const stateTax = doc.valorTributosAprox > 0 ? doc.valorTributosAprox * 0.55 : doc.valorTotal * 0.1500;
+  lines.push(`Trib aprox: R$ ${fedTax.toFixed(2).replace('.', ',')} Fed, R$ ${stateTax.toFixed(2).replace('.', ',')} Est e`);
+  lines.push(`R$ 0,00 Mun Fonte: IBPT`);
 
-  // Chave e Protocolo
-  lines.push(center('CONSULTE PELA CHAVE DE ACESSO EM:'));
-  lines.push(center('https://www.fazenda.sp.gov.br/nfce/consulta'));
-  lines.push(center(doc.chaveAcesso.replace(/(\d{4})/g, '$1 ').trim()));
-  lines.push(dashSeparator);
+  const nsu = '000139';
+  const coo = '029158';
+  lines.push(`LJ:0103 PDV:001 NSU:${nsu} O:001090 A:001083 COO:${coo}`);
+  lines.push(`Numero ${String(doc.numeroNota).padStart(9, '0')} Serie ${doc.serie} Emissao ${doc.dataEmissao}`);
+  lines.push(`http://app.sefaz.${(store.state || 'sp').toLowerCase()}.gov.br/ConsultaNFCe/QRCode.aspx`);
+  lines.push(doc.chaveAcesso.replace(/(\d{4})/g, '$1 ').trim());
+
+  const consumerText = doc.destinatarioCpfCnpj
+    ? `CONSUMIDOR CPF: ${doc.destinatarioCpfCnpj}`
+    : 'CONSUMIDOR NAO IDENTIFICADO';
+  lines.push(`           ${consumerText}`);
+  lines.push(`          Consulta via leitor de QR Code`);
+  lines.push(`                  [ QR CODE SEFAZ ]`);
 
   if (doc.protocoloAutorizacao) {
-    lines.push(justify('PROTOCOLO AUTORIZACAO:', doc.protocoloAutorizacao));
-    lines.push(justify('DATA AUTORIZACAO:', doc.dataAutorizacao || doc.dataEmissao));
-  } else if (doc.tipoEmissao === 'CONTINGENCIA_OFFLINE') {
-    lines.push(center('MOTIVO DA CONTINGENCIA:'));
-    lines.push(center(doc.contingenciaMotivo || 'SEFAZ Fora do Ar'));
+    lines.push(`Protocolo de autorizacao: ${doc.protocoloAutorizacao}`);
+    lines.push(`                ${doc.dataAutorizacao || doc.dataEmissao.split(' ')[0]}`);
   }
 
-  lines.push(lineSeparator);
-  lines.push(center('ADEGASWG - SISTEMA FISCAL SEFAZ'));
-  lines.push(center('Obrigado pela preferencia!'));
+  lines.push(dashSeparator);
+  lines.push(`                    CUPOM DE TROCA`);
+  lines.push(`DATA:${doc.dataEmissao.split(' ')[0]} LJ:0103 ECF:001 COD:${coo} NSU:${nsu}`);
+  doc.itens.slice(0, 3).forEach((it) => {
+    lines.push(`7898279790417 ${it.produtoNome.toUpperCase().substring(0, 30)}`);
+  });
+  lines.push(`        OBRIGADO PELA PREFERENCIA! VOLTE SEMPRE`);
   lines.push('\n\n\n'); // Espaço para corte de papel
 
   return lines.join('\n');

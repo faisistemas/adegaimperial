@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Printer, X, Download, CheckCircle2, QrCode, Usb, Scissors } from 'lucide-react';
+import { Printer, X, Download, CheckCircle2, Usb, Scissors } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Order, Store } from '../../types';
-import { formatAccessKey } from '../../utils/fiscalUtils';
 import { printThermalViaBrowser, sendEscPosToSerial, generatePdvReceipt, checkWebSerialSupport } from '../../utils/thermalPrinter';
 import { playSuccessBeep, playCashDrawerSound } from '../../utils/peripheralUtils';
 
@@ -19,6 +19,41 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({ isOpen
 
   const isWebSerialAvailable = checkWebSerialSupport();
   const receiptData = generatePdvReceipt(order, store, 80);
+
+  const items = order.items || [];
+  const totalItemsCount = items.reduce((sum, it) => sum + (it.quantity ?? 1), 0);
+  const now = new Date();
+  const dateStr = order.createdAt ? order.createdAt.split(',')[0].trim() : now.toLocaleDateString('pt-BR');
+  const timeStr = order.createdAt && order.createdAt.includes(',') 
+    ? order.createdAt.split(',')[1].trim() 
+    : now.toLocaleTimeString('pt-BR');
+
+  const rawKey = (order.nfceKey || '32170133014556014901652030000122301986636180')
+    .replace(/\D/g, '')
+    .padEnd(44, '0')
+    .slice(0, 44);
+  const formattedKey = rawKey.replace(/(\d{4})/g, '$1 ').trim();
+
+  const numeroNota = (order.code.replace(/\D/g, '') || '000012230').padStart(9, '0');
+  const coo = (order.code.replace(/\D/g, '') || '029158').slice(-6).padStart(6, '0');
+  const nsu = (order.payment?.tefAuthorizationCode?.replace(/\D/g, '') || order.code.replace(/\D/g, '') || '000139')
+    .slice(-6)
+    .padStart(6, '0');
+  const protocolo = order.nfceProtocol || '332170000222766';
+  const sefazUrl = `http://app.sefaz.${(store.state || 'sp').toLowerCase()}.gov.br/ConsultaNFCe/QRCode.aspx`;
+  const qrCodeUrl = `${sefazUrl}?p=${rawKey}|2|1|1|8B92942F-8461-41AA-B73C-E68241A0B2C9`;
+
+  const fedTax = (order.total ?? 0) * 0.1345;
+  const stateTax = (order.total ?? 0) * 0.1500;
+  const paymentMethodName = order.payment?.method === 'TEF_CREDITO' ? 'Cartao de Credito'
+    : order.payment?.method === 'TEF_DEBITO' ? 'Cartao de Debito'
+    : order.payment?.method === 'DINHEIRO' ? 'Dinheiro'
+    : order.payment?.method === 'PIX' ? 'PIX'
+    : order.payment?.method || 'Cartao de Credito';
+  const isCard = paymentMethodName.includes('Cartao') || (order.payment?.method || '').toUpperCase().startsWith('TEF');
+  const cardBrand = (order.payment?.tefCardBrand || 'MASTERCARD').toUpperCase();
+  const cardAut = order.payment?.tefAuthorizationCode?.replace(/\D/g, '') || '451771';
+  const nsuCtf = order.payment?.pixTxId?.replace(/\D/g, '') || '505311';
 
   const handlePrint = async () => {
     playSuccessBeep();
@@ -46,169 +81,194 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({ isOpen
   };
 
   const handleDownloadTxt = () => {
-    const lines = [
-      `================================================`,
-      `            ${store.name.toUpperCase()}         `,
-      ` CNPJ: ${store.cnpj}   IE: ${store.ie} `,
-      ` ${store.address} - ${store.city}/${store.state} `,
-      `================================================`,
-      `DANFE NFC-e - Documento Auxiliar da Nota Fiscal `,
-      `de Consumidor Eletronica                        `,
-      `================================================`,
-      `COD  DESCRICAO               QTD   UN    V.TOTAL`,
-      `------------------------------------------------`,
-      ...(order?.items || []).map((item, i) => {
-        const desc = item.isDose 
-          ? `DOSE 50ML ${(item.product?.name || '').substring(0, 18)}`
-          : (item.product?.name || '').substring(0, 24);
-        const un = item.isDose ? 'ML' : (item.weightKg ? 'KG' : 'UN');
-        const qtd = item.weightKg ? (item.weightKg ?? 0).toFixed(3) : (item.quantity ?? 1).toString();
-        return `${String(i + 1).padStart(3, '0')}  ${desc.padEnd(24, ' ')} ${qtd.padStart(4, ' ')} ${un.padEnd(2, ' ')} R$${(item.totalPrice ?? 0).toFixed(2).padStart(7, ' ')}`;
-      }),
-      `------------------------------------------------`,
-      `QTD. TOTAL DE ITENS: ${(order?.items || []).length}`,
-      `SUBTOTAL:                          R$ ${(order?.subtotal ?? 0).toFixed(2)}`,
-      (order?.serviceFee || 0) > 0 ? `TAXA DE SERVICO (10%):             R$ ${(order.serviceFee ?? 0).toFixed(2)}` : '',
-      (order?.deliveryFee || 0) > 0 ? `TAXA DE ENTREGA:                   R$ ${(order.deliveryFee ?? 0).toFixed(2)}` : '',
-      `VALOR TOTAL A PAGAR:               R$ ${(order?.total ?? 0).toFixed(2)}`,
-      `FORMA DE PAGAMENTO:                ${order.payment?.method || 'PIX'}`,
-      `================================================`,
-      `EMISSAO: ${order.createdAt}   PEDIDO: ${order.code}`,
-      `OPERADOR: ${order.operatorName}`,
-      `CHAVE DE ACESSO NFC-e:`,
-      `${formatAccessKey(order?.nfceKey || '35260912345678000190650010000001011128392109')}`,
-      `PROTOCOLO DE AUTORIZACAO: ${order?.nfceProtocol || '135269988112233'}`,
-      `Tributos Totais Incidentes (Lei 12.741/12): R$ {(((order?.total ?? 0) * 0.28)).toFixed(2)} (28%)`,
-      `================================================`,
-      `      OBRIGADO PELA PREFERENCIA! VOLTE SEMPRE!  `,
-    ].filter(Boolean).join('\r\n');
-
-    const blob = new Blob([lines], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([receiptData.text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Cupom_NFCe_${order.code.replace('#', '')}.txt`;
+    a.download = `Comprovante_NFCe_${order.code.replace('#', '')}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden my-6 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
           <div className="flex items-center gap-2">
             <Printer className="w-4 h-4 text-amber-400" />
-            <span className="font-bold text-sm text-zinc-100 font-serif">Simulação Impressora Térmica ESC/POS (80mm)</span>
+            <span className="font-bold text-sm text-zinc-100 font-serif">Comprovante de Pagamento / NFC-e (80mm)</span>
           </div>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-200">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Receipt Container - Realistic Paper Look */}
-        <div className="p-6 bg-zinc-950 flex justify-center">
-          <div className="w-80 bg-stone-50 text-stone-900 p-5 rounded shadow-2xl font-mono text-[11px] leading-tight select-all border-dashed border-t-4 border-b-4 border-stone-300 relative">
-            {/* Store details */}
-            <div className="text-center pb-2 border-b border-dashed border-stone-400">
-              <h2 className="font-black text-xs tracking-wider uppercase">{store.name}</h2>
-              <p className="text-[10px] text-stone-700 mt-0.5">CNPJ: {store.cnpj} - IE: {store.ie}</p>
-              <p className="text-[9px] text-stone-600">{store.address}</p>
-              <p className="text-[9px] text-stone-600">{store.city} - {store.state} | {store.phone}</p>
+        {/* Receipt Container - Realistic Paper Look matching photograph */}
+        <div className="p-4 sm:p-6 bg-zinc-950 flex justify-center max-h-[70vh] overflow-y-auto">
+          <div className="w-[330px] bg-stone-50 text-stone-900 p-4 sm:p-5 rounded shadow-2xl font-mono text-[9.5px] leading-tight select-all border-dashed border-t-4 border-b-4 border-stone-300 relative">
+            
+            {/* Logomarca da Empresa */}
+            <div className="text-center mb-2">
+              <img 
+                src="/logo.jpg" 
+                alt={`Logo ${store.name}`}
+                className="mx-auto max-h-12 w-auto object-contain filter grayscale contrast-150" 
+              />
             </div>
 
-            <div className="py-2 text-center border-b border-dashed border-stone-400">
-              <p className="font-bold text-[10px] uppercase">DANFE NFC-e - Documento Auxiliar</p>
-              <p className="text-[9px] text-stone-600">Nota Fiscal de Consumidor Eletrônica</p>
-              <p className="text-[9px] text-emerald-800 font-bold mt-0.5">EMITIDA E AUTORIZADA NA SEFAZ</p>
+            {/* Cabeçalho do Estabelecimento */}
+            <div className="text-center pb-2 leading-tight">
+              <h2 className="font-bold text-[11px] tracking-wide uppercase">{store.name} - #0103</h2>
+              <p className="text-[9.5px] mt-0.5">CNPJ-{store.cnpj} &nbsp;&nbsp; {dateStr}</p>
+              <p className="text-[8.5px] uppercase mt-0.5">{store.address}, {store.city}-{store.state}</p>
+              <p className="font-bold text-[9.5px] uppercase mt-1">DANFE NFC-e Documento Auxiliar</p>
+              <p className="text-[8.5px]">da Nota Fiscal de Consumidor Eletronica</p>
             </div>
 
-            {/* Items Table with Fractionated Dose Specifications */}
-            <div className="py-2 border-b border-dashed border-stone-400">
-              <div className="grid grid-cols-12 font-bold text-[10px] pb-1 mb-1 border-b border-stone-300">
-                <span className="col-span-1">#</span>
-                <span className="col-span-6">ITEM</span>
-                <span className="col-span-2 text-center">QTD</span>
-                <span className="col-span-3 text-right">TOTAL</span>
+            {/* Tabela de Itens exatamente como no comprovante */}
+            <table className="w-full text-[8.5px] border-collapse mt-1">
+              <thead>
+                <tr className="border-b border-dashed border-stone-700 text-left font-bold">
+                  <th className="py-1 w-6">ITEM</th>
+                  <th className="py-1 w-24">CODIGO</th>
+                  <th className="py-1">DESCRICAO</th>
+                  <th className="py-1 text-right w-16">TOT. ITEM(R$)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, idx) => {
+                  const itemNum = String(idx + 1).padStart(3, '0');
+                  const unit = item.isDose ? 'ML' : (item.product?.tipoEmbalagem || (item.weightKg ? 'KG' : 'PC'));
+                  const desc = item.isDose 
+                    ? `DOSE 50ML ${item.product?.name?.toUpperCase() || ''}` 
+                    : `${item.product?.name?.toUpperCase() || ''} ${unit}`;
+                  const totPrice = (item.totalPrice ?? (item.quantity * item.unitPrice)).toFixed(2).replace('.', ',');
+                  const barcode = item.product?.barcode && item.product.barcode.length >= 8 
+                    ? item.product.barcode 
+                    : `789${String(Math.abs(idx * 8191 + 104857)).padStart(9, '0').slice(0, 9)}2`;
+
+                  return (
+                    <React.Fragment key={idx}>
+                      <tr className="leading-tight">
+                        <td className="py-0.5 align-top">{itemNum}</td>
+                        <td className="py-0.5 align-top font-mono">{barcode}</td>
+                        <td className="py-0.5 align-top font-semibold uppercase">{desc}</td>
+                        <td className="py-0.5 align-top text-right font-bold">{totPrice}</td>
+                      </tr>
+                      {(item.quantity ?? 1) > 1 && (
+                        <tr>
+                          <td></td>
+                          <td colSpan={3} className="text-[8px] text-stone-700 pl-1 pb-0.5">
+                            &nbsp;&nbsp;{item.quantity} {unit} X {(item.unitPrice ?? 0).toFixed(2).replace('.', ',')}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* Totais do Cupom */}
+            <div className="py-1.5 border-t border-dashed border-stone-700 space-y-0.5 text-[9px] mt-1">
+              <div className="flex justify-between">
+                <span>QTD. TOTAL DE ITENS</span>
+                <span className="font-bold">{totalItemsCount}</span>
               </div>
-
-              <div className="space-y-1.5">
-                {(order?.items || []).map((item, index) => (
-                  <div key={index} className="grid grid-cols-12 text-[10px] leading-snug">
-                    <span className="col-span-1 text-stone-500">{index + 1}</span>
-                    <span className="col-span-6 font-semibold truncate">
-                      {item.isDose ? `DOSE 50ML ${item.product?.name || ''}` : (item.product?.name || '')}
-                      {item.isDose && (
-                        <span className="block text-[8px] text-amber-800 font-sans font-bold">
-                          [Fracionado Garrafa Lote #26]
-                        </span>
-                      )}
-                      {item.weightKg && (
-                        <span className="block text-[8px] text-stone-600">
-                          {(item.weightKg ?? 0).toFixed(3)}kg x R$ {(item.product?.pricePerKg ?? 0).toFixed(2)}/kg
-                        </span>
-                      )}
-                    </span>
-                    <span className="col-span-2 text-center">
-                      {item.weightKg ? '1 un' : `${item.quantity} un`}
-                    </span>
-                    <span className="col-span-3 text-right font-bold">
-                      R$ {(item.totalPrice ?? 0).toFixed(2)}
-                    </span>
+              {(order.discount || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span>DESCONTO R$</span>
+                  <span>- {order.discount.toFixed(2).replace('.', ',')}</span>
+                </div>
+              )}
+              {(order.serviceFee || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span>TAXA DE SERVICO R$</span>
+                  <span>{order.serviceFee.toFixed(2).replace('.', ',')}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-black text-[10.5px] pt-1">
+                <span>VALOR TOTAL R$</span>
+                <span>{order.total.toFixed(2).replace('.', ',')}</span>
+              </div>
+              <div className="flex justify-between font-bold pt-1 text-[9px]">
+                <span>FORMA DE PAGAMENTO</span>
+                <span>VALOR PAGO</span>
+              </div>
+              <div className="flex justify-between text-[9px]">
+                <span>{paymentMethodName}</span>
+                <span>{(order.payment?.amount || order.total).toFixed(2).replace('.', ',')}</span>
+              </div>
+              {order.payment?.change && order.payment.change > 0 && (
+                <>
+                  <div className="flex justify-between text-[8px] text-stone-700">
+                    <span>VALOR RECEBIDO R$</span>
+                    <span>{(order.payment.receivedAmount || order.total).toFixed(2).replace('.', ',')}</span>
                   </div>
+                  <div className="flex justify-between text-[8px] text-stone-700 font-bold">
+                    <span>TROCO R$</span>
+                    <span>{order.payment.change.toFixed(2).replace('.', ',')}</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Linha dos Tributos IBPT */}
+            <div className="text-[8px] text-stone-800 leading-tight pt-1">
+              Trib aprox: R$ {fedTax.toFixed(2).replace('.', ',')} Fed, R$ {stateTax.toFixed(2).replace('.', ',')} Est e<br />
+              R$ 0,00 Mun Fonte: IBPT
+            </div>
+
+            {/* Identificação de Caixa e Terminal */}
+            <div className="text-[8px] text-stone-800 mt-1 space-y-0.5 leading-tight">
+              <p>LJ:0103 PDV:001 NSU:{nsu} O:001090 A:001083 COO:{coo}</p>
+              <p>Numero {numeroNota} Serie 203 Emissao {dateStr} {timeStr}</p>
+              <p className="break-all text-[7.5px]">{sefazUrl}</p>
+              <p className="font-bold tracking-tight text-[8px] break-all">{formattedKey}</p>
+            </div>
+
+            {/* Consumidor e Consulta QR Code */}
+            <div className="text-center mt-1">
+              <p className="font-bold text-[8px] uppercase">
+                {order.customerCpf ? `CONSUMIDOR CPF: ${order.customerCpf}` : 'CONSUMIDOR NAO IDENTIFICADO'}
+              </p>
+              <p className="text-[7.5px] text-stone-700">Consulta via leitor de QR Code</p>
+            </div>
+
+            {/* QR Code Regulamentar SEFAZ */}
+            <div className="my-2 flex justify-center">
+              <div className="p-1 bg-white border border-stone-300 rounded shadow-sm inline-block">
+                <QRCodeSVG value={qrCodeUrl} size={110} level="M" />
+              </div>
+            </div>
+
+            {/* Protocolo de Autorização */}
+            <div className="text-center text-[8px] text-stone-800 leading-tight">
+              <p>Protocolo de autorizacao: {protocolo}</p>
+              <p>{dateStr}</p>
+              {isCard && (
+                <div className="font-bold mt-1">
+                  <p>{cardBrand} *8033 AUT:{cardAut}</p>
+                  <p>NSU_CTF:{nsuCtf}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Divisória e Seção Cupom de Troca */}
+            <div className="border-t border-dashed border-stone-700 mt-2.5 pt-2 text-center">
+              <p className="font-bold text-[9.5px] tracking-wider uppercase">CUPOM DE TROCA</p>
+              <p className="text-[8px] text-stone-700 mt-0.5">DATA:{dateStr} LJ:0103 ECF:001 COD:{coo} NSU:{nsu}</p>
+              <div className="text-[7.5px] text-stone-800 mt-1 text-left leading-tight">
+                {items.slice(0, 3).map((it, i) => (
+                  <p key={i} className="truncate">
+                    {it.product?.barcode || '7898279790417'} {it.product?.name?.toUpperCase()}
+                  </p>
                 ))}
               </div>
+              <p className="font-bold text-[8.5px] mt-2 uppercase">OBRIGADO PELA PREFERENCIA! VOLTE SEMPRE</p>
             </div>
 
-            {/* Totals */}
-            <div className="py-2 border-b border-dashed border-stone-400 space-y-0.5 text-[10px]">
-              <div className="flex justify-between">
-                <span>SUBTOTAL:</span>
-                <span>R$ {(order?.subtotal ?? 0).toFixed(2)}</span>
-              </div>
-              {(order?.serviceFee || 0) > 0 && (
-                <div className="flex justify-between text-stone-700">
-                  <span>TAXA DE SERVIÇO (10%):</span>
-                  <span>R$ {(order?.serviceFee ?? 0).toFixed(2)}</span>
-                </div>
-              )}
-              {(order?.deliveryFee || 0) > 0 && (
-                <div className="flex justify-between text-stone-700">
-                  <span>TAXA DE ENTREGA:</span>
-                  <span>R$ {(order?.deliveryFee ?? 0).toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex justify-between font-black text-xs pt-1 border-t border-stone-300">
-                <span>VALOR TOTAL:</span>
-                <span>R$ {(order?.total ?? 0).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between pt-0.5 text-stone-700">
-                <span>PAGAMENTO:</span>
-                <span className="font-bold">{order?.payment?.method || 'PIX'}</span>
-              </div>
-            </div>
-
-            {/* Fiscal Footer & NFC-e Access Key */}
-            <div className="pt-2 text-center text-[9px] space-y-1">
-              <p className="font-bold">CHAVE DE ACESSO SEFAZ:</p>
-              <p className="text-[8px] font-mono tracking-tighter break-all bg-stone-200 p-1 rounded">
-                {formatAccessKey(order?.nfceKey || '35260912345678000190650010000001011128392109')}
-              </p>
-              <p>PROTOCOLO: {order?.nfceProtocol || '135269988112233'}</p>
-              <p className="text-stone-500">
-                Tributos Totais Incidentes (Lei 12.741/12): R$ {(((order?.total ?? 0) * 0.28)).toFixed(2)} (28.4%)
-              </p>
-              
-              {/* Mock QR Code for SEFAZ Consultation */}
-              <div className="py-2 flex flex-col items-center">
-                <div className="w-20 h-20 bg-stone-900 p-1.5 rounded flex items-center justify-center text-stone-50 shadow-sm">
-                  <QrCode className="w-full h-full text-white" />
-                </div>
-                <span className="text-[8px] text-stone-600 mt-1">Consulte pela chave de acesso em sefaz.sp.gov.br</span>
-              </div>
-
-              <p className="font-bold text-[9px] pt-1">Obrigado pela preferência!</p>
-            </div>
           </div>
         </div>
 
@@ -257,6 +317,7 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({ isOpen
             )}
             <button
               onClick={handlePrint}
+              id="btn-print-thermal-receipt"
               className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
               title="Imprimir cupom térmico no navegador"
             >

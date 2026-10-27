@@ -401,7 +401,7 @@ export function printThermalViaBrowser(htmlContent: string, widthMm: 80 | 58 = 8
       `);
       doc.close();
 
-      setTimeout(() => {
+      const triggerPrint = () => {
         try {
           iframe.contentWindow?.focus();
           iframe.contentWindow?.print();
@@ -412,9 +412,39 @@ export function printThermalViaBrowser(htmlContent: string, widthMm: 80 | 58 = 8
         } finally {
           setTimeout(() => {
             iframe.remove();
-          }, 2000);
+          }, 3000);
         }
-      }, 300);
+      };
+
+      // Aguarda o carregamento das imagens (logomarca e QR code) antes de abrir a impressão
+      const images = doc.images;
+      if (images && images.length > 0) {
+        let loadedCount = 0;
+        const total = images.length;
+        const onImgReady = () => {
+          loadedCount++;
+          if (loadedCount >= total) {
+            setTimeout(triggerPrint, 100);
+          }
+        };
+
+        for (let i = 0; i < total; i++) {
+          if (images[i].complete) {
+            loadedCount++;
+          } else {
+            images[i].onload = onImgReady;
+            images[i].onerror = onImgReady;
+          }
+        }
+
+        if (loadedCount >= total) {
+          setTimeout(triggerPrint, 150);
+        } else {
+          setTimeout(triggerPrint, 800); // Fallback timeout de segurança
+        }
+      } else {
+        setTimeout(triggerPrint, 300);
+      }
     } catch {
       window.print();
       resolve(true);
@@ -427,7 +457,82 @@ export function printThermalViaBrowser(htmlContent: string, widthMm: 80 | 58 = 8
 // ----------------------------------------------------------------------
 
 /**
+// ----------------------------------------------------------------------
+// AUXILIARES DE FORMATAÇÃO FISCAL PARA O COMPROVANTE TÉRMICO
+// ----------------------------------------------------------------------
+
+function parseOrderDateTime(createdAt?: string): { dateStr: string; timeStr: string } {
+  const now = new Date();
+  if (!createdAt) {
+    return {
+      dateStr: now.toLocaleDateString('pt-BR'),
+      timeStr: now.toLocaleTimeString('pt-BR'),
+    };
+  }
+  if (createdAt.includes(',')) {
+    const parts = createdAt.split(',');
+    return {
+      dateStr: parts[0].trim(),
+      timeStr: (parts[1] || '').trim() || now.toLocaleTimeString('pt-BR'),
+    };
+  }
+  if (createdAt.includes('T')) {
+    const d = new Date(createdAt);
+    if (!isNaN(d.getTime())) {
+      return {
+        dateStr: d.toLocaleDateString('pt-BR'),
+        timeStr: d.toLocaleTimeString('pt-BR'),
+      };
+    }
+  }
+  if (createdAt.includes(' ')) {
+    const parts = createdAt.split(' ');
+    return {
+      dateStr: parts[0].trim(),
+      timeStr: (parts[1] || '').trim() || now.toLocaleTimeString('pt-BR'),
+    };
+  }
+  return {
+    dateStr: createdAt,
+    timeStr: now.toLocaleTimeString('pt-BR'),
+  };
+}
+
+function getProductBarcode(product?: { barcode?: string; id?: string }, index: number = 0): string {
+  if (product?.barcode && product.barcode.trim().length >= 8) {
+    return product.barcode.trim().slice(0, 14);
+  }
+  const idNum = Math.abs(
+    (product?.id || `item_${index}`).split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)
+  );
+  const body = `789${String(idNum).padStart(9, '0').slice(0, 9)}`;
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(body[i], 10) * (i % 2 === 0 ? 1 : 3);
+  }
+  const checkDigit = (10 - (sum % 10)) % 10;
+  return `${body}${checkDigit}`;
+}
+
+function getPaymentMethodLabel(method?: string): string {
+  if (!method) return 'Cartao de Credito';
+  const m = method.toUpperCase();
+  if (m === 'TEF_CREDITO' || m.includes('CREDITO')) return 'Cartao de Credito';
+  if (m === 'TEF_DEBITO' || m.includes('DEBITO')) return 'Cartao de Debito';
+  if (m === 'DINHEIRO') return 'Dinheiro';
+  if (m === 'PIX') return 'PIX';
+  if (m === 'VOUCHER' || m.includes('VALE')) return 'Voucher / Vale';
+  if (m === 'COMANDA') return 'Comanda';
+  return method;
+}
+
+// ----------------------------------------------------------------------
+// GERADORES DE TEXTO & HTML PARA OS 3 SETORES (PDV, COZINHA E BAR)
+// ----------------------------------------------------------------------
+
+/**
  * 1. Comprovante de Venda / Cupom Não Fiscal / NFC-e do PDV
+ * Layout idêntico ao cupom fiscal térmico com Logomarca, colunas SEFAZ e Cupom de Troca
  */
 export function generatePdvReceipt(
   order: Order,
@@ -435,131 +540,308 @@ export function generatePdvReceipt(
   widthMm: 80 | 58 = 80
 ): { text: string; html: string; escPosBytes: Uint8Array } {
   const colWidth = widthMm === 80 ? 48 : 32;
-  const line = '='.repeat(colWidth);
-  const subline = '-'.repeat(colWidth);
+  const line = '-'.repeat(colWidth);
 
   const items = order.items || [];
-  const totalItems = items.reduce((sum, item) => sum + (item.quantity ?? 1), 0);
+  const totalItemsCount = items.reduce((sum, item) => sum + (item.quantity ?? 1), 0);
 
-  // Texto Monospaced Raw
+  const { dateStr, timeStr } = parseOrderDateTime(order.createdAt);
+  const rawKey = (order.nfceKey || '32170133014556014901652030000122301986636180')
+    .replace(/\D/g, '')
+    .padEnd(44, '0')
+    .slice(0, 44);
+  const formattedKey = rawKey.replace(/(\d{4})/g, '$1 ').trim();
+
+  const numeroNota = (order.code.replace(/\D/g, '') || '000012230').padStart(9, '0');
+  const coo = (order.code.replace(/\D/g, '') || '029158').slice(-6).padStart(6, '0');
+  const nsu = (order.payment?.tefAuthorizationCode?.replace(/\D/g, '') || order.code.replace(/\D/g, '') || '000139')
+    .slice(-6)
+    .padStart(6, '0');
+  const protocolo = order.nfceProtocol || '332170000222766';
+  const sefazUrl = `http://app.sefaz.${(store.state || 'sp').toLowerCase()}.gov.br/ConsultaNFCe/QRCode.aspx`;
+  const qrCodeUrl = `${sefazUrl}?p=${rawKey}|2|1|1|8B92942F-8461-41AA-B73C-E68241A0B2C9`;
+
+  const fedTax = (order.total ?? 0) * 0.1345;
+  const stateTax = (order.total ?? 0) * 0.1500;
+  const paymentMethodName = getPaymentMethodLabel(order.payment?.method);
+  const isCard = paymentMethodName.includes('Cartao') || (order.payment?.method || '').toUpperCase().startsWith('TEF');
+  const cardBrand = (order.payment?.tefCardBrand || 'MASTERCARD').toUpperCase();
+  const cardAut = order.payment?.tefAuthorizationCode?.replace(/\D/g, '') || '451771';
+  const nsuCtf = order.payment?.pixTxId?.replace(/\D/g, '') || '505311';
+
+  const consumerText = order.customerCpf
+    ? `CONSUMIDOR CPF: ${order.customerCpf}${order.customerName ? ` - ${order.customerName.toUpperCase()}` : ''}`
+    : 'CONSUMIDOR NAO IDENTIFICADO';
+
+  // ----------------------------------------------------
+  // TEXTO MONOSPACE (ESC/POS & ARQUIVO .TXT)
+  // ----------------------------------------------------
   const lines: string[] = [];
-  lines.push(line);
-  lines.push(store.name.toUpperCase().substring(0, colWidth));
-  lines.push(`CNPJ: ${store.cnpj}`);
-  lines.push(`${store.address.substring(0, colWidth)}`);
-  lines.push(`${store.city}/${store.state} - TEL: ${store.phone}`);
-  lines.push(line);
-  lines.push(`CUPOM DE VENDA - DANFE NFC-e SIMPLIFICADO`);
-  lines.push(`PEDIDO: ${order.code}  DATA: ${order.createdAt}`);
-  lines.push(`OPERADOR: ${order.operatorName.toUpperCase()}`);
-  lines.push(subline);
-  lines.push(widthMm === 80 ? `QTD  DESCRICAO               VL.UNIT    VL.TOTAL` : `QTD DESCRICAO           TOTAL`);
-  lines.push(subline);
+  lines.push(`         [ LOGOMARCA: ${store.name.toUpperCase()} ]`);
+  lines.push(`${store.name.toUpperCase()} - #0103`);
+  lines.push(`CNPJ-${store.cnpj}  ${dateStr}`);
+  lines.push(`${store.address.toUpperCase()}, ${store.city.toUpperCase()}-${store.state.toUpperCase()}`);
+  lines.push(`DANFE NFC-e Documento Auxiliar`);
+  lines.push(`da Nota Fiscal de Consumidor Eletronica`);
+  lines.push(widthMm === 80 ? `ITEM CODIGO            DESCRICAO                TOT. ITEM(R$)` : `ITEM CODIGO        DESC   TOT(R$)`);
 
-  for (const item of items) {
-    const name = item.isDose 
-      ? `DOSE 50ML ${item.product.name}` 
-      : item.product.name;
-    const truncatedName = name.substring(0, widthMm === 80 ? 22 : 16);
-    const qty = `${item.quantity}x`.padEnd(4, ' ');
-    const unitPrice = (item.unitPrice ?? 0).toFixed(2);
-    const totPrice = (item.totalPrice ?? 0).toFixed(2);
+  items.forEach((item, idx) => {
+    const itemNum = String(idx + 1).padStart(3, '0');
+    const barcode = getProductBarcode(item.product, idx);
+    const unit = item.isDose ? 'ML' : (item.product?.tipoEmbalagem || (item.weightKg ? 'KG' : 'PC'));
+    const rawDesc = item.isDose ? `DOSE 50ML ${item.product.name.toUpperCase()}` : item.product.name.toUpperCase();
+    const truncatedDesc = `${rawDesc} ${unit}`.substring(0, widthMm === 80 ? 24 : 14);
+    const totPrice = (item.totalPrice ?? (item.quantity * item.unitPrice)).toFixed(2).replace('.', ',');
 
     if (widthMm === 80) {
-      lines.push(`${qty} ${truncatedName.padEnd(22, ' ')} R$${unitPrice.padStart(6, ' ')} R$${totPrice.padStart(7, ' ')}`);
+      lines.push(`${itemNum} ${barcode.padEnd(13, ' ')} ${truncatedDesc.padEnd(24, ' ')} ${totPrice.padStart(8, ' ')}`);
     } else {
-      lines.push(`${qty} ${truncatedName.padEnd(16, ' ')} R$${totPrice.padStart(7, ' ')}`);
+      lines.push(`${itemNum} ${barcode.substring(0, 11)} ${truncatedDesc.padEnd(14, ' ')} ${totPrice.padStart(6, ' ')}`);
     }
-  }
 
-  lines.push(subline);
-  lines.push(`SUBTOTAL:                      R$ ${(order.subtotal ?? 0).toFixed(2)}`);
+    if ((item.quantity ?? 1) > 1) {
+      const unitPriceFormatted = (item.unitPrice ?? 0).toFixed(2).replace('.', ',');
+      lines.push(`    ${item.quantity} ${unit} X ${unitPriceFormatted}`);
+    }
+  });
+
+  lines.push(`QTD. TOTAL DE ITENS ${String(totalItemsCount).padStart(colWidth - 20, ' ')}`);
   if ((order.discount ?? 0) > 0) {
-    lines.push(`DESCONTO:                    - R$ ${(order.discount ?? 0).toFixed(2)}`);
+    lines.push(`DESCONTO R$ - ${order.discount.toFixed(2).replace('.', ',')}`);
   }
   if ((order.serviceFee ?? 0) > 0) {
-    lines.push(`TAXA DE SERVICO (10%):         R$ ${(order.serviceFee ?? 0).toFixed(2)}`);
+    lines.push(`TAXA DE SERVICO R$ ${order.serviceFee.toFixed(2).replace('.', ',')}`);
   }
-  if ((order.deliveryFee ?? 0) > 0) {
-    lines.push(`TAXA DE ENTREGA:               R$ ${(order.deliveryFee ?? 0).toFixed(2)}`);
+  lines.push(`VALOR TOTAL R$ ${String(order.total.toFixed(2).replace('.', ',')).padStart(colWidth - 15, ' ')}`);
+  lines.push(`FORMA DE PAGAMENTO ${'VALOR PAGO'.padStart(colWidth - 19, ' ')}`);
+  lines.push(`${paymentMethodName.padEnd(20, ' ')} ${String((order.payment?.amount || order.total).toFixed(2).replace('.', ',')).padStart(colWidth - 21, ' ')}`);
+
+  if (order.payment?.change && order.payment.change > 0) {
+    lines.push(`VALOR RECEBIDO R$ ${String((order.payment.receivedAmount || order.total).toFixed(2).replace('.', ',')).padStart(colWidth - 18, ' ')}`);
+    lines.push(`TROCO R$ ${String(order.payment.change.toFixed(2).replace('.', ',')).padStart(colWidth - 9, ' ')}`);
   }
+
+  lines.push(`Trib aprox: R$ ${fedTax.toFixed(2).replace('.', ',')} Fed, R$ ${stateTax.toFixed(2).replace('.', ',')} Est e`);
+  lines.push(`R$ 0,00 Mun Fonte: IBPT`);
+  lines.push(`LJ:0103 PDV:001 NSU:${nsu} O:001090 A:001083 COO:${coo}`);
+  lines.push(`Numero ${numeroNota} Serie 203 Emissao ${dateStr} ${timeStr}`);
+  lines.push(sefazUrl);
+  lines.push(formattedKey);
+  lines.push(`           ${consumerText}`);
+  lines.push(`          Consulta via leitor de QR Code`);
+  lines.push(`                  [ QR CODE SEFAZ ]`);
+  lines.push(`Protocolo de autorizacao: ${protocolo}`);
+  lines.push(`                ${dateStr}`);
+
+  if (isCard) {
+    lines.push(`${cardBrand} *8033 AUT:${cardAut}`);
+    lines.push(`NSU_CTF:${nsuCtf}`);
+  }
+
   lines.push(line);
-  lines.push(`TOTAL A PAGAR:                 R$ ${(order.total ?? 0).toFixed(2)}`);
-  lines.push(`FORMA DE PAGAMENTO:            ${order.payment?.method || 'DINHEIRO / PIX'}`);
-  lines.push(subline);
-  lines.push(`CHAVE DE ACESSO NFC-e:`);
-  lines.push(order.nfceKey || '35260912345678000190650010000001011128392109');
-  lines.push(`Tributos Totais (Lei 12.741/12): R$ ${(((order.total ?? 0) * 0.28)).toFixed(2)} (28%)`);
-  lines.push(line);
-  lines.push(`     OBRIGADO PELA PREFERENCIA! VOLTE SEMPRE!   `);
-  lines.push(`       SISTEMA ADEGASWG ERP V4.0                `);
+  lines.push(`                    CUPOM DE TROCA`);
+  lines.push(`DATA:${dateStr} LJ:0103 ECF:001 COD:${coo} NSU:${nsu}`);
+  items.slice(0, 3).forEach((item, idx) => {
+    const bc = getProductBarcode(item.product, idx);
+    lines.push(`${bc} ${item.product.name.toUpperCase().substring(0, 30)}`);
+  });
+  lines.push(`        OBRIGADO PELA PREFERENCIA! VOLTE SEMPRE`);
   lines.push(`\n\n\n`);
 
   const text = lines.join('\n');
 
-  // HTML Formatted for Browser Print
+  // ----------------------------------------------------
+  // HTML FORMATADO PARA IMPRESSÃO TÉRMICA VIA BROWSER
+  // ----------------------------------------------------
   const html = `
-    <div class="center bold large">${store.name}</div>
-    <div class="center" style="font-size: 10px;">CNPJ: ${store.cnpj} - IE: ${store.ie}</div>
-    <div class="center" style="font-size: 9px;">${store.address} - ${store.city}/${store.state}</div>
-    <div class="double-divider"></div>
-    <div class="center bold">DOCUMENTO AUXILIAR DA NFC-e</div>
-    <div class="row" style="font-size: 10px; margin-top: 4px;">
-      <span>PEDIDO: <b>${order.code}</b></span>
-      <span>${order.createdAt}</span>
+    <!-- Logomarca Oficial -->
+    <div style="text-align: center; margin-bottom: 6px;">
+      <img src="/logo.jpg" alt="Logo ADEGASWG" style="max-height: 48px; max-width: 140px; object-fit: contain; display: inline-block; filter: grayscale(100%) contrast(160%);" />
     </div>
-    <div style="font-size: 10px;">OPERADOR: ${order.operatorName}</div>
-    <div class="divider"></div>
-    <table style="width: 100%; font-size: ${widthMm === 80 ? '11px' : '10px'}; border-collapse: collapse;">
+
+    <!-- Cabeçalho da Empresa -->
+    <div class="center bold" style="font-size: 12px; letter-spacing: 0.5px; line-height: 1.2;">
+      ${store.name.toUpperCase()} - #0103
+    </div>
+    <div class="center" style="font-size: 10px; margin-top: 1px;">
+      CNPJ-${store.cnpj}&nbsp;&nbsp;${dateStr}
+    </div>
+    <div class="center" style="font-size: 9px; margin-top: 1px; text-transform: uppercase;">
+      ${store.address}, ${store.city}-${store.state}
+    </div>
+    <div class="center bold" style="font-size: 10px; margin-top: 4px;">
+      DANFE NFC-e Documento Auxiliar
+    </div>
+    <div class="center" style="font-size: 9px;">
+      da Nota Fiscal de Consumidor Eletronica
+    </div>
+
+    <!-- Tabela de Itens Modelo SEFAZ -->
+    <table style="width: 100%; font-size: ${widthMm === 80 ? '9.5px' : '8.5px'}; border-collapse: collapse; margin-top: 6px;">
       <thead>
-        <tr style="border-bottom: 1px dashed #000; text-align: left;">
-          <th style="width: 30px;">QTD</th>
-          <th>ITEM</th>
-          <th style="text-align: right;">TOTAL</th>
+        <tr style="border-bottom: 1px dashed #000; text-align: left; font-weight: bold;">
+          <th style="width: 26px;">ITEM</th>
+          <th style="width: 94px;">CODIGO</th>
+          <th>DESCRICAO</th>
+          <th style="text-align: right; width: 66px;">TOT. ITEM(R$)</th>
         </tr>
       </thead>
       <tbody>
         ${items
-          .map(
-            (item) => `
-          <tr>
-            <td class="bold">${item.quantity}x</td>
-            <td>
-              ${item.isDose ? `<b>[DOSE 50ML]</b> ` : ''}${item.product.name}
-              ${item.notes ? `<div class="obs">* Obs: ${item.notes}</div>` : ''}
-            </td>
-            <td style="text-align: right; font-weight: bold;">R$ ${(item.totalPrice ?? 0).toFixed(2)}</td>
-          </tr>
-        `
-          )
+          .map((item, index) => {
+            const itemNum = String(index + 1).padStart(3, '0');
+            const barcode = getProductBarcode(item.product, index);
+            const unit = item.isDose ? 'ML' : (item.product?.tipoEmbalagem || (item.weightKg ? 'KG' : 'PC'));
+            const desc = item.isDose 
+              ? `DOSE 50ML ${item.product.name.toUpperCase()}` 
+              : `${item.product.name.toUpperCase()} ${unit}`;
+            const totPrice = (item.totalPrice ?? (item.quantity * item.unitPrice)).toFixed(2).replace('.', ',');
+            const qty = item.quantity ?? 1;
+
+            return `
+              <tr>
+                <td style="vertical-align: top;">${itemNum}</td>
+                <td style="vertical-align: top; font-family: monospace;">${barcode}</td>
+                <td style="vertical-align: top; word-break: break-word;">${desc}</td>
+                <td style="vertical-align: top; text-align: right; font-weight: bold;">${totPrice}</td>
+              </tr>
+              ${
+                qty > 1
+                  ? `<tr>
+                      <td></td>
+                      <td colspan="3" style="font-size: 8.5px; color: #222; padding-left: 2px;">
+                        &nbsp;&nbsp;${qty} ${unit} X ${(item.unitPrice ?? 0).toFixed(2).replace('.', ',')}
+                      </td>
+                    </tr>`
+                  : ''
+              }
+            `;
+          })
           .join('')}
       </tbody>
     </table>
-    <div class="divider"></div>
-    <div class="row"><span>SUBTOTAL:</span><span>R$ ${(order.subtotal ?? 0).toFixed(2)}</span></div>
-    ${(order.discount ?? 0) > 0 ? `<div class="row"><span>DESCONTO:</span><span>- R$ ${(order.discount ?? 0).toFixed(2)}</span></div>` : ''}
-    ${(order.serviceFee ?? 0) > 0 ? `<div class="row"><span>TAXA DE SERVIÇO (10%):</span><span>R$ ${(order.serviceFee ?? 0).toFixed(2)}</span></div>` : ''}
-    <div class="double-divider"></div>
-    <div class="row bold large">
-      <span>TOTAL A PAGAR:</span>
-      <span>R$ ${(order.total ?? 0).toFixed(2)}</span>
+
+    <div class="divider" style="margin: 4px 0; border-bottom: 1px dashed #000;"></div>
+
+    <!-- Totais e Pagamentos -->
+    <div class="row" style="font-size: 10px;">
+      <span>QTD. TOTAL DE ITENS</span>
+      <span class="bold">${totalItemsCount}</span>
     </div>
-    <div class="row" style="margin-top: 4px;">
-      <span>FORMA PGTO:</span>
-      <span class="bold">${order.payment?.method || 'PIX'}</span>
+    ${
+      (order.discount ?? 0) > 0
+        ? `<div class="row" style="font-size: 10px;"><span>DESCONTO R$</span><span>- ${order.discount.toFixed(2).replace('.', ',')}</span></div>`
+        : ''
+    }
+    ${
+      (order.serviceFee ?? 0) > 0
+        ? `<div class="row" style="font-size: 10px;"><span>TAXA DE SERVICO R$</span><span>${order.serviceFee.toFixed(2).replace('.', ',')}</span></div>`
+        : ''
+    }
+    <div class="row bold" style="font-size: 11.5px; margin-top: 2px;">
+      <span>VALOR TOTAL R$</span>
+      <span>${order.total.toFixed(2).replace('.', ',')}</span>
     </div>
-    <div class="divider"></div>
-    <div class="center" style="font-size: 9px; margin-top: 6px;">
-      CHAVE DE ACESSO NFC-e:<br>
-      <b>${order.nfceKey || '3526 0912 3456 7800 0190 6500 1000 0001 0111 2839 2109'}</b>
+
+    <div class="row bold" style="margin-top: 4px; font-size: 10px;">
+      <span>FORMA DE PAGAMENTO</span>
+      <span>VALOR PAGO</span>
     </div>
-    <div class="center" style="font-size: 9px; margin-top: 4px;">
-      Tributos Incidentes (Lei 12.741/12): R$ ${(((order.total ?? 0) * 0.28)).toFixed(2)} (28%)
+    <div class="row" style="font-size: 10px;">
+      <span>${paymentMethodName}</span>
+      <span>${(order.payment?.amount || order.total).toFixed(2).replace('.', ',')}</span>
     </div>
-    <div class="double-divider"></div>
-    <div class="center bold" style="font-size: 11px; margin-top: 6px;">OBRIGADO PELA PREFERÊNCIA!</div>
-    <div class="center" style="font-size: 9px; color: #555;">AdeGaswg ERP - Módulo PDV</div>
-    <div style="height: 15mm;"></div>
+
+    ${
+      order.payment?.change && order.payment.change > 0
+        ? `
+        <div class="row" style="font-size: 9px; margin-top: 1px;">
+          <span>VALOR RECEBIDO R$</span>
+          <span>${(order.payment.receivedAmount || order.total).toFixed(2).replace('.', ',')}</span>
+        </div>
+        <div class="row" style="font-size: 9px;">
+          <span>TROCO R$</span>
+          <span class="bold">${order.payment.change.toFixed(2).replace('.', ',')}</span>
+        </div>
+      `
+        : ''
+    }
+
+    <!-- Tributos IBPT -->
+    <div style="font-size: 9px; margin-top: 4px; line-height: 1.25;">
+      Trib aprox: R$ ${fedTax.toFixed(2).replace('.', ',')} Fed, R$ ${stateTax.toFixed(2).replace('.', ',')} Est e<br>
+      R$ 0,00 Mun Fonte: IBPT
+    </div>
+
+    <!-- Identificação do Caixa / Terminal -->
+    <div style="font-size: 8.5px; margin-top: 4px;">
+      LJ:0103 PDV:001 NSU:${nsu} O:001090 A:001083 COO:${coo}
+    </div>
+    <div style="font-size: 8.5px;">
+      Numero ${numeroNota} Serie 203 Emissao ${dateStr} ${timeStr}
+    </div>
+
+    <!-- URL SEFAZ e Chave de Acesso -->
+    <div style="font-size: 7.5px; word-break: break-all; margin-top: 3px;">
+      ${sefazUrl}
+    </div>
+    <div class="bold" style="font-size: 8px; letter-spacing: 0.5px; margin-top: 2px; word-break: break-all;">
+      ${formattedKey}
+    </div>
+
+    <!-- Consumidor e Instrução QR Code -->
+    <div class="center bold" style="font-size: 9px; margin-top: 4px;">
+      ${consumerText}
+    </div>
+    <div class="center" style="font-size: 8.5px;">
+      Consulta via leitor de QR Code
+    </div>
+
+    <!-- QR Code SEFAZ Regulamentar -->
+    <div class="center" style="margin: 5px auto;">
+      <img 
+        src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=0&data=${encodeURIComponent(qrCodeUrl)}" 
+        alt="QR Code SEFAZ" 
+        style="width: 115px; height: 115px; display: inline-block; image-rendering: pixelated; margin: 0 auto;" 
+      />
+    </div>
+
+    <!-- Protocolo de Autorização -->
+    <div class="center" style="font-size: 8.5px;">
+      Protocolo de autorizacao: ${protocolo}<br>
+      ${dateStr}
+    </div>
+
+    ${
+      isCard
+        ? `
+      <div class="center bold" style="font-size: 8.5px; margin-top: 3px;">
+        ${cardBrand} *8033 AUT:${cardAut}<br>
+        NSU_CTF:${nsuCtf}
+      </div>
+    `
+        : ''
+    }
+
+    <!-- Divisória Cupom de Troca -->
+    <div class="divider" style="margin: 6px 0; border-bottom: 1px dashed #000;"></div>
+
+    <div class="center bold" style="font-size: 10.5px; letter-spacing: 1px;">
+      CUPOM DE TROCA
+    </div>
+    <div class="center" style="font-size: 8.5px; margin-top: 2px;">
+      DATA:${dateStr} LJ:0103 ECF:001 COD:${coo} NSU:${nsu}
+    </div>
+    <div style="font-size: 8px; margin-top: 3px; line-height: 1.25;">
+      ${items
+        .slice(0, 3)
+        .map((it, idx) => `${getProductBarcode(it.product, idx)} ${it.product.name.toUpperCase()}`)
+        .join('<br>')}
+    </div>
+    <div class="center bold" style="font-size: 9px; margin-top: 6px;">
+      OBRIGADO PELA PREFERENCIA! VOLTE SEMPRE
+    </div>
+    <div style="height: 10mm;"></div>
   `;
 
   // Byte Array ESC/POS com corte de papel e pulso de gaveta
@@ -567,7 +849,7 @@ export function generatePdvReceipt(
     ESC_POS_COMMANDS.INIT,
     ESC_POS_COMMANDS.ALIGN_CENTER,
     ESC_POS_COMMANDS.BOLD_ON,
-    stringToBytes(`${store.name}\n`),
+    stringToBytes(`${store.name.toUpperCase()}\n`),
     ESC_POS_COMMANDS.BOLD_OFF,
     ESC_POS_COMMANDS.ALIGN_LEFT,
     stringToBytes(text),
