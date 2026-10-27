@@ -480,11 +480,11 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
         {/* Content Body */}
         {activeMode === 'PRINT_QR' ? (
           /* Printable QR Code Totem View */
-          <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-center flex-1 flex flex-col justify-center items-center">
+          <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-center flex-1 flex flex-col justify-center items-center w-full min-h-0">
             {/* Totem Card idêntico à imagem enviada pelo usuário */}
             <div 
               id="totem-display-card"
-              className="w-full max-w-[285px] mx-auto p-6 sm:p-7 rounded-3xl bg-white border-2 border-amber-300 shadow-2xl flex flex-col items-center justify-center text-center select-none"
+              className="w-full max-w-[275px] mx-auto p-5 sm:p-6 rounded-3xl bg-white border-2 border-amber-400 shadow-2xl flex flex-col items-center justify-center text-center select-none"
             >
               
               {/* Logomarca da Adega com fundo preto e bordas arredondadas */}
@@ -504,18 +504,19 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
                 Cardápio & Pedidos Digitais
               </p>
 
-              {/* QR Code Nítido e Centralizado com moldura suave */}
-              <div className="my-3.5 p-3.5 bg-white border border-zinc-200/70 rounded-2xl shadow-xs inline-flex items-center justify-center">
+              {/* QR Code Nítido, Grande e Centralizado com moldura suave */}
+              <div className="my-3 p-3 bg-white border border-zinc-200/80 rounded-2xl shadow-xs inline-flex items-center justify-center mx-auto">
                 <QRCodeSVG
                   id="totem-mesa-qr-svg"
                   value={tableQrUrl}
-                  size={150}
+                  size={170}
                   level="M"
+                  className="w-40 h-40 max-w-full object-contain"
                 />
               </div>
 
               {/* Tag com contorno da Mesa */}
-              <div>
+              <div className="mx-auto">
                 <div className="inline-flex items-center justify-center px-5 py-1 rounded-full border border-zinc-300 bg-white shadow-xs">
                   <span className="font-black text-xs text-zinc-900 tracking-wider">
                     MESA {String(currentTable.number).padStart(2, '0')}
@@ -524,7 +525,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
               </div>
 
               {/* Instruções do Autoatendimento */}
-              <p className="text-[10px] text-zinc-500 mt-2.5 leading-snug max-w-[215px] mx-auto text-center font-normal">
+              <p className="text-[10px] text-zinc-500 mt-2.5 leading-snug max-w-[210px] mx-auto text-center font-normal">
                 Aponte a câmera do seu smartphone para fazer pedidos sem esperar o garçom.
               </p>
             </div>
