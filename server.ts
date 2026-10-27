@@ -283,9 +283,6 @@ async function startServer() {
         avatar: user.avatar || '/logo.jpg',
         pin: String(user.pin || ''),
         store_id: user.storeId || 'store-1',
-        phone: user.phone || null,
-        whatsapp: user.whatsapp || null,
-        cpf_cnpj: user.cpfCnpj || null,
         updated_at: new Date().toISOString(),
       };
 

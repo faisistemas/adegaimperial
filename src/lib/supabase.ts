@@ -4,20 +4,20 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 let supabaseClient: SupabaseClient | null = null;
 
 const DEFAULT_SUPABASE_URL = 'https://zaryikcqbvjueyisudqy.supabase.co';
-const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inphcnlpa2NxYnZqdWV5aXN1ZHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NzAzNzIsImV4cCI6MjEwODM0NjM3Mn0.uMe7dgVuIKITdC7OKedbxMVFPDDcBPYkB-Sn5J7xWyY';
+const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inphcnlpa2NxYnZqdWV5aXN1ZHF5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5Mjc3MDM3MiwiZXhwIjoyMTA4MzQ2MzcyfQ.pYraq-QNLJwgRs3LPiUKz9ZhQPC9aB3ztnJ8TgOMkfs';
 
 export function getSupabaseClient(): SupabaseClient | null {
   const metaEnv = (import.meta as any).env || {};
   const url = metaEnv.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-  const anonKey = metaEnv.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+  const key = metaEnv.VITE_SUPABASE_SERVICE_ROLE_KEY || metaEnv.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_KEY;
 
-  if (!url || !anonKey) {
+  if (!url || !key) {
     return null;
   }
 
   if (!supabaseClient) {
     try {
-      supabaseClient = createClient(url, anonKey, {
+      supabaseClient = createClient(url, key, {
         auth: {
           persistSession: true,
           autoRefreshToken: true,

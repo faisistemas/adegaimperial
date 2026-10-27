@@ -660,7 +660,7 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         })
         .then(() => {}, () => {});
 
-      // 2. Se a tabela usuarios existir, persiste também nela
+      // 2. Persiste na tabela usuarios do Supabase
       sb.from('usuarios')
         .upsert(
           users.map((u) => ({
@@ -670,13 +670,18 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             role: u.role,
             avatar: u.avatar || '/logo.jpg',
             pin: u.pin,
-            phone: u.whatsapp || u.phone || null,
-            whatsapp: u.whatsapp || null,
             store_id: u.storeId || 'store-1',
             updated_at: new Date().toISOString(),
           }))
         )
-        .then(() => {}, () => {});
+        .then(
+          ({ error }) => {
+            if (error) {
+              console.warn('[Supabase Sync usuarios Warning]:', error.message);
+            }
+          },
+          () => {}
+        );
     }
   }, [users]);
 

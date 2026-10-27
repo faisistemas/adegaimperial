@@ -93,11 +93,11 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
           avatar: updatedUser.avatar || '/logo.jpg',
           pin: updatedUser.pin,
           store_id: updatedUser.storeId || 'store-1',
-          phone: updatedUser.whatsapp || updatedUser.phone || null,
-          whatsapp: updatedUser.whatsapp || null,
           updated_at: new Date().toISOString(),
         })
-        .then(() => {}, () => {});
+        .then(({ error }) => {
+          if (error) console.error('[Supabase Password Error]:', error);
+        });
     }
 
     setPasswords((prev) => ({ ...prev, [user.id]: '' }));
@@ -227,11 +227,11 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
             avatar: updatedUser.avatar || '/logo.jpg',
             pin: updatedUser.pin,
             store_id: updatedUser.storeId || 'store-1',
-            phone: updatedUser.whatsapp || updatedUser.phone || null,
-            whatsapp: updatedUser.whatsapp || null,
             updated_at: new Date().toISOString(),
           })
-          .then(() => {}, () => {});
+          .then(({ error }) => {
+            if (error) console.error('[Supabase Update User Error]:', error);
+          });
       }
 
       showNotification('success', `Usuário "${formName}" atualizado com sucesso!`);
@@ -268,11 +268,15 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
             avatar: newUser.avatar || '/logo.jpg',
             pin: newUser.pin,
             store_id: newUser.storeId || 'store-1',
-            phone: newUser.whatsapp || newUser.phone || null,
-            whatsapp: newUser.whatsapp || null,
             updated_at: new Date().toISOString(),
           })
-          .then(() => {}, () => {});
+          .then(({ error }) => {
+            if (error) {
+              console.error('[Supabase Create User Error]:', error);
+            } else {
+              console.log('[Supabase User Created Successfully]:', newUser.name);
+            }
+          });
       }
 
       showNotification('success', `Usuário "${newUser.name}" cadastrado com sucesso no banco de dados!`);
