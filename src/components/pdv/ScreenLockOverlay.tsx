@@ -22,6 +22,17 @@ export const ScreenLockOverlay: React.FC = () => {
   const [regError, setRegError] = useState<string | null>(null);
   const [regSuccess, setRegSuccess] = useState<string | null>(null);
 
+  // Estados para o modal Cadastro com Google
+  const [showGoogleModal, setShowGoogleModal] = useState<boolean>(false);
+  const [googleName, setGoogleName] = useState<string>('Operador Google');
+  const [googleEmail, setGoogleEmail] = useState<string>('operador@gmail.com');
+  const [googleRole, setGoogleRole] = useState<UserRole>('STORE_MANAGER');
+  const [googlePassword, setGooglePassword] = useState<string>('');
+  const [showGooglePassword, setShowGooglePassword] = useState<boolean>(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+  const [googleSuccess, setGoogleSuccess] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
+
   // Estados para o modal Recuperação de Senha por E-mail
   const [forgotEmail, setForgotEmail] = useState<string>('');
   const [forgotStep, setForgotStep] = useState<'input' | 'success' | 'new_password'>('input');
@@ -162,15 +173,75 @@ export const ScreenLockOverlay: React.FC = () => {
     }, 350);
   };
 
-  const handleGoogleLogin = () => {
-    setIsLoading(true);
-    setErrorMsg(null);
+  const handleOpenGoogle = () => {
+    setGoogleError(null);
+    setGoogleSuccess(null);
+    if (email && email.includes('@')) {
+      setGoogleEmail(email);
+    } else {
+      setGoogleEmail('usuario.google@gmail.com');
+    }
+    setGooglePassword('');
+    setShowGoogleModal(true);
+  };
+
+  const handleGoogleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    setGoogleError(null);
+
+    const trimmedName = googleName.trim();
+    const trimmedEmail = googleEmail.trim().toLowerCase();
+    const trimmedPass = googlePassword.trim();
+
+    if (!trimmedName) {
+      setGoogleError('Informe seu nome para a conta Google.');
+      playErrorBuzz();
+      return;
+    }
+    if (!trimmedEmail || !trimmedEmail.includes('@')) {
+      setGoogleError('Informe um e-mail válido (ex: seuemail@gmail.com).');
+      playErrorBuzz();
+      return;
+    }
+    if (!trimmedPass) {
+      setGoogleError('Defina uma senha de acesso ao terminal.');
+      playErrorBuzz();
+      return;
+    }
+
+    setGoogleLoading(true);
+
     setTimeout(() => {
-      const adminUser = users.find((u) => u.role === 'SUPER_ADMIN') || users[0];
-      switchUserRole(adminUser);
-      setScreenLocked(false);
-      playSuccessBeep();
-      setIsLoading(false);
+      const existingUser = users.find((u) => u.email.toLowerCase() === trimmedEmail);
+
+      if (existingUser) {
+        const updated = { ...existingUser, name: trimmedName, pin: trimmedPass, role: googleRole };
+        setUsers((prev) => prev.map((u) => (u.id === existingUser.id ? updated : u)));
+        switchUserRole(updated);
+        setGoogleSuccess('Conta Google autenticada com sucesso! Conectando...');
+        playSuccessBeep();
+      } else {
+        const newGoogleUser: User = {
+          id: `g-${Date.now()}`,
+          name: trimmedName,
+          email: trimmedEmail,
+          role: googleRole,
+          avatar: '/logo.jpg',
+          pin: trimmedPass,
+          storeId: 'store-1',
+        };
+        setUsers((prev) => [...prev, newGoogleUser]);
+        switchUserRole(newGoogleUser);
+        setGoogleSuccess('Cadastro com Google concluído! Conectando...');
+        playSuccessBeep();
+      }
+
+      setTimeout(() => {
+        setGoogleLoading(false);
+        setShowGoogleModal(false);
+        setScreenLocked(false);
+        setGoogleSuccess(null);
+      }, 700);
     }, 450);
   };
 
@@ -344,7 +415,7 @@ export const ScreenLockOverlay: React.FC = () => {
         {/* Botão Google */}
         <button
           type="button"
-          onClick={handleGoogleLogin}
+          onClick={handleOpenGoogle}
           disabled={isLoading}
           className="w-full py-2.5 px-4 rounded-xl bg-[#08090c] hover:bg-zinc-800/80 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-sm active:scale-[0.99]"
         >
@@ -384,6 +455,172 @@ export const ScreenLockOverlay: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Modal Cadastro com Google */}
+      {showGoogleModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#111317] border border-zinc-800 rounded-2xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl space-y-4 text-left relative">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <div className="flex items-center gap-2.5">
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <h4 className="font-bold text-sm text-zinc-100">Cadastro com Google</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowGoogleModal(false);
+                  setGoogleError(null);
+                }}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 bg-[#08090c] border border-zinc-800/80 rounded-xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-amber-400 text-sm shrink-0">
+                G
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-xs font-semibold text-zinc-200 block truncate">
+                  Conexão Google Identity
+                </span>
+                <span className="text-[11px] text-zinc-400 block truncate">
+                  Complete as informações abaixo para acessar o terminal
+                </span>
+              </div>
+            </div>
+
+            {googleSuccess && (
+              <div className="p-2.5 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>{googleSuccess}</span>
+              </div>
+            )}
+
+            {googleError && (
+              <div className="p-2.5 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{googleError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleGoogleRegister} className="space-y-3">
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Nome no Google</label>
+                <input
+                  type="text"
+                  required
+                  value={googleName}
+                  onChange={(e) => setGoogleName(e.target.value)}
+                  placeholder="Ex: Carlos Oliveira"
+                  className="w-full bg-[#08090c] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">E-mail Google</label>
+                <input
+                  type="email"
+                  required
+                  value={googleEmail}
+                  onChange={(e) => setGoogleEmail(e.target.value)}
+                  placeholder="Ex: carlos@gmail.com"
+                  className="w-full bg-[#08090c] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Função / Cargo no Sistema</label>
+                <select
+                  value={googleRole}
+                  onChange={(e) => setGoogleRole(e.target.value as UserRole)}
+                  className="w-full bg-[#08090c] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none cursor-pointer"
+                >
+                  <option value="STORE_MANAGER">Gerente de Loja</option>
+                  <option value="CASHIER">Operador de Caixa</option>
+                  <option value="WAITER">Garçom</option>
+                  <option value="SUPER_ADMIN">Administrador</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-zinc-400 block mb-1">Senha de Acesso ao Terminal</label>
+                <div className="relative">
+                  <input
+                    type={showGooglePassword ? 'text' : 'password'}
+                    required
+                    maxLength={30}
+                    value={googlePassword}
+                    onChange={(e) => setGooglePassword(e.target.value)}
+                    placeholder="Digite sua senha"
+                    className="w-full bg-[#08090c] border border-zinc-800 rounded-xl px-3 pr-10 py-2 text-xs text-zinc-100 focus:border-amber-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGooglePassword(!showGooglePassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                  >
+                    {showGooglePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowGoogleModal(false)}
+                  className="px-3 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-xs hover:bg-zinc-700 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={googleLoading}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
+                >
+                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                    <path
+                      fill="#1e293b"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#1e293b"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#1e293b"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    />
+                    <path
+                      fill="#1e293b"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    />
+                  </svg>
+                  <span>{googleLoading ? 'Cadastrando...' : 'Concluir Cadastro com Google'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal Criar Conta / Cadastrar-se */}
       {showRegisterModal && (
