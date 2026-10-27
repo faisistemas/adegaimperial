@@ -7,7 +7,7 @@ import {
 } from '../utils/storage';
 import { getSupabaseClient } from '../lib/supabase';
 import { 
-  User, Store, Product, Table, Comanda, Order, DoseAuditLog, 
+  User, UserRole, Store, Product, Table, Comanda, Order, DoseAuditLog, 
   CashRegisterSession, FiscalDocument, Customer, CartItem, PaymentDetails, OrderStatus, PaymentMethod,
   PeripheralSettings, ScaleConfig, ThermalPrinterConfig, BarcodeScannerConfig,
   CashMovement, CashBlindCloseRecord, AccessLog, MultiPaymentSplit,
@@ -391,9 +391,30 @@ interface AdegaContextType {
   updateAppSettings: (partialOrFn: Partial<AppSettings> | ((prev: AppSettings) => AppSettings)) => void;
   auditRecords: AuditRecord[];
   recordAudit: (audit: Omit<AuditRecord, 'id' | 'dataHora' | 'timestamp'>) => void;
+
+  // Controle de Permissões de Acesso por Cargo (Configurações)
+  modulePermissions: Record<string, UserRole[]>;
+  updateModulePermissions: (permissions: Record<string, UserRole[]>) => void;
 }
 
 const AdegaContext = createContext<AdegaContextType | undefined>(undefined);
+
+export const DEFAULT_MODULE_PERMISSIONS: Record<string, UserRole[]> = {
+  vendas: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER'],
+  compras: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  estoque: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  mesas: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER', 'WAITER'],
+  comandas: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER', 'WAITER'],
+  kds: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER', 'WAITER'],
+  delivery: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER', 'DELIVERY_COURIER'],
+  fiscal: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  financeiro: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER'],
+  backoffice: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  dashboard: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  impressoras: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER'],
+  perifericos: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  configuracoes: ['SUPER_ADMIN', 'STORE_MANAGER'],
+};
 
 const DEFAULT_INITIAL_COMANDAS: Comanda[] = [];
 
@@ -496,6 +517,30 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [comandas, setComandas] = useState<Comanda[]>(() => loadFromStorage(STORAGE_KEYS.COMANDAS, DEFAULT_INITIAL_COMANDAS));
   const [orders, setOrders] = useState<Order[]>(() => loadFromStorage(STORAGE_KEYS.ORDERS, DEFAULT_INITIAL_ORDERS));
+
+  // Permissões de Acesso por Cargo aos Módulos do Sistema
+  const [modulePermissions, setModulePermissionsState] = useState<Record<string, UserRole[]>>(() => {
+    const loaded = loadFromStorage<Record<string, UserRole[]>>('adegaswg_module_permissions', DEFAULT_MODULE_PERMISSIONS);
+    return loaded ? { ...DEFAULT_MODULE_PERMISSIONS, ...loaded } : DEFAULT_MODULE_PERMISSIONS;
+  });
+
+  const updateModulePermissions = (newPermissions: Record<string, UserRole[]>) => {
+    setModulePermissionsState(newPermissions);
+    saveToStorage('adegaswg_module_permissions', newPermissions);
+
+    // Sincroniza em segundo plano no Supabase
+    const sb = getSupabaseClient();
+    if (sb) {
+      sb.from('pedidos')
+        .upsert({
+          id: 'SYS_CONFIG_PERMISSOES',
+          payment_method: 'SYSTEM',
+          status: 'SYSTEM_CONFIG',
+          items: newPermissions,
+        })
+        .then(() => {}, () => {});
+    }
+  };
 
   const [doseAuditLogs, setDoseAuditLogs] = useState<DoseAuditLog[]>([]);
 
@@ -709,6 +754,21 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return merged;
         });
       }
+
+      // 4. Carrega permissões de módulos personalizadas do Supabase
+      try {
+        const sb = getSupabaseClient();
+        if (sb) {
+          const { data, error } = await sb.from('pedidos').select('items').eq('id', 'SYS_CONFIG_PERMISSOES').maybeSingle();
+          if (!error && data && data.items && typeof data.items === 'object') {
+            setModulePermissionsState((prev) => {
+              const merged = { ...prev, ...(data.items as any) };
+              saveToStorage('adegaswg_module_permissions', merged);
+              return merged;
+            });
+          }
+        }
+      } catch (e) {}
     };
 
     hydrateUsers();
@@ -4330,6 +4390,9 @@ Acerto Liquidado por: ${currentUser.name}
         updateAppSettings,
         auditRecords,
         recordAudit,
+        // Permissões de Módulos por Cargo
+        modulePermissions,
+        updateModulePermissions,
       }}
     >
       {children}

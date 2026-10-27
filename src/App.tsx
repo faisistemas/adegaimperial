@@ -34,7 +34,7 @@ interface MainLayoutProps {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ onOpenSalesPage }) => {
-  const { currentUser } = useAdega();
+  const { currentUser, modulePermissions } = useAdega();
   const [activeTab, setActiveTab] = useState<any>('vendas');
   const [usuariosModalOpen, setUsuariosModalOpen] = useState(false);
   const [creditoDigitalModalOpen, setCreditoDigitalModalOpen] = useState(false);
@@ -44,18 +44,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ onOpenSalesPage }) => {
 
   // Auto adjust tab if user role does not have access
   useEffect(() => {
-    if (currentUser.role === 'DELIVERY_COURIER') {
-      setActiveTab('delivery');
-    } else if (currentUser.role === 'WAITER') {
-      if (!['mesas', 'comandas', 'kds'].includes(activeTab)) {
+    const allowed = modulePermissions?.[activeTab];
+    if (allowed && !allowed.includes(currentUser.role)) {
+      if (currentUser.role === 'DELIVERY_COURIER') {
+        setActiveTab('delivery');
+      } else if (currentUser.role === 'WAITER') {
         setActiveTab('mesas');
-      }
-    } else if (currentUser.role === 'CASHIER') {
-      if (['fiscal', 'backoffice', 'dashboard', 'multiloja', 'multilojas', 'configuracoes'].includes(activeTab)) {
+      } else {
         setActiveTab('vendas');
       }
     }
-  }, [currentUser.role]);
+  }, [currentUser.role, modulePermissions]);
 
   const renderActiveView = () => {
     switch (activeTab) {

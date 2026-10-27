@@ -43,10 +43,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
   onOpenCardapioQr
 }) => {
-  const { currentUser } = useAdega();
+  const { currentUser, modulePermissions } = useAdega();
 
-  const isRoleAllowed = (allowedRoles: UserRole[]): boolean => {
-    return allowedRoles.includes(currentUser.role);
+  const isRoleAllowed = (itemId: string, allowedRoles: UserRole[]): boolean => {
+    const roles = modulePermissions?.[itemId] || allowedRoles;
+    return roles.includes(currentUser.role);
   };
 
   const getRoleHandle = (role?: UserRole) => {
@@ -202,10 +203,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const handleItemClick = (item: typeof navItems[0]) => {
-    if (isRoleAllowed(item.allowedRoles)) {
+    if (isRoleAllowed(item.id, item.allowedRoles)) {
       setActiveTab(item.id);
     } else if (onRestrictedClick) {
-      onRestrictedClick(item.allowedRoles);
+      onRestrictedClick(modulePermissions?.[item.id] || item.allowedRoles);
     }
   };
 
@@ -257,7 +258,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Navigation List */}
         <div className="p-3 space-y-1 overflow-y-auto flex-1">
           {navItems.map((item) => {
-            const allowed = isRoleAllowed(item.allowedRoles);
+            const allowed = isRoleAllowed(item.id, item.allowedRoles);
             const isActive = activeTab === item.id;
             const Icon = item.icon;
             const isConfig = item.id === 'configuracoes';

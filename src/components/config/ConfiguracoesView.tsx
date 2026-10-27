@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Settings, Building2, Clock, Calendar, Bell, 
-  Shield, Save, CheckCircle2, Plus, Trash2, Wine
+  Shield, Save, CheckCircle2, Plus, Trash2, Wine,
+  ShoppingCart, Truck, Droplets, LayoutGrid, FileText,
+  UtensilsCrossed, Bike, ReceiptText, DollarSign, TrendingUp,
+  BarChart3, Printer, Cpu, KeyRound, Check, RotateCcw, Lock
 } from 'lucide-react';
+import { useAdega, DEFAULT_MODULE_PERMISSIONS } from '../../context/AdegaContext';
+import { UserRole } from '../../types';
 
 interface DadosAdeGaswg {
   nome: string;
@@ -26,11 +31,235 @@ interface FeriadoItem {
   aberto: boolean;
 }
 
+interface ModuleDef {
+  id: string;
+  label: string;
+  description: string;
+  badge?: string;
+  icon: React.ElementType;
+  defaultRoles: UserRole[];
+}
+
+const SYSTEM_MODULES: ModuleDef[] = [
+  {
+    id: 'vendas',
+    label: 'Vendas e Clientes',
+    description: 'PDV, Devoluções, CRM e Reservas',
+    badge: 'Principal',
+    icon: ShoppingCart,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER'],
+  },
+  {
+    id: 'compras',
+    label: 'Compras & Fornecedores',
+    description: 'Fornecedores, Pedidos e Recebimento',
+    badge: 'Novo',
+    icon: Truck,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  },
+  {
+    id: 'estoque',
+    label: 'Produtos & Estoque',
+    description: 'Lotes, Kardex e transferências',
+    badge: 'Core',
+    icon: Droplets,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  },
+  {
+    id: 'mesas',
+    label: 'Salão & Mesas',
+    description: 'Mapa virtual de mesas e consumo',
+    icon: LayoutGrid,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER', 'WAITER'],
+  },
+  {
+    id: 'comandas',
+    label: 'Comandas',
+    description: 'Fichas individuais por CPF',
+    icon: FileText,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER', 'WAITER'],
+  },
+  {
+    id: 'kds',
+    label: 'KDS Bar & Cozinha',
+    description: 'Preparo com tempos e alertas',
+    badge: 'Módulo 4',
+    icon: UtensilsCrossed,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER', 'WAITER'],
+  },
+  {
+    id: 'delivery',
+    label: 'Delivery & Motoboy',
+    description: 'Despacho, rotas e taxa de entrega',
+    icon: Bike,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER', 'DELIVERY_COURIER'],
+  },
+  {
+    id: 'fiscal',
+    label: 'Fiscal & Sped',
+    description: 'NFC-e, Sped .txt e Sintegra',
+    badge: 'Brasil',
+    icon: ReceiptText,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  },
+  {
+    id: 'financeiro',
+    label: 'Financeiro & Gestão',
+    description: 'Caixa, Contas, Dashboard, Relatórios e Configurações',
+    badge: 'Gestão',
+    icon: DollarSign,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER'],
+  },
+  {
+    id: 'backoffice',
+    label: 'Backoffice & DRE',
+    description: 'DRE, Curva ABC, OFX e Compras',
+    badge: 'Módulo 6',
+    icon: TrendingUp,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  },
+  {
+    id: 'dashboard',
+    label: 'Rentabilidade',
+    description: 'Doses vs Garrafas e Margens',
+    icon: BarChart3,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  },
+  {
+    id: 'impressoras',
+    label: 'Impressoras Térmicas',
+    description: 'PDV, Cozinha e Bar via Browser',
+    badge: 'ESC/POS',
+    icon: Printer,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER', 'CASHIER'],
+  },
+  {
+    id: 'perifericos',
+    label: 'Periféricos & Balança',
+    description: 'Toledo, ESC/POS e Leitor Barcode',
+    badge: 'Módulo 2',
+    icon: Cpu,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  },
+  {
+    id: 'configuracoes',
+    label: 'Configurações',
+    description: 'Dados da AdeGaswg, horários e notificações',
+    badge: 'Geral',
+    icon: Settings,
+    defaultRoles: ['SUPER_ADMIN', 'STORE_MANAGER'],
+  },
+];
+
+const ROLES_LIST: { id: UserRole; label: string; handle: string; description: string }[] = [
+  {
+    id: 'SUPER_ADMIN',
+    label: 'Administrador',
+    handle: 'admin',
+    description: 'Acesso total irrestrito a todos os módulos da adega',
+  },
+  {
+    id: 'STORE_MANAGER',
+    label: 'Gerente / Loja',
+    handle: 'gerente',
+    description: 'Gestão de estoque, compras, sangrias e relatórios',
+  },
+  {
+    id: 'CASHIER',
+    label: 'Operador de Caixa',
+    handle: 'caixa',
+    description: 'Frente de caixa (PDV Touch), recebimentos e emissão fiscal',
+  },
+  {
+    id: 'WAITER',
+    label: 'Garçom / Atendente',
+    handle: 'garcom',
+    description: 'Atendimento a mesas, comandas e lançamento rápido no salão',
+  },
+  {
+    id: 'DELIVERY_COURIER',
+    label: 'Motoboy / Delivery',
+    handle: 'motoboy',
+    description: 'Despacho de pedidos, rotas de entrega e confirmações',
+  },
+];
+
 const STORAGE_KEY = 'adegaswg_configuracoes';
 
 export const ConfiguracoesView: React.FC = () => {
-  const [activeSubTab, setActiveSubTab] = useState<'geral' | 'horarios' | 'feriados' | 'notificacoes' | 'auditoria'>('geral');
+  const { modulePermissions, updateModulePermissions } = useAdega();
+  const [activeSubTab, setActiveSubTab] = useState<'geral' | 'horarios' | 'feriados' | 'notificacoes' | 'auditoria' | 'permissoes'>('geral');
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  // Estado de controle de permissões por cargo
+  const [selectedRole, setSelectedRole] = useState<UserRole>('WAITER');
+  const [tempPermissions, setTempPermissions] = useState<Record<string, UserRole[]>>(() => {
+    return modulePermissions || DEFAULT_MODULE_PERMISSIONS;
+  });
+
+  useEffect(() => {
+    if (modulePermissions) {
+      setTempPermissions(modulePermissions);
+    }
+  }, [modulePermissions]);
+
+  const togglePermission = (moduleId: string) => {
+    setTempPermissions((prev) => {
+      const currentList = prev[moduleId] || SYSTEM_MODULES.find(m => m.id === moduleId)?.defaultRoles || [];
+      const isCurrentlyAllowed = currentList.includes(selectedRole);
+      let nextList: UserRole[];
+      if (isCurrentlyAllowed) {
+        nextList = currentList.filter(r => r !== selectedRole);
+      } else {
+        nextList = [...currentList, selectedRole];
+      }
+      return {
+        ...prev,
+        [moduleId]: nextList,
+      };
+    });
+  };
+
+  const handleLiberarTodosCargo = () => {
+    setTempPermissions((prev) => {
+      const next = { ...prev };
+      SYSTEM_MODULES.forEach((m) => {
+        const cur = next[m.id] || m.defaultRoles;
+        if (!cur.includes(selectedRole)) {
+          next[m.id] = [...cur, selectedRole];
+        }
+      });
+      return next;
+    });
+  };
+
+  const handleBloquearTodosCargo = () => {
+    setTempPermissions((prev) => {
+      const next = { ...prev };
+      SYSTEM_MODULES.forEach((m) => {
+        const cur = next[m.id] || m.defaultRoles;
+        next[m.id] = cur.filter(r => r !== selectedRole);
+      });
+      return next;
+    });
+  };
+
+  const handleRestaurarPadraoCargo = () => {
+    setTempPermissions((prev) => {
+      const next = { ...prev };
+      SYSTEM_MODULES.forEach((m) => {
+        next[m.id] = m.defaultRoles;
+      });
+      return next;
+    });
+  };
+
+  const handleSalvarPermissoes = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateModulePermissions(tempPermissions);
+    setFeedback('Permissões de acesso por tipo de usuário salvas com sucesso!');
+    setTimeout(() => setFeedback(null), 3500);
+  };
 
   // 1. Dados Gerais da AdeGaswg
   const [dados, setDados] = useState<DadosAdeGaswg>(() => {
@@ -179,6 +408,18 @@ export const ConfiguracoesView: React.FC = () => {
           >
             <Shield className="w-4 h-4 text-emerald-400" />
             <span>Auditoria</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('permissoes')}
+            className={`flex-1 sm:flex-initial px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${
+              activeSubTab === 'permissoes'
+                ? 'bg-zinc-800 text-white shadow-md border border-zinc-700/60'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+            }`}
+          >
+            <KeyRound className="w-4 h-4 text-amber-400" />
+            <span>Permissões</span>
           </button>
         </div>
       </div>
@@ -545,6 +786,198 @@ export const ConfiguracoesView: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* CONTEÚDO DA ABA PERMISSÕES POR TIPO DE USUÁRIO */}
+      {activeSubTab === 'permissoes' && (
+        <form onSubmit={handleSalvarPermissoes} className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 sm:p-7 space-y-6 max-w-4xl shadow-xl">
+          {/* Cabeçalho do Card */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800/80">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-white">
+                  Controle de Permissões por Tipo de Usuário
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Libere ou bloqueie cada uma das 14 funções do menu lateral para cada tipo de usuário cadastrado.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={handleLiberarTodosCargo}
+                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-zinc-700/60 cursor-pointer"
+                title="Liberar todos os 14 módulos para o cargo selecionado"
+              >
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Liberar Todos</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleBloquearTodosCargo}
+                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-zinc-700/60 cursor-pointer"
+                title="Bloquear todos os módulos para o cargo selecionado"
+              >
+                <Lock className="w-3.5 h-3.5 text-rose-400" />
+                <span>Bloquear Todos</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleRestaurarPadraoCargo}
+                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-zinc-700/60 cursor-pointer"
+                title="Restaurar padrão do sistema para este cargo"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-zinc-400" />
+                <span>Padrão</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Seleção do Tipo de Usuário (Cargos) */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider block">
+              1. Selecione o Tipo de Usuário (Cargo):
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
+              {ROLES_LIST.map((role) => {
+                const isSelected = selectedRole === role.id;
+                const allowedCount = SYSTEM_MODULES.filter((m) => {
+                  const allowed = tempPermissions[m.id] || m.defaultRoles;
+                  return allowed.includes(role.id);
+                }).length;
+
+                return (
+                  <button
+                    key={role.id}
+                    type="button"
+                    onClick={() => setSelectedRole(role.id)}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 cursor-pointer ${
+                      isSelected
+                        ? 'bg-amber-500/10 border-amber-500/70 text-white shadow-md shadow-amber-950/30 ring-1 ring-amber-500/30'
+                        : 'bg-zinc-950/70 border-zinc-800/80 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className={`text-xs font-bold ${isSelected ? 'text-amber-400' : 'text-zinc-200'}`}>
+                        {role.label}
+                      </span>
+                      {isSelected && <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />}
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className={isSelected ? 'text-amber-300/80 font-medium' : 'text-zinc-500'}>
+                        {allowedCount} de 14 liberados
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-zinc-400">
+              Editando permissões para: <strong className="text-amber-400 font-semibold">{ROLES_LIST.find(r => r.id === selectedRole)?.label}</strong> — <span className="text-zinc-500">{ROLES_LIST.find(r => r.id === selectedRole)?.description}</span>
+            </p>
+          </div>
+
+          {/* Grid dos 14 Módulos do Menu Lateral */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                2. Funções do Menu Lateral (14 Módulos):
+              </label>
+              <span className="text-[11px] text-zinc-500 hidden sm:inline">
+                Clique para alternar entre Liberado e Bloqueado
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              {SYSTEM_MODULES.map((mod) => {
+                const allowedRoles = tempPermissions[mod.id] || mod.defaultRoles;
+                const isAllowed = allowedRoles.includes(selectedRole);
+                const IconComponent = mod.icon;
+
+                return (
+                  <div
+                    key={mod.id}
+                    onClick={() => togglePermission(mod.id)}
+                    className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer select-none ${
+                      isAllowed
+                        ? 'bg-zinc-950/90 border-emerald-500/40 hover:border-emerald-500/70 shadow-sm'
+                        : 'bg-zinc-950/40 border-zinc-800/60 opacity-60 hover:opacity-90'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 pr-2">
+                      <div className={`p-2.5 rounded-xl shrink-0 ${
+                        isAllowed
+                          ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
+                          : 'bg-zinc-900 border border-zinc-800 text-zinc-600'
+                      }`}>
+                        <IconComponent className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`text-xs font-bold truncate ${isAllowed ? 'text-zinc-100' : 'text-zinc-400'}`}>
+                            {mod.label}
+                          </span>
+                          {mod.badge && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-amber-400/90 font-mono font-medium border border-zinc-700/50">
+                              {mod.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-zinc-500 truncate">
+                          {mod.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePermission(mod.id);
+                      }}
+                      className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors border cursor-pointer ${
+                        isAllowed
+                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300'
+                      }`}
+                    >
+                      {isAllowed ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Liberado</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                          <span>Bloqueado</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Botão de Salvar Permissões (Estilo Idêntico à Imagem 2) */}
+          <div className="pt-3 border-t border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p className="text-[11px] text-zinc-500">
+              As permissões salvas são aplicadas automaticamente no menu lateral e sincronizadas com a nuvem.
+            </p>
+            <button
+              type="submit"
+              className="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-950/40 cursor-pointer shrink-0"
+            >
+              <Save className="w-4 h-4" />
+              <span>Salvar Permissões</span>
+            </button>
+          </div>
+        </form>
       )}
     </div>
   );
