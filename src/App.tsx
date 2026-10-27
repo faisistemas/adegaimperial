@@ -185,10 +185,13 @@ import { CustomerCardapioPage } from './components/atendimento/CustomerCardapioP
 const AppContent: React.FC = () => {
   const [viewMode, setViewMode] = useState<'SYSTEM' | 'SALES_PAGE' | 'CARDAPIO'>(() => {
     if (typeof window !== 'undefined') {
-      const path = window.location.pathname;
-      const search = window.location.search;
+      const path = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
       if (path.startsWith('/cardapio') || search.includes('cardapio=') || search.includes('mesa=')) {
         return 'CARDAPIO';
+      }
+      if (path.startsWith('/vendas') || path.startsWith('/landing') || path.startsWith('/lp') || search.includes('vendas')) {
+        return 'SALES_PAGE';
       }
     }
     return 'SYSTEM';
@@ -197,10 +200,14 @@ const AppContent: React.FC = () => {
   // Listen to popstate or url changes
   useEffect(() => {
     const handleUrlChange = () => {
-      const path = window.location.pathname;
-      const search = window.location.search;
+      const path = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
       if (path.startsWith('/cardapio') || search.includes('cardapio=') || search.includes('mesa=')) {
         setViewMode('CARDAPIO');
+      } else if (path.startsWith('/vendas') || path.startsWith('/landing') || path.startsWith('/lp') || search.includes('vendas')) {
+        setViewMode('SALES_PAGE');
+      } else {
+        setViewMode('SYSTEM');
       }
     };
     window.addEventListener('popstate', handleUrlChange);
@@ -221,10 +228,19 @@ const AppContent: React.FC = () => {
   }
 
   if (viewMode === 'SALES_PAGE') {
-    return <SalesLandingPageView onEnterSystem={() => setViewMode('SYSTEM')} />;
+    return (
+      <SalesLandingPageView 
+        onEnterSystem={() => {
+          if (typeof window !== 'undefined') {
+            window.history.pushState({}, '', '/');
+          }
+          setViewMode('SYSTEM');
+        }} 
+      />
+    );
   }
 
-  return <MainLayout onOpenSalesPage={() => setViewMode('SALES_PAGE')} />;
+  return <MainLayout />;
 };
 
 export default function App() {

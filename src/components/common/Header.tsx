@@ -146,18 +146,6 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Página de Vendas (Landing Page) Link */}
-        {onOpenSalesPage && (
-          <button
-            onClick={onOpenSalesPage}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 to-amber-600/10 hover:from-amber-500/25 hover:to-amber-600/20 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-all shadow-sm cursor-pointer"
-            title="Ver Página de Vendas e Portal de Conversão"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Página de Vendas</span>
-          </button>
-        )}
-
         {/* Admin Dropdown com Administrador admin 🌙 (Substituindo o antigo seletor por este da imagem) */}
         <AdminDropdown
           onOpenUsuarios={onOpenUsuarios}
