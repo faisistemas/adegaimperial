@@ -124,15 +124,17 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
         {isOpen && (
           <div className="absolute right-0 mt-2 w-48 sm:w-52 bg-[#121316] border border-zinc-800/90 rounded-2xl shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 divide-y divide-zinc-800/40">
             <div className="space-y-0.5">
-              {/* 1. Usuarios */}
-              <button
-                type="button"
-                onClick={() => handleSelect(onOpenUsuarios)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-sm text-zinc-300 hover:text-white hover:bg-zinc-800/70 transition-all text-left cursor-pointer group"
-              >
-                <Users className="w-4 h-4 text-zinc-400 group-hover:text-zinc-200 shrink-0" />
-                <span className="font-medium">Usuarios</span>
-              </button>
+              {/* 1. Usuarios (Apenas Administrador) */}
+              {(currentUser?.role === 'SUPER_ADMIN' || currentUser?.name?.toLowerCase().includes('admin')) && (
+                <button
+                  type="button"
+                  onClick={() => handleSelect(onOpenUsuarios)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-sm text-zinc-300 hover:text-white hover:bg-zinc-800/70 transition-all text-left cursor-pointer group"
+                >
+                  <Users className="w-4 h-4 text-zinc-400 group-hover:text-zinc-200 shrink-0" />
+                  <span className="font-medium">Usuarios</span>
+                </button>
+              )}
 
               {/* 2. Fidelidade */}
               <button

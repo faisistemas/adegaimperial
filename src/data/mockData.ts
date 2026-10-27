@@ -35,15 +35,6 @@ export const INITIAL_USERS: User[] = [
     pin: '#Adegaswg2027*',
     storeId: 'store-1',
   },
-  {
-    id: 'u-2',
-    name: 'Garçom',
-    email: 'garcom@adegaswg.com.br',
-    role: 'WAITER',
-    avatar: '/logo.jpg',
-    pin: '#Adegaswg2027*',
-    storeId: 'store-1',
-  },
 ];
 
 export const INITIAL_PRODUCTS: Product[] = [];

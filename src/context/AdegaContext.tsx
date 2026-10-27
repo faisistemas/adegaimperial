@@ -423,12 +423,14 @@ const DEFAULT_INITIAL_ORDERS: Order[] = [];
 export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsersState] = useState<User[]>(() => {
     const loaded = loadFromStorage<User[]>(STORAGE_KEYS.USERS, INITIAL_USERS);
-    return (loaded || INITIAL_USERS).map((u) => {
-      if (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin)) {
-        return { ...u, pin: '#Adegaswg2027*' };
-      }
-      return u;
-    });
+    return (loaded || INITIAL_USERS)
+      .filter((u) => u && u.id !== 'u-2' && u.id !== 'u-1793120258445' && u.name.toLowerCase() !== 'teste')
+      .map((u) => {
+        if (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin)) {
+          return { ...u, pin: '#Adegaswg2027*' };
+        }
+        return u;
+      });
   });
 
   const setUsers: React.Dispatch<React.SetStateAction<User[]>> = (action) => {
@@ -740,20 +742,24 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (fetchedUsers.length > 0) {
         setUsersState((prev) => {
           const map = new Map<string, User>();
-          prev.forEach((u) => {
-            const cleanPin = (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin))
-              ? '#Adegaswg2027*'
-              : u.pin;
-            map.set(u.id, { ...u, pin: cleanPin });
-          });
-          fetchedUsers.forEach((u: User) => {
-            if (u && u.id) {
+          prev
+            .filter((u) => u && u.id !== 'u-2' && u.id !== 'u-1793120258445' && u.name.toLowerCase() !== 'teste')
+            .forEach((u) => {
               const cleanPin = (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin))
                 ? '#Adegaswg2027*'
                 : u.pin;
-              map.set(u.id, { ...(map.get(u.id) || {}), ...u, pin: cleanPin });
-            }
-          });
+              map.set(u.id, { ...u, pin: cleanPin });
+            });
+          fetchedUsers
+            .filter((u) => u && u.id !== 'u-2' && u.id !== 'u-1793120258445' && u.name.toLowerCase() !== 'teste')
+            .forEach((u: User) => {
+              if (u && u.id) {
+                const cleanPin = (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin))
+                  ? '#Adegaswg2027*'
+                  : u.pin;
+                map.set(u.id, { ...(map.get(u.id) || {}), ...u, pin: cleanPin });
+              }
+            });
           const merged = Array.from(map.values());
           saveToStorage(STORAGE_KEYS.USERS, merged);
           return merged;

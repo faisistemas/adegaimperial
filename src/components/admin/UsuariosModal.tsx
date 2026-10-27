@@ -48,6 +48,38 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
 
   if (!isOpen) return null;
 
+  const isAdmin = currentUser.role === 'SUPER_ADMIN' || currentUser.name.toLowerCase().includes('admin');
+  if (!isAdmin) {
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={onClose}
+      >
+        <div 
+          className="w-full max-w-md bg-[#141517] border border-zinc-800 rounded-2xl p-6 text-center space-y-4 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
+            <Lock className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-white">Acesso Restrito ao Administrador</h3>
+            <p className="text-xs text-zinc-400">
+              Apenas usuários com perfil de <strong>Administrador</strong> têm permissão para acessar e visualizar quem está cadastrado no sistema.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-colors cursor-pointer"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const showNotification = (type: 'success' | 'error', text: string) => {
     setFeedback({ type, text });
     setTimeout(() => setFeedback(null), 3500);
@@ -438,9 +470,11 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
           </div>
         </form>
 
-        {/* Lista de Usuários Cadastrados (Administrador, Garçom, etc.) ABAIXO de Cadastrar Usuário */}
+        {/* Lista de Usuários Cadastrados ABAIXO de Cadastrar Usuário */}
         <div className="divide-y divide-zinc-800/80">
-          {users.map((user) => {
+          {users
+            .filter((u) => u && u.id !== 'u-2' && u.id !== 'u-1793120258445' && u.name.toLowerCase() !== 'teste')
+            .map((user) => {
             const handle = getUserHandle(user);
             const badge = getRoleBadge(user);
 
