@@ -5,6 +5,7 @@ import {
   Search, Plus, Minus, Trash2, Printer, Copy, Check,
   ExternalLink, Layers, UtensilsCrossed, AlertCircle
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAdega } from '../../context/AdegaContext';
 import { Product, CartItem, Table } from '../../types';
 
@@ -22,7 +23,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
   });
 
   // Modal mode: "SIMULATOR" (Cliente no Celular) or "PRINT_QR" (QR Code para Imprimir)
-  const [activeMode, setActiveMode] = useState<'SIMULATOR' | 'PRINT_QR'>('SIMULATOR');
+  const [activeMode, setActiveMode] = useState<'SIMULATOR' | 'PRINT_QR'>('PRINT_QR');
 
   // Simulator state
   const [selectedCategory, setSelectedCategory] = useState<string>('TODOS');
@@ -252,41 +253,47 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
         {/* Content Body */}
         {activeMode === 'PRINT_QR' ? (
           /* Printable QR Code Totem View */
-          <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 text-center flex-1 flex flex-col justify-center items-center">
-            <div className="w-full max-w-[280px] mx-auto p-4 rounded-2xl bg-zinc-950 border-2 border-amber-500/40 shadow-xl relative overflow-hidden">
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 via-amber-300 to-amber-600" />
+          <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-center flex-1 flex flex-col justify-center items-center">
+            {/* Totem Card idêntico à imagem enviada pelo usuário */}
+            <div className="w-full max-w-[285px] mx-auto p-6 sm:p-7 rounded-3xl bg-white border-2 border-amber-300 shadow-2xl flex flex-col items-center justify-center text-center select-none">
               
-              <div className="w-12 h-12 rounded-xl overflow-hidden border border-amber-500/40 shadow-lg mx-auto mb-1.5 bg-zinc-900 ring-1 ring-amber-500/20">
+              {/* Logomarca da Adega com fundo preto e bordas arredondadas */}
+              <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-md mx-auto mb-2 bg-black flex items-center justify-center p-1.5 border border-zinc-200/80">
                 <img
                   src="/logo.jpg"
                   alt="AdeGaswg"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
 
-              <h3 className="font-serif font-bold text-sm text-zinc-100 uppercase tracking-wide mt-0.5">
+              {/* Nome da Adega e Subtítulo */}
+              <h3 className="font-extrabold text-sm text-zinc-800 uppercase tracking-wider mt-0.5">
                 {activeStore?.name || 'ADEGASWG'}
               </h3>
-              <p className="text-[10px] text-zinc-400">Cardápio & Pedidos Digitais</p>
+              <p className="text-[11px] text-zinc-500 font-medium mt-0.5">
+                Cardápio & Pedidos Digitais
+              </p>
 
-              {/* Graphic QR Code display */}
-              <div className="my-2.5 p-2 bg-white rounded-xl inline-block shadow-inner">
-                <div className="w-36 h-36 flex flex-col items-center justify-center bg-white border border-zinc-200 rounded-lg p-1 overflow-hidden">
-                  <img
-                    src="/mesa-qrcode.png"
-                    alt={`QR Code Mesa ${currentTable.number}`}
-                    className="w-full h-full object-contain"
-                  />
+              {/* QR Code Nítido e Centralizado com moldura suave */}
+              <div className="my-3.5 p-3.5 bg-white border border-zinc-200/70 rounded-2xl shadow-xs inline-flex items-center justify-center">
+                <QRCodeSVG
+                  value={tableQrUrl}
+                  size={150}
+                  level="M"
+                />
+              </div>
+
+              {/* Tag com contorno da Mesa */}
+              <div>
+                <div className="inline-flex items-center justify-center px-5 py-1 rounded-full border border-zinc-300 bg-white shadow-xs">
+                  <span className="font-black text-xs text-zinc-900 tracking-wider">
+                    MESA {String(currentTable.number).padStart(2, '0')}
+                  </span>
                 </div>
               </div>
 
-              <div>
-                <span className="bg-amber-500 text-zinc-950 font-black text-xs uppercase px-3.5 py-1 rounded-lg tracking-widest inline-block shadow-sm">
-                  MESA 0{currentTable.number}
-                </span>
-              </div>
-
-              <p className="text-[10px] text-zinc-400 mt-2 leading-relaxed">
+              {/* Instruções do Autoatendimento */}
+              <p className="text-[10px] text-zinc-500 mt-2.5 leading-snug max-w-[215px] mx-auto text-center font-normal">
                 Aponte a câmera do seu smartphone para fazer pedidos sem esperar o garçom.
               </p>
             </div>
