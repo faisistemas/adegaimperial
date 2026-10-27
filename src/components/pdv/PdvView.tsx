@@ -388,7 +388,7 @@ export const PdvView: React.FC = () => {
         </div>
 
         {/* Categories Bar */}
-        <div className="px-4 py-2.5 border-b border-zinc-800/80 bg-zinc-950 overflow-x-auto flex items-center gap-2 scrollbar-none shrink-0">
+        <div className="px-4 pt-2.5 pb-3 border-b border-zinc-800/80 bg-zinc-950 overflow-x-auto flex items-center gap-2 scrollbar-visible-x shrink-0">
           {(categories || []).map((cat) => {
             const isSelected = selectedCategory === cat.id;
             return (
