@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   QrCode, Smartphone, X, ShoppingBag, Droplets, 
   CheckCircle2, Wine, Beer, Sparkles, ArrowRight,
   Search, Plus, Minus, Trash2, Printer, Copy, Check,
-  ExternalLink, Layers, UtensilsCrossed, AlertCircle
+  ExternalLink, Layers, UtensilsCrossed, AlertCircle,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAdega } from '../../context/AdegaContext';
@@ -32,6 +33,15 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
   const [orderSent, setOrderSent] = useState(false);
   const [itemNoteInput, setItemNoteInput] = useState<{ [productId: string]: string }>({});
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const categoriesRef = useRef<HTMLDivElement>(null);
+
+  const handleScrollCategories = (direction: 'left' | 'right') => {
+    if (categoriesRef.current) {
+      const scrollAmount = direction === 'left' ? -180 : 180;
+      categoriesRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -584,28 +594,53 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 text-xs scrollbar-none touch-pan-x">
-                {[
-                  { id: 'TODOS', label: 'Todos' },
-                  { id: 'DESTILADOS', label: 'Doses & Whiskies' },
-                  { id: 'CERVEJAS', label: 'Cervejas' },
-                  { id: 'VINHOS', label: 'Vinhos' },
-                  { id: 'NAO_ALCOOLICOS', label: 'Bebidas & Gelo' },
-                  { id: 'PETISCOS', label: 'Petiscos' },
-                ].map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3 py-1.5 sm:px-3.5 rounded-xl shrink-0 transition-all font-semibold text-xs whitespace-nowrap ${
-                      selectedCategory === cat.id
-                        ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm'
-                        : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
+              <div className="flex items-center gap-1 sm:gap-1.5 relative">
+                <button
+                  type="button"
+                  onClick={() => handleScrollCategories('left')}
+                  className="p-1 sm:p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 active:scale-95 text-zinc-400 hover:text-amber-400 border border-zinc-800 transition-all shrink-0 shadow-sm z-10"
+                  title="Voltar categorias"
+                  aria-label="Voltar categorias"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+
+                <div 
+                  ref={categoriesRef}
+                  className="flex-1 flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 text-xs scrollbar-none scroll-smooth touch-pan-x"
+                >
+                  {[
+                    { id: 'TODOS', label: 'Todos' },
+                    { id: 'DESTILADOS', label: 'Doses & Whiskies' },
+                    { id: 'CERVEJAS', label: 'Cervejas' },
+                    { id: 'VINHOS', label: 'Vinhos' },
+                    { id: 'NAO_ALCOOLICOS', label: 'Bebidas & Gelo' },
+                    { id: 'PETISCOS', label: 'Petiscos' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`px-3 py-1.5 sm:px-3.5 rounded-xl shrink-0 transition-all font-semibold text-xs whitespace-nowrap ${
+                        selectedCategory === cat.id
+                          ? 'bg-amber-500 text-zinc-950 font-bold shadow-sm'
+                          : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleScrollCategories('right')}
+                  className="p-1 sm:p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 active:scale-95 text-zinc-400 hover:text-amber-400 border border-zinc-800 transition-all shrink-0 shadow-sm z-10"
+                  title="Avançar categorias"
+                  aria-label="Avançar categorias"
+                >
+                  <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
               </div>
             </div>
 
