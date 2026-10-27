@@ -400,7 +400,17 @@ const DEFAULT_INITIAL_ORDERS: Order[] = [];
 
 export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<User[]>(() => loadFromStorage(STORAGE_KEYS.USERS, INITIAL_USERS));
-  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0]); // Começa com Super Admin
+  const [currentUser, setCurrentUser] = useState<User>(() => {
+    if (typeof window !== 'undefined') {
+      const savedUserId = sessionStorage.getItem('adega_session_user_id');
+      if (savedUserId) {
+        const loadedUsers = loadFromStorage<User[]>(STORAGE_KEYS.USERS, INITIAL_USERS);
+        const found = (loadedUsers || INITIAL_USERS).find((u) => u.id === savedUserId);
+        if (found) return found;
+      }
+    }
+    return INITIAL_USERS[0];
+  });
   const [stores] = useState<Store[]>(INITIAL_STORES);
   const [activeStore, setActiveStore] = useState<Store>(INITIAL_STORES[0]);
   const [products, setProducts] = useState<Product[]>(() => loadFromStorage(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS));
@@ -640,8 +650,28 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     },
   });
 
-  // Tela de Bloqueio Touch
-  const [isScreenLocked, setScreenLocked] = useState<boolean>(false);
+  // Tela de Bloqueio / Autenticação Obrigatória
+  // Inicia bloqueado por padrão (true) garantindo que ao abrir a URL em outro navegador
+  // seja exigido o login. Mantém desbloqueado apenas na sessão ativa autenticada daquele navegador.
+  const [isScreenLocked, setScreenLockedState] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const activeSession = sessionStorage.getItem('adega_session_active');
+      return activeSession !== 'true';
+    }
+    return true;
+  });
+
+  const setScreenLocked = (locked: boolean) => {
+    setScreenLockedState(locked);
+    if (typeof window !== 'undefined') {
+      if (locked) {
+        sessionStorage.removeItem('adega_session_active');
+        sessionStorage.removeItem('adega_session_user_id');
+      } else {
+        sessionStorage.setItem('adega_session_active', 'true');
+      }
+    }
+  };
 
   // Configurações Globais da Aplicação
   const [appSettings, setAppSettings] = useState<AppSettings>(() => 
@@ -847,6 +877,9 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const switchUserRole = (user: User) => {
     setCurrentUser(user);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('adega_session_user_id', user.id);
+    }
     setNotifications((prev) => [
       `Sessão alterada: Operador ${user.name} (${user.role}) conectado.`,
       ...prev,
