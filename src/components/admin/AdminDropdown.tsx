@@ -101,7 +101,7 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
               ? 'bg-zinc-800 text-white border-zinc-700 shadow-md ring-1 ring-zinc-700'
               : 'bg-zinc-900/90 hover:bg-zinc-850 text-zinc-200 border-zinc-800 hover:border-zinc-700'
           }`}
-          title="Menu de Administração"
+          title={currentUser ? `Conectado como ${currentUser.name}` : "Menu do Usuário"}
         >
           {/* Ícone de Admin (Shield com silhueta) */}
           <div className="w-4 h-4 text-zinc-300 flex items-center justify-center shrink-0">
@@ -116,7 +116,9 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
             </svg>
           </div>
 
-          <span className="font-semibold tracking-tight text-zinc-100">Admin</span>
+          <span className="font-semibold tracking-tight text-zinc-100 max-w-[120px] truncate">
+            {currentUser?.name || 'Admin'}
+          </span>
           <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-150 ${isOpen ? 'rotate-180 text-white' : ''}`} />
         </button>
 
