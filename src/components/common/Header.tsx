@@ -38,7 +38,8 @@ export const Header: React.FC<HeaderProps> = ({
     activeStore, 
     cashSession, 
     notifications, 
-    dismissNotification 
+    dismissNotification,
+    clearNotifications 
   } = useAdega();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -119,7 +120,18 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="fixed left-1/2 -translate-x-1/2 top-[4.25rem] sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:translate-x-0 sm:mt-2 w-[calc(100vw-1.5rem)] sm:w-80 md:w-96 max-w-sm sm:max-w-none bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl z-50 p-2.5 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                 <div className="flex items-center justify-between px-2 py-1.5 border-b border-zinc-800 text-xs font-semibold text-zinc-300">
                   <span>Alertas da Adega ({(notifications || []).length})</span>
-                  <span className="text-[11px] text-zinc-400">Sincronizado</span>
+                  <div className="flex items-center gap-2">
+                    {(notifications || []).length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => clearNotifications()}
+                        className="text-[11px] text-amber-400 hover:text-amber-300 font-medium transition-colors cursor-pointer"
+                      >
+                        Limpar tudo
+                      </button>
+                    )}
+                    <span className="text-[11px] text-zinc-500">Sincronizado</span>
+                  </div>
                 </div>
                 <div className="max-h-64 overflow-y-auto divide-y divide-zinc-800/60 mt-1">
                   {(notifications || []).length === 0 ? (

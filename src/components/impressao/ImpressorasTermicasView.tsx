@@ -107,47 +107,7 @@ export const ImpressorasTermicasView: React.FC = () => {
   const [isSerialPrinting, setIsSerialPrinting] = useState(false);
 
   // Spooler History State
-  const [printJobs, setPrintJobs] = useState<ThermalPrintJob[]>([
-    {
-      id: 'job-001',
-      timestamp: '14:22:10',
-      title: 'Comanda Cozinha - Mesa 04 (Petiscos)',
-      sector: 'COZINHA',
-      contentRaw: 'MESA 04\n[ 1x ] PICANHA NA CHAPA\n[ 2x ] BATATA RUSTICA',
-      paperWidthMm: 80,
-      orderCode: '#2041',
-      tableOrComanda: 'Mesa 04',
-      status: 'IMPRESSO',
-      printerName: 'Impressora Cozinha',
-      reprintCount: 0,
-    },
-    {
-      id: 'job-002',
-      timestamp: '14:22:11',
-      title: 'Comanda Bar - Mesa 04 (Doses & Bebidas)',
-      sector: 'BAR',
-      contentRaw: 'MESA 04\n[ 2x ] DOSE WHISKY BLACK LABEL (50ML)\n[ 1x ] CHOPP IPA 500ML',
-      paperWidthMm: 80,
-      orderCode: '#2041',
-      tableOrComanda: 'Mesa 04',
-      status: 'IMPRESSO',
-      printerName: 'Impressora Bar',
-      reprintCount: 0,
-    },
-    {
-      id: 'job-003',
-      timestamp: '14:35:50',
-      title: 'Cupom de Venda NFC-e - Pedido #2040',
-      sector: 'PDV',
-      contentRaw: 'ADEGASWG\nCUPOM FISCAL NFC-E\nTOTAL R$ 245.00',
-      paperWidthMm: 80,
-      orderCode: '#2040',
-      tableOrComanda: 'Balcão',
-      status: 'IMPRESSO',
-      printerName: 'Impressora Caixa Principal',
-      reprintCount: 0,
-    },
-  ]);
+  const [printJobs, setPrintJobs] = useState<ThermalPrintJob[]>([]);
 
   const isWebSerialAvailable = checkWebSerialSupport();
 

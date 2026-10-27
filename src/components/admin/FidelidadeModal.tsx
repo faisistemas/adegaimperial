@@ -82,35 +82,41 @@ export const FidelidadeModal: React.FC<FidelidadeModalProps> = ({
             </div>
 
             <div className="space-y-2">
-              {rankedCustomers.map((cust, idx) => (
-                <div
-                  key={cust.id}
-                  className="p-3 rounded-xl bg-zinc-950/50 border border-zinc-800/80 hover:border-zinc-700 flex items-center justify-between gap-3 text-xs transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                      idx === 0 ? 'bg-amber-500 text-zinc-950' : idx === 1 ? 'bg-zinc-300 text-zinc-950' : 'bg-zinc-800 text-zinc-400'
-                    }`}>
-                      {idx + 1}
-                    </span>
-                    <div>
-                      <div className="font-semibold text-zinc-100">{cust.name}</div>
-                      <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 mt-0.5">
-                        <span className="text-amber-400 font-medium">{cust.nivel}</span>
-                        <span>•</span>
-                        <span>Cashback: R$ {cust.cashback.toFixed(2)}</span>
+              {rankedCustomers.length === 0 ? (
+                <div className="p-4 text-center text-xs text-zinc-500 bg-zinc-950/40 rounded-xl border border-zinc-800/60">
+                  Nenhum cliente cadastrado no momento.
+                </div>
+              ) : (
+                rankedCustomers.map((cust, idx) => (
+                  <div
+                    key={cust.id}
+                    className="p-3 rounded-xl bg-zinc-950/50 border border-zinc-800/80 hover:border-zinc-700 flex items-center justify-between gap-3 text-xs transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
+                        idx === 0 ? 'bg-amber-500 text-zinc-950' : idx === 1 ? 'bg-zinc-300 text-zinc-950' : 'bg-zinc-800 text-zinc-400'
+                      }`}>
+                        {idx + 1}
+                      </span>
+                      <div>
+                        <div className="font-semibold text-zinc-100">{cust.name}</div>
+                        <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 mt-0.5">
+                          <span className="text-amber-400 font-medium">{cust.nivel}</span>
+                          <span>•</span>
+                          <span>Cashback: R$ {cust.cashback.toFixed(2)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="text-right">
-                    <div className="font-bold text-amber-400 font-mono text-sm">
-                      {cust.pontos} pts
+                    <div className="text-right">
+                      <div className="font-bold text-amber-400 font-mono text-sm">
+                        {cust.pontos} pts
+                      </div>
+                      <div className="text-[10px] text-zinc-500">Acumulados</div>
                     </div>
-                    <div className="text-[10px] text-zinc-500">Acumulados</div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 

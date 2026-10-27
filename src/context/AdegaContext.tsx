@@ -382,6 +382,7 @@ interface AdegaContextType {
   // Notificações / Alertas
   notifications: string[];
   dismissNotification: (index: number) => void;
+  clearNotifications: () => void;
 
   // Persistência e Backup
   resetarDadosParaPadrao: () => void;
@@ -918,28 +919,7 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Logs de Acesso e Auditoria (PostgreSQL logs_acesso)
-  const [accessLogs, setAccessLogs] = useState<AccessLog[]>([
-    {
-      id: 'log-1',
-      usuarioId: 'u-3',
-      usuarioNome: 'Lucas Ferreira',
-      lojaId: 'store-1',
-      ipOrigem: '192.168.1.50 (PDV 01)',
-      acao: 'LOGIN_SUCESSO',
-      dataHora: '15/09/2026 15:58',
-      detalhes: 'Operador autenticado via PIN rápido no terminal PDV Touch',
-    },
-    {
-      id: 'log-2',
-      usuarioId: 'u-3',
-      usuarioNome: 'Lucas Ferreira',
-      lojaId: 'store-1',
-      ipOrigem: '192.168.1.50 (PDV 01)',
-      acao: 'ABERTURA_CAIXA',
-      dataHora: '15/09/2026 16:00',
-      detalhes: 'Abertura do Caixa 01 com Fundo de Troco inicial de R$ 200,00',
-    },
-  ]);
+  const [accessLogs, setAccessLogs] = useState<AccessLog[]>([]);
 
   const addAccessLog = (acao: AccessLog['acao'], detalhes?: string) => {
     const newLog: AccessLog = {
@@ -1036,21 +1016,7 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return { success: false, message: 'Senha/PIN incorreto! Digite a senha cadastrada do usuário.' };
   };
 
-  const [fiscalDocuments, setFiscalDocuments] = useState<FiscalDocument[]>([
-    {
-      id: 'fisc-1',
-      orderId: 'ord-101',
-      number: 101,
-      series: 1,
-      type: 'NFCe',
-      accessKey: '35260912345678000190650010000001011128392109',
-      authorizationProtocol: '135269988112233',
-      issuedAt: '15/09/2026 21:30',
-      status: 'AUTORIZADA',
-      totalValue: 81.60,
-      xmlMock: '<nfeProc versao="4.00"><NFe><infNFe Id="NFe35260912345678000190650010000001011128392109">...</infNFe></NFe></nfeProc>',
-    }
-  ]);
+  const [fiscalDocuments, setFiscalDocuments] = useState<FiscalDocument[]>([]);
 
   // ============================================================
   // MÓDULO 5: Fiscal e Conformidade Tributária Brasileira (State)
@@ -1070,14 +1036,14 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [exportacaoContabil, setExportacaoContabil] = useState<ExportacaoContabilidade>(INITIAL_EXPORTACOES_CONTABILIDADE);
 
 
-  const [notifications, setNotifications] = useState<string[]>([
-    'AdeGaswg: Caixa do turno da noite aberto com sucesso (Fundo: R$ 200,00).',
-    'Estoque: Gin Tanqueray atingiu nível de atenção na garrafa aberta (550ml restantes).',
-    'Novo pedido de delivery despachado para Motoboy Thiago.',
-  ]);
+  const [notifications, setNotifications] = useState<string[]>([]);
 
   const dismissNotification = (index: number) => {
     setNotifications((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
   };
 
   const switchUserRole = (user: User) => {
@@ -1085,10 +1051,6 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('adega_session_user_id', user.id);
     }
-    setNotifications((prev) => [
-      `Sessão alterada: Operador ${user.name} (${user.role}) conectado.`,
-      ...prev,
-    ]);
   };
 
   const switchStore = (storeId: string) => {
@@ -4396,6 +4358,7 @@ Acerto Liquidado por: ${currentUser.name}
         resetarDadosParaPadrao,
         notifications,
         dismissNotification,
+        clearNotifications,
         // Módulo Financeiro e Gestão
         appSettings,
         updateAppSettings,

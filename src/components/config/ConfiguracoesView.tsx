@@ -769,21 +769,8 @@ export const ConfiguracoesView: React.FC = () => {
             </h2>
           </div>
 
-          <div className="divide-y divide-zinc-800 bg-zinc-950 rounded-xl border border-zinc-800">
-            <div className="p-3 flex items-center justify-between text-zinc-300">
-              <div>
-                <span className="font-bold text-white">Alteração do Horário de Atendimento da Adega</span>
-                <span className="text-zinc-500 block text-[10px]">Operador: Carlos Albuquerque (Super Admin)</span>
-              </div>
-              <span className="text-zinc-400 font-mono text-[10px]">Hoje, 03:45</span>
-            </div>
-            <div className="p-3 flex items-center justify-between text-zinc-300">
-              <div>
-                <span className="font-bold text-white">Atualização dos Dados Cadastrais / CNPJ da Adega</span>
-                <span className="text-zinc-500 block text-[10px]">Operador: Carlos Albuquerque (Super Admin)</span>
-              </div>
-              <span className="text-zinc-400 font-mono text-[10px]">Ontem, 18:20</span>
-            </div>
+          <div className="p-6 text-center text-zinc-500 bg-zinc-950 rounded-xl border border-zinc-800">
+            Nenhum registro de auditoria no momento.
           </div>
         </div>
       )}
