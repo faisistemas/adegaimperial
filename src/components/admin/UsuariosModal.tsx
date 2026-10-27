@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
 import { User, UserRole } from '../../types';
+import { getSupabaseClient } from '../../lib/supabase';
 
 interface UsuariosModalProps {
   isOpen: boolean;
@@ -29,21 +30,6 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [showPinInViewer, setShowPinInViewer] = useState(false);
 
-  // Garante que, se houver apenas o Administrador, o Garçom também seja carregado conforme o layout de referência
-  useEffect(() => {
-    if (users.length === 1 && users[0].role === 'SUPER_ADMIN') {
-      const garcomUser: User = {
-        id: 'u-2',
-        name: 'Garçom',
-        email: 'garcom@adegaswg.com.br',
-        role: 'WAITER',
-        avatar: '/logo.jpg',
-        pin: '1111',
-        storeId: users[0].storeId || 'store-1',
-      };
-      setUsers([...users, garcomUser]);
-    }
-  }, [users, setUsers]);
 
   // Fechar com tecla ESC
   useEffect(() => {
@@ -74,17 +60,45 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
       return;
     }
 
-    const updatedUsers = users.map((u) => {
-      if (u.id === user.id) {
-        return { ...u, pin: newPassword };
-      }
-      return u;
-    });
+    const updatedUser = { ...user, pin: newPassword };
 
-    setUsers(updatedUsers);
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === user.id) {
+          return updatedUser;
+        }
+        return u;
+      })
+    );
 
     if (currentUser.id === user.id) {
       switchUserRole({ ...currentUser, pin: newPassword });
+    }
+
+    // Persiste no Supabase em segundo plano (API e Cliente direto)
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedUser),
+    }).catch(() => {});
+
+    const sb = getSupabaseClient();
+    if (sb) {
+      sb.from('usuarios')
+        .upsert({
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          avatar: updatedUser.avatar || '/logo.jpg',
+          pin: updatedUser.pin,
+          store_id: updatedUser.storeId || 'store-1',
+          phone: updatedUser.whatsapp || updatedUser.phone || null,
+          whatsapp: updatedUser.whatsapp || null,
+          updated_at: new Date().toISOString(),
+        })
+        .then(() => {})
+        .catch(() => {});
     }
 
     setPasswords((prev) => ({ ...prev, [user.id]: '' }));
@@ -101,9 +115,19 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
     }
 
     if (window.confirm(`Deseja realmente excluir o usuário "${targetUser.name}"?`)) {
-      const remainingUsers = users.filter((u) => u.id !== userId);
-      setUsers(remainingUsers);
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
 
+      // Remove no Supabase em segundo plano (API e Cliente direto)
+      fetch(`/api/users/${userId}`, {
+        method: 'DELETE',
+      }).catch(() => {});
+
+      const sbDelete = getSupabaseClient();
+      if (sbDelete) {
+        sbDelete.from('usuarios').delete().eq('id', userId).then(() => {}).catch(() => {});
+      }
+
+      const remainingUsers = users.filter((u) => u.id !== userId);
       if (userId === currentUser.id && remainingUsers.length > 0) {
         switchUserRole(remainingUsers[0]);
       }
@@ -151,33 +175,65 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
       return;
     }
 
+    const cleanEmail = formEmail.trim().toLowerCase();
+    const cleanPin = formPin.trim();
+
     if (editingUserId) {
       // Atualizar usuário existente
-      const updatedUsers = users.map((u) => {
-        if (u.id === editingUserId) {
-          return {
-            ...u,
-            name: formName.trim(),
-            role: formRole,
-            pin: formPin.trim(),
-            email: formEmail.trim() || u.email,
-            whatsapp: formWhatsapp.trim() || u.whatsapp,
-          };
-        }
-        return u;
-      });
+      const updatedUser: User = {
+        id: editingUserId,
+        name: formName.trim(),
+        role: formRole,
+        pin: cleanPin,
+        email: cleanEmail || `${formName.trim().toLowerCase().replace(/\s+/g, '.')}@adegaswg.com.br`,
+        whatsapp: formWhatsapp.trim(),
+        avatar: '/logo.jpg',
+        storeId: currentUser.storeId || 'store-1',
+      };
 
-      setUsers(updatedUsers);
+      setUsers((prev) =>
+        prev.map((u) => {
+          if (u.id === editingUserId) {
+            return {
+              ...u,
+              ...updatedUser,
+            };
+          }
+          return u;
+        })
+      );
 
       if (currentUser.id === editingUserId) {
         switchUserRole({
           ...currentUser,
-          name: formName.trim(),
-          role: formRole,
-          pin: formPin.trim(),
-          email: formEmail.trim() || currentUser.email,
-          whatsapp: formWhatsapp.trim() || currentUser.whatsapp,
+          ...updatedUser,
         });
+      }
+
+      // Persiste no Supabase (API e Cliente direto)
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedUser),
+      }).catch(() => {});
+
+      const sb = getSupabaseClient();
+      if (sb) {
+        sb.from('usuarios')
+          .upsert({
+            id: updatedUser.id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            avatar: updatedUser.avatar || '/logo.jpg',
+            pin: updatedUser.pin,
+            store_id: updatedUser.storeId || 'store-1',
+            phone: updatedUser.whatsapp || updatedUser.phone || null,
+            whatsapp: updatedUser.whatsapp || null,
+            updated_at: new Date().toISOString(),
+          })
+          .then(() => {})
+          .catch(() => {});
       }
 
       showNotification('success', `Usuário "${formName}" atualizado com sucesso!`);
@@ -186,17 +242,43 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
       const newUser: User = {
         id: `u-${Date.now()}`,
         name: formName.trim(),
-        email: formEmail.trim() || `${formName.toLowerCase().replace(/\s+/g, '.')}@adegaswg.com.br`,
+        email: cleanEmail || `${formName.trim().toLowerCase().replace(/\s+/g, '.')}@adegaswg.com.br`,
         whatsapp: formWhatsapp.trim(),
         role: formRole,
         avatar: '/logo.jpg',
-        pin: formPin.trim(),
+        pin: cleanPin,
         storeId: currentUser.storeId || 'store-1',
       };
 
-      setUsers([...users, newUser]);
-      switchUserRole(newUser);
-      showNotification('success', `Usuário "${newUser.name}" cadastrado e conectado com sucesso!`);
+      setUsers((prev) => [...prev.filter((u) => u.id !== newUser.id), newUser]);
+
+      // Persiste no Supabase (API e Cliente direto)
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUser),
+      }).catch(() => {});
+
+      const sb = getSupabaseClient();
+      if (sb) {
+        sb.from('usuarios')
+          .upsert({
+            id: newUser.id,
+            name: newUser.name,
+            email: newUser.email,
+            role: newUser.role,
+            avatar: newUser.avatar || '/logo.jpg',
+            pin: newUser.pin,
+            store_id: newUser.storeId || 'store-1',
+            phone: newUser.whatsapp || newUser.phone || null,
+            whatsapp: newUser.whatsapp || null,
+            updated_at: new Date().toISOString(),
+          })
+          .then(() => {})
+          .catch(() => {});
+      }
+
+      showNotification('success', `Usuário "${newUser.name}" cadastrado com sucesso no banco de dados!`);
     }
 
     handleCancelForm();

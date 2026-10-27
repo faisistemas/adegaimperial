@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Database, CheckCircle2, AlertTriangle, RefreshCw, Copy, Check, ExternalLink, X, ShieldCheck, Terminal, Layers } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
+import { getSupabaseClient, checkBackendSupabaseStatus } from '../../lib/supabase';
 
 interface SupabaseConfigModalProps {
   isOpen: boolean;
@@ -8,7 +9,7 @@ interface SupabaseConfigModalProps {
 }
 
 export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen, onClose }) => {
-  const { products, orders } = useAdega();
+  const { products, orders, users, customers, tables, comandas } = useAdega();
   const [status, setStatus] = useState<{
     configured: boolean;
     connected: boolean;
@@ -30,20 +31,19 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen
   const checkStatus = async () => {
     setStatus((prev) => ({ ...prev, loading: true }));
     try {
-      const res = await fetch('/api/supabase/status');
-      const data = await res.json();
+      const res = await checkBackendSupabaseStatus();
       setStatus({
-        configured: data.configured ?? false,
-        connected: data.connected ?? false,
-        schemaReady: data.schemaReady,
-        message: data.message || 'Status verificado.',
+        configured: res.configured,
+        connected: res.connected,
+        schemaReady: res.schemaReady,
+        message: res.message || 'Status verificado.',
         loading: false,
       });
     } catch (err: any) {
       setStatus({
         configured: false,
         connected: false,
-        message: 'Falha ao contatar a API local do servidor backend.',
+        message: `Falha ao verificar Supabase: ${err.message}`,
         loading: false,
       });
     }
@@ -58,31 +58,163 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen
   const handleSync = async () => {
     setSyncing(true);
     setSyncResult(null);
+
+    let syncedSuccess = false;
+    let pCount = 0;
+    let oCount = 0;
+    let uCount = 0;
+    let cCount = 0;
+
+    // 1. Tenta sincronização via API local / backend
     try {
       const res = await fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products, orders }),
+        body: JSON.stringify({ products, orders, users, customers, tables, comandas }),
       });
-      const data = await res.json();
-      if (data.synced) {
-        setSyncResult(`Sincronização concluída com sucesso! ${data.productsCount} produtos e ${data.ordersCount} pedidos atualizados no Supabase.`);
-      } else {
-        setSyncResult(data.message || 'Erro durante a sincronização.');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.synced) {
+          syncedSuccess = true;
+          pCount = data.productsCount ?? 0;
+          oCount = data.ordersCount ?? 0;
+          uCount = data.usersCount ?? 0;
+          cCount = data.customersCount ?? 0;
+        }
       }
     } catch (err: any) {
-      setSyncResult(`Erro ao sincronizar: ${err.message}`);
-    } finally {
-      setSyncing(false);
+      // Ignora erro da API e tenta sincronização direta via cliente Supabase
     }
+
+    // 2. Se a API não respondeu (ex: deploy estático na Vercel), sincroniza diretamente via Supabase Client
+    if (!syncedSuccess) {
+      const sb = getSupabaseClient();
+      if (sb) {
+        try {
+          if (products && products.length > 0) {
+            const formattedProducts = products.map((p) => ({
+              id: p.id,
+              name: p.name,
+              barcode: p.barcode,
+              category: p.category,
+              subcategory: p.subcategory || null,
+              price: p.price,
+              cost_price: p.costPrice || 0,
+              stock_units: p.stockUnits || 0,
+              image: p.image || null,
+              is_fractionable: p.isFractionable ?? false,
+              bottle_volume_ml: p.bottleVolumeMl || null,
+              dose_volume_ml: p.doseVolumeMl || null,
+              price_per_dose: p.pricePerDose || null,
+              open_bottle_volume_ml: p.openBottleVolumeMl || null,
+              is_weighed: p.isWeighed ?? false,
+              price_per_kg: p.pricePerKg || null,
+              min_stock_alert: p.minStockAlert ?? 5,
+              ncm: p.ncm || '2208.90.00',
+              cest: p.cest || null,
+              cfop: p.cfop || '5.405',
+              cst_icms: p.cstIcms || '500',
+              updated_at: new Date().toISOString(),
+            }));
+            const { error: pErr } = await sb.from('produtos').upsert(formattedProducts);
+            if (!pErr) pCount = formattedProducts.length;
+          }
+
+          if (orders && orders.length > 0) {
+            const formattedOrders = orders.map((o) => ({
+              id: o.id,
+              code: o.code,
+              store_id: o.storeId || 'store-1',
+              created_at: o.createdAt || new Date().toISOString(),
+              subtotal: o.subtotal || 0,
+              discount: o.discount || 0,
+              service_fee: o.serviceFee || 0,
+              delivery_fee: o.deliveryFee || 0,
+              total: o.total || 0,
+              status: o.status || 'COMPLETED',
+              order_type: o.orderType || 'PDV_BALCAO',
+              table_number: o.tableNumber || null,
+              comanda_number: o.comandaNumber || null,
+              customer_name: o.customerName || null,
+              customer_cpf: o.customerCpf || null,
+              operator_name: o.operatorName || null,
+              nfce_key: o.nfceKey || null,
+              nfce_protocol: o.nfceProtocol || null,
+              payment_method: o.paymentMethod || null,
+              payment_details: o.paymentDetails || null,
+              items: o.items || [],
+            }));
+            const { error: oErr } = await sb.from('pedidos').upsert(formattedOrders);
+            if (!oErr) oCount = formattedOrders.length;
+          }
+
+          if (users && users.length > 0) {
+            const formattedUsers = users.map((u) => ({
+              id: u.id,
+              name: u.name,
+              email: u.email,
+              role: u.role,
+              avatar: u.avatar || '/logo.jpg',
+              pin: u.pin,
+              phone: u.whatsapp || u.phone || null,
+              whatsapp: u.whatsapp || null,
+              cpf_cnpj: u.cpfCnpj || null,
+              store_id: u.storeId || 'store-1',
+              updated_at: new Date().toISOString(),
+            }));
+            const { error: uErr } = await sb.from('usuarios').upsert(formattedUsers);
+            if (!uErr) uCount = formattedUsers.length;
+          }
+
+          if (customers && customers.length > 0) {
+            const formattedCustomers = customers.map((c) => ({
+              id: c.id,
+              name: c.name,
+              cpf_cnpj: c.cpfCnpj || null,
+              phone: c.phone || null,
+              email: c.email || null,
+              address: c.address || null,
+              total_spent: c.totalSpent || 0,
+              orders_count: c.ordersCount || 0,
+              credit_balance: c.creditBalance || 0,
+              loyalty_points: c.loyaltyPoints || 0,
+              updated_at: new Date().toISOString(),
+            }));
+            const { error: cErr } = await sb.from('clientes').upsert(formattedCustomers);
+            if (!cErr) cCount = formattedCustomers.length;
+          }
+
+          syncedSuccess = true;
+        } catch (clientErr: any) {
+          setSyncResult(`Erro ao sincronizar diretamente com Supabase: ${clientErr.message}`);
+          setSyncing(false);
+          return;
+        }
+      }
+    }
+
+    if (syncedSuccess) {
+      setSyncResult(`Sincronização concluída com sucesso! ${pCount} produtos, ${oCount} pedidos, ${uCount} usuários e ${cCount} clientes sincronizados no Supabase.`);
+    } else {
+      setSyncResult('Não foi possível sincronizar com o banco de dados. Verifique a conexão com o Supabase.');
+    }
+    setSyncing(false);
   };
 
-  const sqlCode = `-- 1. Tabela de Produtos
+  const sqlCode = `-- ========================================================
+-- Schema do Banco de Dados Supabase para AdeGaswg PDV
+-- Execute este script no SQL Editor do seu projeto Supabase
+-- ========================================================
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. Tabela de Produtos / Catálogo
 CREATE TABLE IF NOT EXISTS public.produtos (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     barcode TEXT NOT NULL,
     category TEXT NOT NULL,
+    subcategory TEXT,
     price NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     cost_price NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     stock_units INTEGER NOT NULL DEFAULT 0,
@@ -92,9 +224,14 @@ CREATE TABLE IF NOT EXISTS public.produtos (
     dose_volume_ml INTEGER,
     price_per_dose NUMERIC(10,2),
     open_bottle_volume_ml INTEGER,
+    is_weighed BOOLEAN DEFAULT FALSE,
+    price_per_kg NUMERIC(10,2),
+    min_stock_alert INTEGER DEFAULT 5,
     ncm TEXT DEFAULT '2208.90.00',
+    cest TEXT,
     cfop TEXT DEFAULT '5.405',
     cst_icms TEXT DEFAULT '500',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -105,9 +242,14 @@ CREATE TABLE IF NOT EXISTS public.pedidos (
     store_id TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     subtotal NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    discount NUMERIC(10,2) DEFAULT 0.00,
+    service_fee NUMERIC(10,2) DEFAULT 0.00,
+    delivery_fee NUMERIC(10,2) DEFAULT 0.00,
     total NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     status TEXT NOT NULL DEFAULT 'COMPLETED',
     order_type TEXT NOT NULL DEFAULT 'PDV_BALCAO',
+    table_number INTEGER,
+    comanda_number INTEGER,
     customer_name TEXT,
     customer_cpf TEXT,
     operator_name TEXT,
@@ -118,11 +260,130 @@ CREATE TABLE IF NOT EXISTS public.pedidos (
     items JSONB NOT NULL DEFAULT '[]'::jsonb
 );
 
--- 3. Habilitar Políticas de Acesso
+-- 3. Tabela de Sessões de Caixa
+CREATE TABLE IF NOT EXISTS public.caixa_sessoes (
+    id TEXT PRIMARY KEY,
+    opened_at TIMESTAMPTZ DEFAULT NOW(),
+    closed_at TIMESTAMPTZ,
+    initial_amount NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    current_cash NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    total_sales NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    is_open BOOLEAN DEFAULT TRUE,
+    operator_name TEXT,
+    terminal_number TEXT DEFAULT '01'
+);
+
+-- 4. Tabela de Movimentações de Caixa
+CREATE TABLE IF NOT EXISTS public.caixa_movimentacoes (
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    session_id TEXT REFERENCES public.caixa_sessoes(id) ON DELETE CASCADE,
+    type TEXT NOT NULL,
+    amount NUMERIC(10,2) NOT NULL,
+    reason TEXT NOT NULL,
+    operator_name TEXT NOT NULL,
+    timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. Tabela de Mesas do Salão
+CREATE TABLE IF NOT EXISTS public.mesas (
+    id INTEGER PRIMARY KEY,
+    number INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'FREE',
+    guests_count INTEGER DEFAULT 0,
+    total_amount NUMERIC(10,2) DEFAULT 0.00,
+    waiter_name TEXT,
+    items JSONB DEFAULT '[]'::jsonb,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. Tabela de Comandas Individuais
+CREATE TABLE IF NOT EXISTS public.comandas (
+    id TEXT PRIMARY KEY,
+    number INTEGER NOT NULL,
+    customer_name TEXT NOT NULL,
+    customer_cpf TEXT,
+    status TEXT NOT NULL DEFAULT 'OPEN',
+    total_amount NUMERIC(10,2) DEFAULT 0.00,
+    opened_at TIMESTAMPTZ DEFAULT NOW(),
+    closed_at TIMESTAMPTZ,
+    items JSONB DEFAULT '[]'::jsonb
+);
+
+-- 7. Tabela de Usuários / Operadores do Sistema
+CREATE TABLE IF NOT EXISTS public.usuarios (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'WAITER',
+    avatar TEXT DEFAULT '/logo.jpg',
+    pin TEXT NOT NULL,
+    store_id TEXT DEFAULT 'store-1',
+    phone TEXT,
+    whatsapp TEXT,
+    cpf_cnpj TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO public.usuarios (id, name, email, role, avatar, pin, store_id)
+VALUES 
+    ('u-1', 'Administrador', 'admin@adegaswg.com.br', 'SUPER_ADMIN', '/logo.jpg', '1234', 'store-1'),
+    ('u-2', 'Garçom', 'garcom@adegaswg.com.br', 'WAITER', '/logo.jpg', '1111', 'store-1')
+ON CONFLICT (id) DO NOTHING;
+
+-- 8. Tabela de Clientes
+CREATE TABLE IF NOT EXISTS public.clientes (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    cpf_cnpj TEXT,
+    phone TEXT,
+    email TEXT,
+    address TEXT,
+    total_spent NUMERIC(10,2) DEFAULT 0.00,
+    orders_count INTEGER DEFAULT 0,
+    credit_balance NUMERIC(10,2) DEFAULT 0.00,
+    loyalty_points INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9. Habilitar Row Level Security (RLS)
 ALTER TABLE public.produtos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pedidos ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permitir Leitura e Escrita Produtos" ON public.produtos FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Permitir Leitura e Escrita Pedidos" ON public.pedidos FOR ALL USING (true) WITH CHECK (true);`;
+ALTER TABLE public.caixa_sessoes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.caixa_movimentacoes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.mesas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comandas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.clientes ENABLE ROW LEVEL SECURITY;
+
+-- 10. Políticas de Acesso
+DROP POLICY IF EXISTS "Acesso total produtos" ON public.produtos;
+CREATE POLICY "Acesso total produtos" ON public.produtos FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total pedidos" ON public.pedidos;
+CREATE POLICY "Acesso total pedidos" ON public.pedidos FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total caixa_sessoes" ON public.caixa_sessoes;
+CREATE POLICY "Acesso total caixa_sessoes" ON public.caixa_sessoes FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total caixa_movimentacoes" ON public.caixa_movimentacoes;
+CREATE POLICY "Acesso total caixa_movimentacoes" ON public.caixa_movimentacoes FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total mesas" ON public.mesas;
+CREATE POLICY "Acesso total mesas" ON public.mesas FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total comandas" ON public.comandas;
+CREATE POLICY "Acesso total comandas" ON public.comandas FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total usuarios" ON public.usuarios;
+CREATE POLICY "Acesso total usuarios" ON public.usuarios FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total clientes" ON public.clientes;
+CREATE POLICY "Acesso total clientes" ON public.clientes FOR ALL USING (true) WITH CHECK (true);
+
+NOTIFY pgrst, 'reload schema';`;
 
   const copySqlToClipboard = () => {
     navigator.clipboard.writeText(sqlCode);

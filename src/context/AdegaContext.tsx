@@ -5,6 +5,7 @@ import {
   STORAGE_KEYS, 
   clearAllAdegaStorage 
 } from '../utils/storage';
+import { getSupabaseClient } from '../lib/supabase';
 import { 
   User, Store, Product, Table, Comanda, Order, DoseAuditLog, 
   CashRegisterSession, FiscalDocument, Customer, CartItem, PaymentDetails, OrderStatus, PaymentMethod,
@@ -399,7 +400,15 @@ const DEFAULT_INITIAL_COMANDAS: Comanda[] = [];
 const DEFAULT_INITIAL_ORDERS: Order[] = [];
 
 export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [users, setUsers] = useState<User[]>(() => loadFromStorage(STORAGE_KEYS.USERS, INITIAL_USERS));
+  const [users, setUsersState] = useState<User[]>(() => loadFromStorage(STORAGE_KEYS.USERS, INITIAL_USERS));
+
+  const setUsers: React.Dispatch<React.SetStateAction<User[]>> = (action) => {
+    setUsersState((prev) => {
+      const next = typeof action === 'function' ? action(prev) : action;
+      saveToStorage(STORAGE_KEYS.USERS, next);
+      return next;
+    });
+  };
   const [currentUser, setCurrentUser] = useState<User>(() => {
     if (typeof window !== 'undefined') {
       const savedUserId = sessionStorage.getItem('adega_session_user_id');
@@ -585,6 +594,64 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.USERS, users);
   }, [users]);
+
+  // Carrega e sincroniza usuários do banco de dados (Supabase/API) na inicialização
+  useEffect(() => {
+    const hydrateUsers = async () => {
+      let fetchedUsers: User[] = [];
+
+      // 1. Tenta API local / backend
+      try {
+        const res = await fetch('/api/users');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.users) && data.users.length > 0) {
+            fetchedUsers = data.users;
+          }
+        }
+      } catch (e) {}
+
+      // 2. Se a API não respondeu ou retornou vazio, tenta Supabase Client direto
+      if (fetchedUsers.length === 0) {
+        try {
+          const sb = getSupabaseClient();
+          if (sb) {
+            const { data, error } = await sb.from('usuarios').select('*');
+            if (!error && Array.isArray(data) && data.length > 0) {
+              fetchedUsers = data.map((u: any) => ({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                role: u.role,
+                avatar: u.avatar || '/logo.jpg',
+                pin: u.pin,
+                phone: u.phone || u.whatsapp,
+                whatsapp: u.whatsapp,
+                storeId: u.store_id || 'store-1',
+              }));
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (fetchedUsers.length > 0) {
+        setUsersState((prev) => {
+          const map = new Map<string, User>();
+          prev.forEach((u) => map.set(u.id, u));
+          fetchedUsers.forEach((u: User) => {
+            if (u && u.id) {
+              map.set(u.id, { ...(map.get(u.id) || {}), ...u });
+            }
+          });
+          const merged = Array.from(map.values());
+          saveToStorage(STORAGE_KEYS.USERS, merged);
+          return merged;
+        });
+      }
+    };
+
+    hydrateUsers();
+  }, []);
 
   const resetarDadosParaPadrao = () => {
     clearAllAdegaStorage();

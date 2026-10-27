@@ -108,39 +108,97 @@ CREATE TABLE IF NOT EXISTS public.comandas (
     items JSONB DEFAULT '[]'::jsonb
 );
 
--- 8. Habilitar Row Level Security (RLS) permissivo para o PDV
+-- 8. Tabela de Usuários / Operadores do Sistema
+CREATE TABLE IF NOT EXISTS public.usuarios (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'WAITER',
+    avatar TEXT DEFAULT '/logo.jpg',
+    pin TEXT NOT NULL,
+    store_id TEXT DEFAULT 'store-1',
+    phone TEXT,
+    whatsapp TEXT,
+    cpf_cnpj TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Inserir usuários padrão caso não existam
+INSERT INTO public.usuarios (id, name, email, role, avatar, pin, store_id)
+VALUES 
+    ('u-1', 'Administrador', 'admin@adegaswg.com.br', 'SUPER_ADMIN', '/logo.jpg', '1234', 'store-1'),
+    ('u-2', 'Garçom', 'garcom@adegaswg.com.br', 'WAITER', '/logo.jpg', '1111', 'store-1')
+ON CONFLICT (id) DO NOTHING;
+
+-- 9. Tabela de Clientes (CRM / Fidelidade / Crédito Digital)
+CREATE TABLE IF NOT EXISTS public.clientes (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    cpf_cnpj TEXT,
+    phone TEXT,
+    email TEXT,
+    address TEXT,
+    total_spent NUMERIC(10,2) DEFAULT 0.00,
+    orders_count INTEGER DEFAULT 0,
+    credit_balance NUMERIC(10,2) DEFAULT 0.00,
+    loyalty_points INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 10. Tabela de Fornecedores
+CREATE TABLE IF NOT EXISTS public.fornecedores (
+    id TEXT PRIMARY KEY,
+    nome_fantasia TEXT NOT NULL,
+    razao_social TEXT,
+    cnpj TEXT,
+    telefone TEXT,
+    email TEXT,
+    categoria TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 11. Habilitar Row Level Security (RLS) permissivo para o PDV
 ALTER TABLE public.produtos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pedidos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.caixa_sessoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.caixa_movimentacoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mesas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comandas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.clientes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.fornecedores ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de Acesso Idempotentes (recria de forma segura se já existirem)
 DROP POLICY IF EXISTS "Acesso total produtos" ON public.produtos;
-DROP POLICY IF EXISTS "Permitir leitura anonima produtos" ON public.produtos;
 CREATE POLICY "Acesso total produtos" ON public.produtos FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Acesso total pedidos" ON public.pedidos;
-DROP POLICY IF EXISTS "Permitir escrita pedidos" ON public.pedidos;
 CREATE POLICY "Acesso total pedidos" ON public.pedidos FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Acesso total caixa_sessoes" ON public.caixa_sessoes;
-DROP POLICY IF EXISTS "Permitir caixa sessoes" ON public.caixa_sessoes;
 CREATE POLICY "Acesso total caixa_sessoes" ON public.caixa_sessoes FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Acesso total caixa_movimentacoes" ON public.caixa_movimentacoes;
-DROP POLICY IF EXISTS "Permitir movimentacoes caixa" ON public.caixa_movimentacoes;
 CREATE POLICY "Acesso total caixa_movimentacoes" ON public.caixa_movimentacoes FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Acesso total mesas" ON public.mesas;
-DROP POLICY IF EXISTS "Permitir mesas" ON public.mesas;
 CREATE POLICY "Acesso total mesas" ON public.mesas FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Acesso total comandas" ON public.comandas;
-DROP POLICY IF EXISTS "Permitir comandas" ON public.comandas;
 CREATE POLICY "Acesso total comandas" ON public.comandas FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total usuarios" ON public.usuarios;
+CREATE POLICY "Acesso total usuarios" ON public.usuarios FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total clientes" ON public.clientes;
+CREATE POLICY "Acesso total clientes" ON public.clientes FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acesso total fornecedores" ON public.fornecedores;
+CREATE POLICY "Acesso total fornecedores" ON public.fornecedores FOR ALL USING (true) WITH CHECK (true);
 
 -- Notificar a API do Supabase para atualizar o cache de schemas imediatamente
 NOTIFY pgrst, 'reload schema';
+
 

@@ -63,6 +63,30 @@ async function startServer() {
     }
   });
 
+  // Teste de tabelas no Supabase
+  app.get('/api/test-tables', async (_req: Request, res: Response) => {
+    const supabase = getSupabaseServerClient();
+    if (!supabase) return res.json({ error: 'No supabase client' });
+
+    const [produtos, pedidos, sessoes, mesas, comandas, clientes] = await Promise.all([
+      supabase.from('produtos').select('count', { count: 'exact', head: true }),
+      supabase.from('pedidos').select('count', { count: 'exact', head: true }),
+      supabase.from('caixa_sessoes').select('count', { count: 'exact', head: true }),
+      supabase.from('mesas').select('count', { count: 'exact', head: true }),
+      supabase.from('comandas').select('count', { count: 'exact', head: true }),
+      supabase.from('clientes').select('count', { count: 'exact', head: true })
+    ]);
+
+    return res.json({
+      produtos: { error: produtos.error?.message, count: produtos.count },
+      pedidos: { error: pedidos.error?.message, count: pedidos.count },
+      sessoes: { error: sessoes.error?.message, count: sessoes.count },
+      mesas: { error: mesas.error?.message, count: mesas.count },
+      comandas: { error: comandas.error?.message, count: comandas.count },
+      clientes: { error: clientes.error?.message, count: clientes.count },
+    });
+  });
+
   // Proxy: Buscar Produtos do Supabase (com fallback)
   app.get('/api/products', async (_req: Request, res: Response) => {
     const supabase = getSupabaseServerClient();
@@ -203,21 +227,182 @@ async function startServer() {
     }
   });
 
-  // Sincronização em Lote (Batch Sync)
+  // ========================================================
+  // Proxy: Usuários do Sistema (Supabase)
+  // ========================================================
+  app.get('/api/users', async (_req: Request, res: Response) => {
+    const supabase = getSupabaseServerClient();
+    if (!supabase) return res.status(200).json({ source: 'local', users: [] });
+
+    try {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) {
+        return res.status(200).json({ source: 'local', error: error.message, users: [] });
+      }
+
+      const formatted = (data || []).map((u: any) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        avatar: u.avatar || '/logo.jpg',
+        pin: u.pin,
+        storeId: u.store_id || 'store-1',
+        phone: u.phone,
+        whatsapp: u.whatsapp,
+        cpfCnpj: u.cpf_cnpj,
+      }));
+
+      return res.json({ source: 'supabase', users: formatted });
+    } catch (err: any) {
+      return res.status(200).json({ source: 'local', error: err.message, users: [] });
+    }
+  });
+
+  app.post('/api/users', async (req: Request, res: Response) => {
+    const supabase = getSupabaseServerClient();
+    const user = req.body;
+    if (!user || !user.name) {
+      return res.status(400).json({ error: 'Dados do usuário inválidos.' });
+    }
+
+    if (!supabase) {
+      return res.status(200).json({ savedLocal: true, message: 'Operando localmente.' });
+    }
+
+    try {
+      const dbUser = {
+        id: user.id || `u-${Date.now()}`,
+        name: user.name,
+        email: user.email || '',
+        role: user.role || 'WAITER',
+        avatar: user.avatar || '/logo.jpg',
+        pin: String(user.pin || ''),
+        store_id: user.storeId || 'store-1',
+        phone: user.phone || null,
+        whatsapp: user.whatsapp || null,
+        cpf_cnpj: user.cpfCnpj || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from('usuarios')
+        .upsert(dbUser)
+        .select()
+        .single();
+
+      if (error) {
+        console.warn('[Supabase Users Upsert Warning]:', error.message);
+        return res.status(200).json({ savedLocal: true, error: error.message });
+      }
+
+      return res.json({ success: true, user: data });
+    } catch (err: any) {
+      return res.status(200).json({ savedLocal: true, error: err.message });
+    }
+  });
+
+  app.delete('/api/users/:id', async (req: Request, res: Response) => {
+    const supabase = getSupabaseServerClient();
+    const { id } = req.params;
+
+    if (!supabase) return res.status(200).json({ savedLocal: true });
+
+    try {
+      const { error } = await supabase.from('usuarios').delete().eq('id', id);
+      if (error) {
+        return res.status(200).json({ savedLocal: true, error: error.message });
+      }
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(200).json({ savedLocal: true, error: err.message });
+    }
+  });
+
+  // ========================================================
+  // Proxy: Clientes (Supabase)
+  // ========================================================
+  app.get('/api/customers', async (_req: Request, res: Response) => {
+    const supabase = getSupabaseServerClient();
+    if (!supabase) return res.status(200).json({ source: 'local', customers: [] });
+
+    try {
+      const { data, error } = await supabase.from('clientes').select('*').order('name', { ascending: true });
+      if (error) return res.status(200).json({ source: 'local', error: error.message, customers: [] });
+
+      const formatted = (data || []).map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        cpfCnpj: c.cpf_cnpj,
+        phone: c.phone,
+        email: c.email,
+        address: c.address,
+        totalSpent: Number(c.total_spent || 0),
+        ordersCount: Number(c.orders_count || 0),
+        creditBalance: Number(c.credit_balance || 0),
+        loyaltyPoints: Number(c.loyalty_points || 0),
+      }));
+
+      return res.json({ source: 'supabase', customers: formatted });
+    } catch (err: any) {
+      return res.status(200).json({ source: 'local', error: err.message, customers: [] });
+    }
+  });
+
+  app.post('/api/customers', async (req: Request, res: Response) => {
+    const supabase = getSupabaseServerClient();
+    const customer = req.body;
+    if (!customer || !customer.name) return res.status(400).json({ error: 'Dados do cliente inválidos.' });
+    if (!supabase) return res.status(200).json({ savedLocal: true });
+
+    try {
+      const dbCustomer = {
+        id: customer.id || `cust-${Date.now()}`,
+        name: customer.name,
+        cpf_cnpj: customer.cpfCnpj || null,
+        phone: customer.phone || null,
+        email: customer.email || null,
+        address: customer.address || null,
+        total_spent: customer.totalSpent || 0,
+        orders_count: customer.ordersCount || 0,
+        credit_balance: customer.creditBalance || 0,
+        loyalty_points: customer.loyaltyPoints || 0,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase.from('clientes').upsert(dbCustomer).select().single();
+      if (error) return res.status(200).json({ savedLocal: true, error: error.message });
+
+      return res.json({ success: true, customer: data });
+    } catch (err: any) {
+      return res.status(200).json({ savedLocal: true, error: err.message });
+    }
+  });
+
+  // ========================================================
+  // Sincronização em Lote de Todo o Sistema (Supabase)
+  // ========================================================
   app.post('/api/sync', async (req: Request, res: Response) => {
     const supabase = getSupabaseServerClient();
     if (!supabase) {
       return res.json({
         synced: false,
-        message: 'Supabase não configurado. Defina SUPABASE_URL e SUPABASE_ANON_KEY.',
+        message: 'Supabase não configurado. Defina SUPABASE_URL e SUPABASE_ANON_KEY / SERVICE_ROLE_KEY.',
       });
     }
 
     try {
-      const { products, orders } = req.body;
+      const { products, orders, users, customers, tables, comandas } = req.body;
       let productsCount = 0;
       let ordersCount = 0;
+      let usersCount = 0;
+      let customersCount = 0;
 
+      // 1. Produtos
       if (Array.isArray(products) && products.length > 0) {
         const formatted = products.map((p) => ({
           id: p.id,
@@ -246,6 +431,7 @@ async function startServer() {
         if (!prodErr) productsCount = formatted.length;
       }
 
+      // 2. Pedidos
       if (Array.isArray(orders) && orders.length > 0) {
         const formattedOrders = orders.map((o) => ({
           id: o.id,
@@ -274,10 +460,84 @@ async function startServer() {
         if (!ordErr) ordersCount = formattedOrders.length;
       }
 
+      // 3. Usuários
+      if (Array.isArray(users) && users.length > 0) {
+        const formattedUsers = users.map((u) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email || '',
+          role: u.role || 'WAITER',
+          avatar: u.avatar || '/logo.jpg',
+          pin: String(u.pin || ''),
+          store_id: u.storeId || 'store-1',
+          phone: u.phone || null,
+          whatsapp: u.whatsapp || null,
+          cpf_cnpj: u.cpfCnpj || null,
+          updated_at: new Date().toISOString(),
+        }));
+
+        const { error: userErr } = await supabase.from('usuarios').upsert(formattedUsers);
+        if (!userErr) usersCount = formattedUsers.length;
+      }
+
+      // 4. Clientes
+      if (Array.isArray(customers) && customers.length > 0) {
+        const formattedCustomers = customers.map((c) => ({
+          id: c.id,
+          name: c.name,
+          cpf_cnpj: c.cpfCnpj || null,
+          phone: c.phone || null,
+          email: c.email || null,
+          address: c.address || null,
+          total_spent: c.totalSpent || 0,
+          orders_count: c.ordersCount || 0,
+          credit_balance: c.creditBalance || 0,
+          loyalty_points: c.loyaltyPoints || 0,
+          updated_at: new Date().toISOString(),
+        }));
+
+        const { error: custErr } = await supabase.from('clientes').upsert(formattedCustomers);
+        if (!custErr) customersCount = formattedCustomers.length;
+      }
+
+      // 5. Mesas
+      if (Array.isArray(tables) && tables.length > 0) {
+        const formattedTables = tables.map((t) => ({
+          id: t.id,
+          number: t.number,
+          name: t.name,
+          status: t.status,
+          guests_count: t.guestsCount || 0,
+          total_amount: t.totalAmount || 0,
+          waiter_name: t.waiterName || null,
+          items: t.items || [],
+          updated_at: new Date().toISOString(),
+        }));
+        await supabase.from('mesas').upsert(formattedTables);
+      }
+
+      // 6. Comandas
+      if (Array.isArray(comandas) && comandas.length > 0) {
+        const formattedComandas = comandas.map((c) => ({
+          id: c.id,
+          number: c.number,
+          customer_name: c.customerName,
+          customer_cpf: c.customerCpf || null,
+          status: c.status,
+          total_amount: c.totalAmount || 0,
+          opened_at: c.openedAt || new Date().toISOString(),
+          closed_at: c.closedAt || null,
+          items: c.items || [],
+        }));
+        await supabase.from('comandas').upsert(formattedComandas);
+      }
+
       return res.json({
         synced: true,
         productsCount,
         ordersCount,
+        usersCount,
+        customersCount,
         timestamp: new Date().toISOString(),
       });
     } catch (err: any) {
