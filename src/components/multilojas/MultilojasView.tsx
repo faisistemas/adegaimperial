@@ -13,7 +13,7 @@ export const MultilojasView: React.FC = () => {
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [sourceStoreId, setSourceStoreId] = useState(stores[0].id);
   const [destStoreId, setDestStoreId] = useState(stores[1]?.id || stores[0].id);
-  const [selectedProductId, setSelectedProductId] = useState(products[0].id);
+  const [selectedProductId, setSelectedProductId] = useState(products[0]?.id || '');
   const [transferUnits, setTransferUnits] = useState(6);
   const [transferSuccess, setTransferSuccess] = useState<string | null>(null);
 

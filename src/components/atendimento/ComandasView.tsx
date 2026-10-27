@@ -37,7 +37,7 @@ export const ComandasView: React.FC = () => {
 
   // Selected comanda for adding items
   const [selectedComanda, setSelectedComanda] = useState<Comanda | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product>(products[0]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(products[0]);
   const [isDose, setIsDose] = useState(true);
   const [qty, setQty] = useState(1);
   const [itemObs, setItemObs] = useState('');
@@ -481,51 +481,57 @@ export const ComandasView: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              <div>
-                <label className="text-xs text-zinc-300 font-medium block mb-1">Produto / Bebida</label>
-                <select
-                  value={selectedProduct.id}
-                  onChange={(e) => {
-                    const found = products.find((p) => p.id === e.target.value);
-                    if (found) setSelectedProduct(found);
-                  }}
-                  className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-2.5 text-xs text-zinc-200"
-                >
-                  {(products || []).map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} {p.isFractionable ? `(Dose R$ ${(p.pricePerDose ?? 0).toFixed(2)} / Garrafa R$ ${(p.price ?? 0).toFixed(2)})` : `- R$ ${(p.price ?? 0).toFixed(2)}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {products.length === 0 ? (
+                <p className="text-xs text-zinc-500 py-2">Nenhum produto cadastrado no catálogo.</p>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-xs text-zinc-300 font-medium block mb-1">Produto / Bebida</label>
+                    <select
+                      value={selectedProduct?.id || ''}
+                      onChange={(e) => {
+                        const found = products.find((p) => p.id === e.target.value);
+                        if (found) setSelectedProduct(found);
+                      }}
+                      className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-2.5 text-xs text-zinc-200"
+                    >
+                      {(products || []).map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} {p.isFractionable ? `(Dose R$ ${(p.pricePerDose ?? 0).toFixed(2)} / Garrafa R$ ${(p.price ?? 0).toFixed(2)})` : `- R$ ${(p.price ?? 0).toFixed(2)}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {selectedProduct.isFractionable && (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsDose(true)}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 border transition-all ${
-                      isDose
-                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                        : 'bg-zinc-950 text-zinc-400 border-zinc-800'
-                    }`}
-                  >
-                    <Droplets className="w-3 h-3" />
-                    <span>Dose ({selectedProduct.doseVolumeMl}ml)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsDose(false)}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 border transition-all ${
-                      !isDose
-                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                        : 'bg-zinc-950 text-zinc-400 border-zinc-800'
-                    }`}
-                  >
-                    <Wine className="w-3 h-3" />
-                    <span>Garrafa</span>
-                  </button>
-                </div>
+                  {selectedProduct?.isFractionable && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsDose(true)}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 border transition-all ${
+                          isDose
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                            : 'bg-zinc-950 text-zinc-400 border-zinc-800'
+                        }`}
+                      >
+                        <Droplets className="w-3 h-3" />
+                        <span>Dose ({selectedProduct.doseVolumeMl}ml)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsDose(false)}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 border transition-all ${
+                          !isDose
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                            : 'bg-zinc-950 text-zinc-400 border-zinc-800'
+                        }`}
+                      >
+                        <Wine className="w-3 h-3" />
+                        <span>Garrafa</span>
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="grid grid-cols-3 gap-2">

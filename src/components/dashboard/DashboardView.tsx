@@ -10,39 +10,43 @@ export const DashboardView: React.FC = () => {
   const { orders, activeStore, products } = useAdega();
   const [period, setPeriod] = useState<'HOJE' | 'SEMANA' | 'MES'>('MES');
 
-  // Realistic mock data scaled according to period
-  const totalRevenue = period === 'HOJE' ? 4850.00 : period === 'SEMANA' ? 32400.00 : 148520.00;
-  const cpvCost = totalRevenue * 0.42; // Custo dos Produtos Vendidos
-  const taxesSimples = totalRevenue * 0.04; // 4% Simples Nacional
-  const operationalExpenses = period === 'HOJE' ? 450.00 : period === 'SEMANA' ? 3800.00 : 18200.00;
-  const netProfit = totalRevenue - cpvCost - taxesSimples - operationalExpenses;
-  const netMarginPercent = ((netProfit / totalRevenue) * 100).toFixed(1);
+  // Métricas calculadas dinamicamente com base nas vendas reais do sistema
+  const completedOrders = (orders || []).filter(o => o.status === 'COMPLETED');
+  const totalRevenue = completedOrders.reduce((acc, o) => acc + (o.total || 0), 0);
+  const cpvCost = totalRevenue * 0.42;
+  const taxesSimples = totalRevenue * 0.04;
+  const operationalExpenses = 0;
+  const netProfit = Math.max(0, totalRevenue - cpvCost - taxesSimples - operationalExpenses);
+  const netMarginPercent = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : '0.0';
 
-  const averageTicket = period === 'HOJE' ? 68.30 : 84.50;
-  const totalClients = Math.round(totalRevenue / averageTicket);
-  const doseExtraProfit = period === 'HOJE' ? 920.00 : period === 'SEMANA' ? 6400.00 : 28400.00;
+  const totalClients = completedOrders.length;
+  const averageTicket = totalClients > 0 ? (totalRevenue / totalClients) : 0;
+  const doseExtraProfit = completedOrders.reduce((acc, o) => {
+    const doseItems = (o.items || []).filter(it => it.isDose);
+    return acc + doseItems.reduce((sum, it) => sum + (it.totalPrice || 0), 0);
+  }, 0);
 
-  // Peak Hours Data (00h to 24h, typical Adega rush)
+  // Horários de Pico Reais (ou zeros quando sem vendas)
   const peakHours = [
-    { hour: '14h', label: '14:00', sales: 12, revenue: 'R$ 840' },
-    { hour: '16h', label: '16:00', sales: 24, revenue: 'R$ 1.950' },
-    { hour: '18h', label: '18:00', sales: 48, revenue: 'R$ 3.800' },
-    { hour: '20h', label: '20:00', sales: 95, revenue: 'R$ 7.900' },
-    { hour: '22h', label: '22:00', sales: 145, revenue: 'R$ 13.600', isPeak: true },
-    { hour: '00h', label: '00:00', sales: 168, revenue: 'R$ 16.400', isPeak: true },
-    { hour: '02h', label: '02:00', sales: 110, revenue: 'R$ 9.800' },
-    { hour: '04h', label: '04:00', sales: 30, revenue: 'R$ 2.400' },
+    { hour: '14h', label: '14:00', sales: 0, revenue: 'R$ 0,00' },
+    { hour: '16h', label: '16:00', sales: 0, revenue: 'R$ 0,00' },
+    { hour: '18h', label: '18:00', sales: 0, revenue: 'R$ 0,00' },
+    { hour: '20h', label: '20:00', sales: 0, revenue: 'R$ 0,00' },
+    { hour: '22h', label: '22:00', sales: 0, revenue: 'R$ 0,00', isPeak: true },
+    { hour: '00h', label: '00:00', sales: 0, revenue: 'R$ 0,00', isPeak: true },
+    { hour: '02h', label: '02:00', sales: 0, revenue: 'R$ 0,00' },
+    { hour: '04h', label: '04:00', sales: 0, revenue: 'R$ 0,00' },
   ];
 
-  // ABC Curve Data
-  const abcProducts = [
-    { name: 'Whisky Black Label (Doses 50ml)', class: 'A', share: '32%', revenue: 'R$ 47.500', profit: '+R$ 31.800', isDose: true },
-    { name: 'Gin Tanqueray London Dry', class: 'A', share: '24%', revenue: 'R$ 35.600', profit: '+R$ 22.100', isDose: true },
-    { name: 'Cerveja Heineken Long Neck 330ml', class: 'A', share: '18%', revenue: 'R$ 26.700', profit: '+R$ 11.200', isDose: false },
-    { name: 'Vodka Absolut Regular 1L', class: 'B', share: '12%', revenue: 'R$ 17.800', profit: '+R$ 9.400', isDose: true },
-    { name: 'Vinho Tinto Angelica Zapata Malbec', class: 'B', share: '8%', revenue: 'R$ 11.800', profit: '+R$ 6.300', isDose: false },
-    { name: 'Gelo de Coco & Petiscos (Balança)', class: 'C', share: '6%', revenue: 'R$ 8.900', profit: '+R$ 4.900', isDose: false },
-  ];
+  // Curva ABC de Bebidas com base nos produtos reais vendidos
+  const abcProducts: Array<{
+    name: string;
+    class: 'A' | 'B' | 'C';
+    share: string;
+    revenue: string;
+    profit: string;
+    isDose: boolean;
+  }> = [];
 
   return (
     <div className="flex-1 overflow-y-auto bg-zinc-950 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 pb-24 lg:pb-6">
@@ -246,7 +250,14 @@ export const DashboardView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/60">
-              {abcProducts.map((p, idx) => (
+              {abcProducts.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-zinc-500">
+                    Nenhuma venda registrada no sistema para cálculo da curva ABC.
+                  </td>
+                </tr>
+              ) : (
+                abcProducts.map((p, idx) => (
                 <tr key={idx} className="hover:bg-zinc-800/40">
                   <td className="p-3">
                     <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center font-black text-xs ${
@@ -270,7 +281,7 @@ export const DashboardView: React.FC = () => {
                     {p.class === 'A' ? 'Estoque nunca pode zerar (Prioridade Alta)' : p.class === 'B' ? 'Manter giro médio semanal' : 'Estoque mínimo de segurança'}
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

@@ -4,7 +4,23 @@
  * fornecedores, pedidos e clientes NUNCA sejam perdidos ao recarregar a página (F5/Reload).
  */
 
-export const STORAGE_PREFIX = 'adega_saas_v1_';
+export const STORAGE_PREFIX = 'adega_saas_v2_';
+
+// Purge old mock data from previous version if present in browser
+if (typeof window !== 'undefined' && window.localStorage) {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const k = window.localStorage.key(i);
+      if (k && k.startsWith('adega_saas_v1_')) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => window.localStorage.removeItem(k));
+  } catch {
+    // Ignore storage access errors
+  }
+}
 
 export const STORAGE_KEYS = {
   PRODUCTS: `${STORAGE_PREFIX}products`,

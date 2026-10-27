@@ -394,91 +394,9 @@ interface AdegaContextType {
 
 const AdegaContext = createContext<AdegaContextType | undefined>(undefined);
 
-const DEFAULT_INITIAL_COMANDAS: Comanda[] = [
-  { 
-    id: 'com-1', 
-    number: 12, 
-    customerName: 'Marcos Vinicius', 
-    customerCpf: '123.456.789-00', 
-    rfidCode: 'RFID-9941',
-    status: 'OPEN', 
-    totalAmount: 94.00, 
-    openedAt: '20:45',
-    items: [
-      { product: INITIAL_PRODUCTS[0], quantity: 2, isDose: true, unitPrice: 25.00, discount: 0, totalPrice: 50.00 },
-      { product: INITIAL_PRODUCTS[10], quantity: 4, isDose: false, unitPrice: 7.90, discount: 0, totalPrice: 31.60 },
-      { product: INITIAL_PRODUCTS[14], quantity: 1, isDose: false, unitPrice: 12.40, discount: 0, totalPrice: 12.40 }
-    ]
-  },
-  { 
-    id: 'com-2', 
-    number: 27, 
-    customerName: 'Fernanda Lima', 
-    customerCpf: '987.654.321-11', 
-    rfidCode: 'RFID-8812',
-    status: 'OPEN', 
-    totalAmount: 48.00, 
-    openedAt: '21:10',
-    items: [
-      { product: INITIAL_PRODUCTS[2], quantity: 2, isDose: true, unitPrice: 22.00, discount: 0, totalPrice: 44.00 },
-      { product: INITIAL_PRODUCTS[10], quantity: 1, isDose: false, unitPrice: 4.00, discount: 0, totalPrice: 4.00 }
-    ]
-  },
-];
+const DEFAULT_INITIAL_COMANDAS: Comanda[] = [];
 
-const DEFAULT_INITIAL_ORDERS: Order[] = [
-  {
-    id: 'ord-101',
-    code: '#101',
-    storeId: 'store-1',
-    createdAt: '15/09/2026 21:30',
-    items: [
-      { product: INITIAL_PRODUCTS[0], quantity: 2, isDose: true, unitPrice: 25.00, discount: 0, totalPrice: 50.00 },
-      { product: INITIAL_PRODUCTS[10], quantity: 4, isDose: false, unitPrice: 7.90, discount: 0, totalPrice: 31.60 },
-    ],
-    subtotal: 81.60,
-    discount: 0,
-    serviceFee: 0,
-    deliveryFee: 0,
-    total: 81.60,
-    status: 'COMPLETED',
-    orderType: 'PDV_BALCAO',
-    payment: { method: 'PIX', amount: 81.60, pixTxId: 'PIX9918237' },
-    operatorName: 'Lucas Ferreira',
-    nfceKey: '35260912345678000190650010000001011128392109',
-    nfceProtocol: '135269988112233',
-  },
-  {
-    id: 'ord-102',
-    code: '#102',
-    storeId: 'store-1',
-    createdAt: '15/09/2026 21:45',
-    items: [
-      { product: INITIAL_PRODUCTS[2], quantity: 1, isDose: false, unitPrice: 149.90, discount: 0, totalPrice: 149.90 },
-      { product: INITIAL_PRODUCTS[14], quantity: 2, isDose: false, weightKg: 2, unitPrice: 4.50, discount: 0, totalPrice: 9.00 },
-    ],
-    subtotal: 158.90,
-    discount: 0,
-    serviceFee: 0,
-    deliveryFee: 15.00,
-    total: 173.90,
-    status: 'DISPATCHED',
-    orderType: 'DELIVERY',
-    payment: { method: 'TEF_CREDITO', amount: 173.90, tefCardBrand: 'Mastercard' },
-    deliveryInfo: {
-      recipientName: 'Juliana Paes',
-      address: 'Rua Bela Cintra, 890 - Apto 42',
-      neighborhood: 'Consolação',
-      phone: '(11) 98888-1122',
-      courierId: 'u-5',
-      courierName: 'Thiago Motoboy',
-      estimatedMinutes: 25,
-    },
-    operatorName: 'Mariana Souza',
-    nfceKey: '35260912345678000190650010000001021882910394',
-    nfceProtocol: '135269988445566',
-  },
-];
+const DEFAULT_INITIAL_ORDERS: Order[] = [];
 
 export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<User[]>(() => loadFromStorage(STORAGE_KEYS.USERS, INITIAL_USERS));
@@ -552,76 +470,25 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [comandas, setComandas] = useState<Comanda[]>(() => loadFromStorage(STORAGE_KEYS.COMANDAS, DEFAULT_INITIAL_COMANDAS));
   const [orders, setOrders] = useState<Order[]>(() => loadFromStorage(STORAGE_KEYS.ORDERS, DEFAULT_INITIAL_ORDERS));
 
-  const [doseAuditLogs, setDoseAuditLogs] = useState<DoseAuditLog[]>([
-    {
-      id: 'aud-1',
-      productId: 'prod-1',
-      productName: 'Whisky Johnnie Walker Black Label',
-      volumeDoseMl: 50,
-      remainingBottleMl: 650,
-      bottleTotalMl: 1000,
-      timestamp: '15/09/2026 21:30',
-      operatorName: 'Lucas Ferreira',
-      orderId: 'ord-101',
-      type: 'SALE',
-      notes: '2 doses servidas no balcão',
-    },
-    {
-      id: 'aud-2',
-      productId: 'prod-2',
-      productName: "Whisky Jack Daniel's Old No. 7",
-      volumeDoseMl: 50,
-      remainingBottleMl: 400,
-      bottleTotalMl: 1000,
-      timestamp: '15/09/2026 20:50',
-      operatorName: 'Mariana Souza',
-      type: 'SALE',
-      notes: '1 dose Mesa 01',
-    },
-    {
-      id: 'aud-3',
-      productId: 'prod-3',
-      productName: 'Gin Tanqueray London Dry',
-      volumeDoseMl: 50,
-      remainingBottleMl: 550,
-      bottleTotalMl: 750,
-      timestamp: '15/09/2026 19:15',
-      operatorName: 'Rafael Santos',
-      type: 'TASTING',
-      notes: 'Degustação para cliente VIP Mesa 06',
-    },
-  ]);
+  const [doseAuditLogs, setDoseAuditLogs] = useState<DoseAuditLog[]>([]);
 
   const [cashSession, setCashSession] = useState<CashRegisterSession>({
-    id: 'cx-2026-09-15',
+    id: `cx-${new Date().toISOString().split('T')[0]}`,
     storeId: 'store-1',
-    operatorId: 'u-3',
-    operatorName: 'Lucas Ferreira',
-    openedAt: '15/09/2026 16:00',
-    initialCash: 200.00,
-    currentCash: 350.00,
-    totalSalesPix: 380.50,
-    totalSalesCard: 640.90,
-    totalSalesCash: 150.00,
+    operatorId: 'u-1',
+    operatorName: 'Administrador',
+    openedAt: '',
+    initialCash: 0,
+    currentCash: 0,
+    totalSalesPix: 0,
+    totalSalesCard: 0,
+    totalSalesCash: 0,
     bleedAmount: 0,
     supplyAmount: 0,
-    isOpen: true,
+    isOpen: false,
   });
 
-  const [cashMovements, setCashMovements] = useState<CashMovement[]>([
-    {
-      id: 'mov-1',
-      sessionId: 'cx-2026-09-15',
-      userId: 'u-3',
-      userName: 'Lucas Ferreira',
-      managerAuthorizedId: 'u-2',
-      managerAuthorizedName: 'Mariana Souza (Gerente)',
-      tipo: 'SUPRIMENTO',
-      valor: 200.00,
-      motivo: 'Fundo inicial de troco para abertura do caixa da noite',
-      dataHora: '15/09/2026 16:00',
-    }
-  ]);
+  const [cashMovements, setCashMovements] = useState<CashMovement[]>([]);
 
   const [blindCloseRecords, setBlindCloseRecords] = useState<CashBlindCloseRecord[]>([]);
 
