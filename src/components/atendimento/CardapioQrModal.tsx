@@ -480,15 +480,15 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
         {/* Content Body */}
         {activeMode === 'PRINT_QR' ? (
           /* Printable QR Code Totem View */
-          <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-center flex-1 flex flex-col justify-center items-center w-full min-h-0">
-            {/* Totem Card idêntico à imagem enviada pelo usuário */}
+          <div className="p-3 sm:p-5 overflow-y-auto flex-1 flex flex-col items-center justify-start sm:justify-center w-full min-h-0 space-y-3">
+            {/* Totem Card idêntico à imagem enviada pelo usuário, com tamanho e proporção perfeitos */}
             <div 
               id="totem-display-card"
-              className="w-full max-w-[275px] mx-auto p-5 sm:p-6 rounded-3xl bg-white border-2 border-amber-400 shadow-2xl flex flex-col items-center justify-center text-center select-none"
+              className="w-full max-w-[245px] sm:max-w-[255px] mx-auto p-4 sm:p-5 rounded-[26px] bg-white border-2 border-amber-400 shadow-2xl flex flex-col items-center justify-center text-center select-none shrink-0"
             >
               
               {/* Logomarca da Adega com fundo preto e bordas arredondadas */}
-              <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-md mx-auto mb-2 bg-black flex items-center justify-center p-1.5 border border-zinc-200/80">
+              <div className="w-11 h-11 rounded-xl overflow-hidden shadow-sm mx-auto mb-1.5 bg-black flex items-center justify-center p-1 border border-zinc-200/80 shrink-0">
                 <img
                   src="/logo.jpg"
                   alt="AdeGaswg"
@@ -497,56 +497,56 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
               </div>
 
               {/* Nome da Adega e Subtítulo */}
-              <h3 className="font-extrabold text-sm text-zinc-800 uppercase tracking-wider mt-0.5">
+              <h3 className="font-extrabold text-xs sm:text-[13px] text-zinc-800 uppercase tracking-wider leading-tight mt-0.5">
                 {activeStore?.name || 'ADEGASWG'}
               </h3>
-              <p className="text-[11px] text-zinc-500 font-medium mt-0.5">
+              <p className="text-[9.5px] text-zinc-500 font-medium mt-0.5 leading-none">
                 Cardápio & Pedidos Digitais
               </p>
 
-              {/* QR Code Nítido, Grande e Centralizado com moldura suave */}
-              <div className="my-3 p-3 bg-white border border-zinc-200/80 rounded-2xl shadow-xs inline-flex items-center justify-center mx-auto">
+              {/* QR Code Nítido e Proporcional com moldura suave */}
+              <div className="my-2.5 p-2.5 bg-white border border-zinc-200/80 rounded-2xl shadow-xs inline-flex items-center justify-center mx-auto">
                 <QRCodeSVG
                   id="totem-mesa-qr-svg"
                   value={tableQrUrl}
-                  size={170}
+                  size={135}
                   level="M"
-                  className="w-40 h-40 max-w-full object-contain"
+                  className="w-32 h-32 sm:w-34 sm:h-34 max-w-full object-contain"
                 />
               </div>
 
               {/* Tag com contorno da Mesa */}
               <div className="mx-auto">
-                <div className="inline-flex items-center justify-center px-5 py-1 rounded-full border border-zinc-300 bg-white shadow-xs">
-                  <span className="font-black text-xs text-zinc-900 tracking-wider">
+                <div className="inline-flex items-center justify-center px-4 py-0.5 rounded-full border border-zinc-300 bg-white shadow-xs">
+                  <span className="font-black text-[11px] text-zinc-900 tracking-wider">
                     MESA {String(currentTable.number).padStart(2, '0')}
                   </span>
                 </div>
               </div>
 
               {/* Instruções do Autoatendimento */}
-              <p className="text-[10px] text-zinc-500 mt-2.5 leading-snug max-w-[210px] mx-auto text-center font-normal">
+              <p className="text-[9px] text-zinc-500 mt-2 leading-tight max-w-[195px] mx-auto text-center font-normal">
                 Aponte a câmera do seu smartphone para fazer pedidos sem esperar o garçom.
               </p>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-center gap-2 pt-1 pb-1">
+            <div className="flex items-center justify-center gap-2 pt-1 pb-1 shrink-0">
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-colors cursor-pointer"
               >
-                {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedLink ? 'Link Copiado!' : 'Copiar Link'}</span>
               </button>
               <button
                 type="button"
                 id="btn-print-table-display"
                 onClick={handlePrintDisplay}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold transition-colors cursor-pointer shadow-sm"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold transition-colors cursor-pointer shadow-sm"
               >
-                <Printer className="w-4 h-4" />
+                <Printer className="w-3.5 h-3.5" />
                 <span>Imprimir Display de Mesa</span>
               </button>
             </div>
