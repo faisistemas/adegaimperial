@@ -3,7 +3,8 @@ import {
   Search, Barcode, ShoppingCart, Trash2, Plus, Minus, 
   Scale, Printer, ArrowRight, ArrowLeft, Droplets, CheckCircle2,
   Sparkles, Tag, DollarSign, Wine, Beer, GlassWater,
-  ArrowDownCircle, ArrowUpCircle, Lock, ShieldAlert, Cpu
+  ArrowDownCircle, ArrowUpCircle, Lock, ShieldAlert, Cpu,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
 import { CartItem, Product, Order, PaymentDetails } from '../../types';
@@ -51,6 +52,14 @@ export const PdvView: React.FC = () => {
   // Barcode HID scanner buffer tracking
   const barcodeBufferRef = useRef<string>('');
   const lastKeyTimeRef = useRef<number>(0);
+  const categoriesRef = useRef<HTMLDivElement>(null);
+
+  const handleScrollCategories = (direction: 'left' | 'right') => {
+    if (categoriesRef.current) {
+      const scrollAmount = direction === 'left' ? -220 : 220;
+      categoriesRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   // Global Keydown Handler (F-Keys and HID Barcode Scanners)
   useEffect(() => {
@@ -387,25 +396,50 @@ export const PdvView: React.FC = () => {
           </div>
         </div>
 
-        {/* Categories Bar */}
-        <div className="px-4 pt-2.5 pb-3 border-b border-zinc-800/80 bg-zinc-950 overflow-x-auto flex items-center gap-2 scrollbar-visible-x shrink-0">
-          {(categories || []).map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-amber-500 text-zinc-950 font-bold shadow-md shadow-amber-500/20'
-                    : 'bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
-                }`}
-              >
-                {cat.icon && <cat.icon className="w-3.5 h-3.5" />}
-                <span>{cat.label}</span>
-              </button>
-            );
-          })}
+        {/* Categories Bar with Navigation Arrows */}
+        <div className="border-b border-zinc-800/80 bg-zinc-950 flex items-center shrink-0 px-2 sm:px-3 relative">
+          <button
+            type="button"
+            onClick={() => handleScrollCategories('left')}
+            className="p-1.5 sm:p-2 rounded-lg bg-zinc-900 hover:bg-zinc-850 active:scale-95 text-zinc-400 hover:text-amber-400 border border-zinc-800 transition-all shrink-0 shadow-sm z-10 mr-1.5"
+            title="Voltar categorias"
+            aria-label="Voltar categorias"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <div
+            ref={categoriesRef}
+            className="flex-1 py-2.5 overflow-x-auto flex items-center gap-2 scrollbar-none scroll-smooth"
+          >
+            {(categories || []).map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                    isSelected
+                      ? 'bg-amber-500 text-zinc-950 font-bold shadow-md shadow-amber-500/20'
+                      : 'bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                  }`}
+                >
+                  {cat.icon && <cat.icon className="w-3.5 h-3.5" />}
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleScrollCategories('right')}
+            className="p-1.5 sm:p-2 rounded-lg bg-zinc-900 hover:bg-zinc-850 active:scale-95 text-zinc-400 hover:text-amber-400 border border-zinc-800 transition-all shrink-0 shadow-sm z-10 ml-1.5"
+            title="Avançar categorias"
+            aria-label="Avançar categorias"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Product Touch Grid */}

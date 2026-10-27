@@ -83,35 +83,6 @@ button, a, input, select {
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* Explicit Horizontal Scrollbar utility */
-.scrollbar-visible-x {
-  overflow-x: auto !important;
-  scrollbar-width: thin !important;
-  scrollbar-color: rgba(245, 158, 11, 0.6) rgba(24, 24, 27, 0.7) !important;
-  -ms-overflow-style: auto !important;
-}
-
-.scrollbar-visible-x::-webkit-scrollbar {
-  display: block !important;
-  width: auto !important;
-  height: 6px !important;
-}
-
-.scrollbar-visible-x::-webkit-scrollbar-track {
-  background: rgba(24, 24, 27, 0.8) !important;
-  border-radius: 9999px;
-  margin: 0 8px;
-}
-
-.scrollbar-visible-x::-webkit-scrollbar-thumb {
-  background: rgba(245, 158, 11, 0.6) !important;
-  border-radius: 9999px;
-}
-
-.scrollbar-visible-x::-webkit-scrollbar-thumb:hover {
-  background: rgba(245, 158, 11, 0.9) !important;
-}
-
 /* Light Mode Engine */
 html.light {
   filter: invert(0.92) hue-rotate(180deg);
