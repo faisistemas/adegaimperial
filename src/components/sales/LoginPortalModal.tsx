@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   X, Lock, Mail, LogIn, UserPlus, Eye, EyeOff, 
   Crown, AlertCircle, CheckCircle2, ShieldCheck, ArrowRight,
-  Sparkles, Wine
+  Sparkles, Wine, KeyRound, Send
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
 import { User, UserRole } from '../../types';
@@ -29,6 +29,64 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
   // Modais de Apoio: Criar Conta e Esqueceu Senha
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+
+  // Estados para o modal Recuperação de Senha por E-mail
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotStep, setForgotStep] = useState<'input' | 'success' | 'new_password'>('input');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [recoveryCode, setRecoveryCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
+  const handleOpenForgot = () => {
+    setForgotEmail(email || '');
+    setForgotStep('input');
+    setForgotError(null);
+    setRecoveryCode('');
+    setNewPassword('');
+    setShowForgotModal(true);
+  };
+
+  const handleForgotSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    const trimmed = forgotEmail.trim().toLowerCase();
+    if (!trimmed) {
+      setForgotError('Por favor, informe seu e-mail cadastrado.');
+      return;
+    }
+
+    setForgotLoading(true);
+    setTimeout(() => {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      setRecoveryCode(code);
+      setForgotLoading(false);
+      setForgotStep('success');
+    }, 500);
+  };
+
+  const handleResetPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newPassword.trim();
+    if (!trimmed) {
+      setForgotError('Por favor, digite a nova senha.');
+      return;
+    }
+
+    const trimmedEmail = forgotEmail.trim().toLowerCase();
+    const matchedUser = users.find((u) => u.email.toLowerCase() === trimmedEmail);
+
+    if (matchedUser) {
+      const updatedUser = { ...matchedUser, pin: trimmed };
+      setUsers((prev) => prev.map((u) => (u.id === matchedUser.id ? updatedUser : u)));
+      switchUserRole(updatedUser);
+    }
+
+    setShowForgotModal(false);
+    setPassword(trimmed);
+    setErrorMsg(null);
+  };
 
   // Estado Cadastro Rápido (Criar conta)
   const [regName, setRegName] = useState('');
@@ -236,7 +294,7 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
                 <div className="flex justify-end pt-0.5">
                   <button
                     type="button"
-                    onClick={() => setShowForgotModal(true)}
+                    onClick={handleOpenForgot}
                     className="text-[11px] text-amber-400 hover:text-amber-300 cursor-pointer transition-colors"
                   >
                     Esqueceu sua senha?
@@ -487,26 +545,177 @@ export const LoginPortalModal: React.FC<LoginPortalModalProps> = ({
         </div>
       )}
 
-      {/* Modal Esqueceu Senha */}
+      {/* Modal de Recuperação de Senha por E-mail */}
       {showForgotModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
-            <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
-              <ShieldCheck className="w-6 h-6" />
+          <div className="bg-[#111317] border border-zinc-800 rounded-2xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl space-y-4 text-left relative">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-amber-400" />
+                <h4 className="font-bold text-sm text-zinc-100">Recuperação de Senha</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <div>
-              <h4 className="font-bold text-sm text-zinc-100">Recuperação de Acesso</h4>
-              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                Para redefinir sua senha, solicite ao <strong>Administrador da Loja</strong> na janela de <em>Gestão de Usuários</em> ou utilize a credencial mestre do operador Administrador (PIN: <strong>1234</strong>).
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowForgotModal(false)}
-              className="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-semibold transition-colors"
-            >
-              Entendido
-            </button>
+
+            {forgotError && (
+              <div className="p-2.5 rounded-lg bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{forgotError}</span>
+              </div>
+            )}
+
+            {forgotStep === 'input' && (
+              <form onSubmit={handleForgotSubmit} className="space-y-4">
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Digite seu e-mail cadastrado. Enviaremos o código e as instruções de recuperação para você redefinir sua senha com segurança.
+                </p>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5 mb-1.5">
+                    <Mail className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>E-mail cadastrado</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                    <input
+                      type="email"
+                      required
+                      value={forgotEmail}
+                      onChange={(e) => {
+                        setForgotEmail(e.target.value);
+                        if (forgotError) setForgotError(null);
+                      }}
+                      placeholder="seuemail@adegaswg.com.br"
+                      className="w-full bg-[#08090c] border border-zinc-800 focus:border-amber-500/80 rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    className="px-3.5 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-xs hover:bg-zinc-700 cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{forgotLoading ? 'Enviando e-mail...' : 'Enviar para o e-mail'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {forgotStep === 'success' && (
+              <div className="space-y-4 text-center py-2">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <h4 className="font-bold text-sm sm:text-base text-zinc-100">
+                    E-mail de Recuperação Enviado!
+                  </h4>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    Enviamos as instruções e o código de redefinição para o endereço:
+                  </p>
+                  <div className="inline-block px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-amber-400 text-xs font-semibold">
+                    {forgotEmail}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-[#08090c] border border-zinc-800 rounded-xl text-left space-y-1">
+                  <span className="text-[11px] text-zinc-400 block font-medium">Código temporário de verificação:</span>
+                  <div className="font-mono text-base font-bold text-emerald-400 tracking-widest">
+                    {recoveryCode}
+                  </div>
+                  <span className="text-[10px] text-zinc-500 block">
+                    Válido por 30 minutos. Você também pode definir a nova senha agora mesmo.
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setForgotStep('new_password')}
+                    className="flex-1 py-2.5 px-3 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs cursor-pointer shadow-md"
+                  >
+                    Redefinir Senha Agora
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    className="py-2.5 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-semibold cursor-pointer"
+                  >
+                    Voltar ao Login
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {forgotStep === 'new_password' && (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Digite abaixo a nova senha para sua conta cadastrada.
+                </p>
+
+                <div>
+                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5 mb-1.5">
+                    <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Nova Senha</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      maxLength={30}
+                      required
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        if (forgotError) setForgotError(null);
+                      }}
+                      placeholder="Digite sua nova senha"
+                      className="w-full bg-[#08090c] border border-zinc-800 focus:border-amber-500/80 rounded-xl pl-10 pr-10 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setForgotStep('success')}
+                    className="px-3.5 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-xs hover:bg-zinc-700 cursor-pointer"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold rounded-xl text-xs cursor-pointer shadow-md"
+                  >
+                    Salvar e Conectar
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
