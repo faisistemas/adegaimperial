@@ -116,7 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
                 className="fixed inset-0 z-40" 
                 onClick={() => setIsNotifOpen(false)} 
               />
-              <div className="absolute left-0 mt-2 w-72 sm:w-96 max-w-[calc(100vw-2rem)] bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 p-2 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-72 sm:w-96 max-w-[calc(100vw-2rem)] bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 p-2 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                 <div className="flex items-center justify-between px-2 py-1.5 border-b border-zinc-800 text-xs font-semibold text-zinc-300">
                   <span>Alertas da Adega ({(notifications || []).length})</span>
                   <span className="text-[11px] text-zinc-400">Sincronizado</span>

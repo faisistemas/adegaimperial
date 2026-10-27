@@ -61,7 +61,7 @@ export const INITIAL_DRE_DATA: DreEstruturaLinha[] = [
     id: 'dre-6',
     codigoContabil: '3.1',
     descricao: '(-) DESPESAS OPERACIONAIS FIXAS & VARIÁVEIS',
-    tipo: 'DESPESAS_OPERACIONAIS',
+    tipo: 'DESPESA_OPERACIONAL',
     valor: 0,
     percentualSobreReceita: 0,
     isTotalizador: true,

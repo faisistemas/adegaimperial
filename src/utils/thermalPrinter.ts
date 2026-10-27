@@ -455,8 +455,6 @@ export function printThermalViaBrowser(htmlContent: string, widthMm: 80 | 58 = 8
 // ----------------------------------------------------------------------
 // GERADORES DE TEXTO & HTML PARA OS 3 SETORES (PDV, COZINHA E BAR)
 // ----------------------------------------------------------------------
-
-/**
 // ----------------------------------------------------------------------
 // AUXILIARES DE FORMATAÇÃO FISCAL PARA O COMPROVANTE TÉRMICO
 // ----------------------------------------------------------------------

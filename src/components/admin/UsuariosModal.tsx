@@ -97,8 +97,7 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
           whatsapp: updatedUser.whatsapp || null,
           updated_at: new Date().toISOString(),
         })
-        .then(() => {})
-        .catch(() => {});
+        .then(() => {}, () => {});
     }
 
     setPasswords((prev) => ({ ...prev, [user.id]: '' }));
@@ -124,7 +123,7 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
 
       const sbDelete = getSupabaseClient();
       if (sbDelete) {
-        sbDelete.from('usuarios').delete().eq('id', userId).then(() => {}).catch(() => {});
+        sbDelete.from('usuarios').delete().eq('id', userId).then(() => {}, () => {});
       }
 
       const remainingUsers = users.filter((u) => u.id !== userId);
@@ -232,8 +231,7 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
             whatsapp: updatedUser.whatsapp || null,
             updated_at: new Date().toISOString(),
           })
-          .then(() => {})
-          .catch(() => {});
+          .then(() => {}, () => {});
       }
 
       showNotification('success', `Usuário "${formName}" atualizado com sucesso!`);
@@ -274,8 +272,7 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
             whatsapp: newUser.whatsapp || null,
             updated_at: new Date().toISOString(),
           })
-          .then(() => {})
-          .catch(() => {});
+          .then(() => {}, () => {});
       }
 
       showNotification('success', `Usuário "${newUser.name}" cadastrado com sucesso no banco de dados!`);
@@ -328,7 +325,7 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-[#141517] border border-zinc-800/90 rounded-2xl p-6 shadow-2xl relative"
+        className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-[#141517] border border-zinc-800/90 rounded-2xl p-4 sm:p-6 shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cabeçalho */}
@@ -446,74 +443,80 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
             return (
               <div 
                 key={user.id} 
-                className="flex items-center justify-between py-4 first:pt-1 last:pb-1 gap-2 sm:gap-3"
+                className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 sm:py-4 first:pt-1 last:pb-1 gap-2.5 sm:gap-3"
               >
-                {/* Lado Esquerdo: Nome + @handle + badge */}
-                <div className="min-w-0 flex-1">
-                  <div className="font-bold text-white text-sm sm:text-base leading-tight truncate">
-                    {user.name}
+                {/* Lado Esquerdo / Superior: Nome + @handle + badge + Botão Entrar */}
+                <div className="flex items-center justify-between sm:justify-start gap-2 min-w-0 flex-1">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-white text-sm sm:text-base leading-tight truncate">
+                      {user.name}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1 text-xs text-zinc-400 font-medium">
+                      <span>@{handle}</span>
+                      <span className="text-zinc-600">·</span>
+                      <span className={`px-2 py-0.5 rounded text-[11px] leading-tight ${badge.className}`}>
+                        {badge.label}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1 text-xs text-zinc-400 font-medium">
-                    <span>@{handle}</span>
-                    <span className="text-zinc-600">·</span>
-                    <span className={`px-2 py-0.5 rounded text-[11px] leading-tight ${badge.className}`}>
-                      {badge.label}
-                    </span>
+
+                  {/* Botão Entrar / Status Conectado */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {currentUser.id === user.id ? (
+                      <span className="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Conectado</span>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          switchUserRole(user);
+                          showNotification('success', `Conectado como ${user.name}!`);
+                          onClose();
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-zinc-950 font-bold text-xs flex items-center gap-1 transition-all shadow-md shadow-amber-500/20 cursor-pointer"
+                        title={`Entrar no sistema como ${user.name}`}
+                      >
+                        <LogIn className="w-3.5 h-3.5" />
+                        <span>Entrar</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                {/* Botão Entrar / Status Conectado */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {currentUser.id === user.id ? (
-                    <span className="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Conectado</span>
-                    </span>
-                  ) : (
+                {/* Lado Direito / Inferior: Input Nova Senha + Chave + Opções (Olho, Lápis, Lixeira) */}
+                <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+                    <input
+                      type="password"
+                      placeholder="Nova senha"
+                      maxLength={30}
+                      value={passwords[user.id] || ''}
+                      onChange={(e) =>
+                        setPasswords((prev) => ({ ...prev, [user.id]: e.target.value }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleUpdatePassword(user);
+                        }
+                      }}
+                      className="w-full sm:w-28 md:w-32 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-[#0c0d0f] border border-zinc-800/90 rounded-xl text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-700 font-mono tracking-wider"
+                    />
+
+                    {/* Botão Chave (Salvar Nova Senha) */}
                     <button
                       type="button"
-                      onClick={() => {
-                        switchUserRole(user);
-                        showNotification('success', `Conectado como ${user.name}!`);
-                        onClose();
-                      }}
-                      className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-zinc-950 font-bold text-xs flex items-center gap-1 transition-all shadow-md shadow-amber-500/20 cursor-pointer"
-                      title={`Entrar no sistema como ${user.name}`}
+                      onClick={() => handleUpdatePassword(user)}
+                      className="p-2 sm:p-2.5 rounded-xl bg-[#26282e] hover:bg-[#32363e] text-zinc-300 hover:text-white border border-zinc-700/40 transition-colors cursor-pointer flex items-center justify-center shrink-0"
+                      title="Salvar nova senha"
                     >
-                      <LogIn className="w-3.5 h-3.5" />
-                      <span>Entrar</span>
+                      <KeyRound className="w-4 h-4 text-zinc-300" />
                     </button>
-                  )}
-                </div>
+                  </div>
 
-                {/* Lado Direito: Input Nova Senha + Chave + Opções (Olho, Lápis, Lixeira) */}
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                  <input
-                    type="password"
-                    placeholder="Nova senha"
-                    maxLength={30}
-                    value={passwords[user.id] || ''}
-                    onChange={(e) =>
-                      setPasswords((prev) => ({ ...prev, [user.id]: e.target.value }))
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleUpdatePassword(user);
-                      }
-                    }}
-                    className="w-24 sm:w-32 px-3 py-2 bg-[#0c0d0f] border border-zinc-800/90 rounded-xl text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-700 font-mono tracking-wider"
-                  />
-
-                  {/* Botão Chave (Salvar Nova Senha) */}
-                  <button
-                    type="button"
-                    onClick={() => handleUpdatePassword(user)}
-                    className="p-2 sm:p-2.5 rounded-xl bg-[#26282e] hover:bg-[#32363e] text-zinc-300 hover:text-white border border-zinc-700/40 transition-colors cursor-pointer flex items-center justify-center"
-                    title="Salvar nova senha"
-                  >
-                    <KeyRound className="w-4 h-4 text-zinc-300" />
-                  </button>
+                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
 
                   {/* Opção da 1ª Imagem: Botão Olho (Visualizar Ficha) */}
                   <button
@@ -549,8 +552,9 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
                   </button>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          );
+        })}
         </div>
 
         {/* Modal de Detalhes do Usuário (Disparado pelo ícone de Olho) */}

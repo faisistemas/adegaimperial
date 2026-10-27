@@ -122,7 +122,7 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
 
         {/* Menu Dropdown exatamente como na imagem */}
         {isOpen && (
-          <div className="absolute right-0 sm:left-0 mt-2 w-48 sm:w-52 bg-[#121316] border border-zinc-800/90 rounded-2xl shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 divide-y divide-zinc-800/40">
+          <div className="absolute right-0 mt-2 w-48 sm:w-52 bg-[#121316] border border-zinc-800/90 rounded-2xl shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 divide-y divide-zinc-800/40">
             <div className="space-y-0.5">
               {/* 1. Usuarios */}
               <button

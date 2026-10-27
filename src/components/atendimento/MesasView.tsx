@@ -509,7 +509,7 @@ export const MesasView: React.FC = () => {
 
       {/* RENDER VIEW: Grade de Mesas ou Planta Baixa Setorizada */}
       {viewMode === 'GRID' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {(filteredTables || []).map((table) => {
             const badge = getStatusBadge(table.status);
             const isSelected = selectedTable?.id === table.id;
@@ -580,7 +580,7 @@ export const MesasView: React.FC = () => {
                   handleDrop(table.id);
                 }}
                 onClick={() => handleSelectTable(table)}
-                className={`relative p-5 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between space-y-4 hover:shadow-xl ${cardBgAndBorder}`}
+                className={`relative p-4 sm:p-5 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between space-y-4 hover:shadow-xl ${cardBgAndBorder}`}
               >
                 {/* Visual Badges de Drop Válido e Alvo Hover */}
                 {isTarget && draggedTableObj && (

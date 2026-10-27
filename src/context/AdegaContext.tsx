@@ -613,8 +613,7 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           status: 'SYSTEM_CONFIG',
           items: users,
         })
-        .then(() => {})
-        .catch(() => {});
+        .then(() => {}, () => {});
 
       // 2. Se a tabela usuarios existir, persiste também nela
       sb.from('usuarios')
@@ -632,8 +631,7 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             updated_at: new Date().toISOString(),
           }))
         )
-        .then(() => {})
-        .catch(() => {});
+        .then(() => {}, () => {});
     }
   }, [users]);
 

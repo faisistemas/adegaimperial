@@ -3,7 +3,7 @@ import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles, AlertCircle, ShieldCheck, Use
 import { useAdega } from '../../context/AdegaContext';
 import { playSuccessBeep, playErrorBuzz } from '../../utils/peripheralUtils';
 import { User, UserRole } from '../../types';
-import { loadFromStorage, STORAGE_KEYS } from '../../utils/storage';
+import { loadFromStorage, saveToStorage, STORAGE_KEYS } from '../../utils/storage';
 import { getSupabaseClient } from '../../lib/supabase';
 
 export const ScreenLockOverlay: React.FC = () => {
@@ -101,8 +101,7 @@ export const ScreenLockOverlay: React.FC = () => {
             status: 'SYSTEM_CONFIG',
             items: nextUsers,
           })
-          .then(() => {})
-          .catch(() => {});
+          .then(() => {}, () => {});
 
         sb.from('usuarios')
           .upsert({
@@ -115,8 +114,7 @@ export const ScreenLockOverlay: React.FC = () => {
             store_id: updatedUser.storeId || 'store-1',
             updated_at: new Date().toISOString(),
           })
-          .then(() => {})
-          .catch(() => {});
+          .then(() => {}, () => {});
       }
     }
 
@@ -214,8 +212,7 @@ export const ScreenLockOverlay: React.FC = () => {
                 status: 'SYSTEM_CONFIG',
                 items: nextUsers,
               })
-              .then(() => {})
-              .catch(() => {});
+              .then(() => {}, () => {});
           }
 
           setScreenLocked(false);
@@ -431,8 +428,8 @@ export const ScreenLockOverlay: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 select-none">
-      <div className="w-full max-w-[390px] bg-[#111317] border border-[#26282d] rounded-[28px] p-6 sm:p-7 shadow-2xl shadow-black/95 flex flex-col relative animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 select-none overflow-y-auto">
+      <div className="w-full max-w-[390px] bg-[#111317] border border-[#26282d] rounded-[28px] p-5 sm:p-7 shadow-2xl shadow-black/95 flex flex-col relative animate-in zoom-in-95 duration-200 my-auto">
         
         {/* Header com Logo ADEGASWG Gestão & PDV */}
         <div className="flex items-center justify-center gap-3.5 mx-auto py-1">

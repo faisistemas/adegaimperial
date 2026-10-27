@@ -105,7 +105,7 @@ export const VendasEClientesView: React.FC<VendasEClientesViewProps> = ({
       </div>
 
       {/* Renderização do conteúdo ativo do Módulo */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      <div className={`flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden ${activeSubTab !== 'pdv' ? 'pb-20 lg:pb-0' : ''}`}>
         {activeSubTab === 'pdv' && <PdvView />}
         {activeSubTab === 'consulta_devolucoes' && <ConsultaVendasDevolucoesTab />}
         {activeSubTab === 'clientes' && <CadastroGestaoClientesTab />}
