@@ -111,32 +111,38 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           {isNotifOpen && (
-            <div className="absolute right-0 mt-2 w-72 sm:w-96 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 p-2 overflow-hidden">
-              <div className="flex items-center justify-between px-2 py-1.5 border-b border-zinc-800 text-xs font-semibold text-zinc-300">
-                <span>Alertas da Adega ({(notifications || []).length})</span>
-                <span className="text-[11px] text-zinc-400">Sincronizado</span>
-              </div>
-              <div className="max-h-64 overflow-y-auto divide-y divide-zinc-800/60 mt-1">
-                {(notifications || []).length === 0 ? (
-                  <p className="text-center py-4 text-xs text-zinc-400">Nenhum alerta pendente</p>
-                ) : (
-                  (notifications || []).map((notif, idx) => (
-                    <div key={idx} className="p-2.5 text-xs text-zinc-300 flex items-start justify-between gap-2 hover:bg-zinc-800/50 rounded-lg">
-                      <div className="flex gap-2">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                        <span>{notif}</span>
+            <>
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setIsNotifOpen(false)} 
+              />
+              <div className="absolute left-0 mt-2 w-72 sm:w-96 max-w-[calc(100vw-2rem)] bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 p-2 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between px-2 py-1.5 border-b border-zinc-800 text-xs font-semibold text-zinc-300">
+                  <span>Alertas da Adega ({(notifications || []).length})</span>
+                  <span className="text-[11px] text-zinc-400">Sincronizado</span>
+                </div>
+                <div className="max-h-64 overflow-y-auto divide-y divide-zinc-800/60 mt-1">
+                  {(notifications || []).length === 0 ? (
+                    <p className="text-center py-4 text-xs text-zinc-400">Nenhum alerta pendente</p>
+                  ) : (
+                    (notifications || []).map((notif, idx) => (
+                      <div key={idx} className="p-2.5 text-xs text-zinc-300 flex items-start justify-between gap-2 hover:bg-zinc-800/50 rounded-lg">
+                        <div className="flex gap-2">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                          <span>{notif}</span>
+                        </div>
+                        <button 
+                          onClick={() => dismissNotification(idx)} 
+                          className="text-zinc-400 hover:text-zinc-300 p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => dismissNotification(idx)} 
-                        className="text-zinc-400 hover:text-zinc-300 p-0.5"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
 
