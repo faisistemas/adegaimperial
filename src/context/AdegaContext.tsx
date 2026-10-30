@@ -396,6 +396,10 @@ interface AdegaContextType {
   // Controle de Permissões de Acesso por Cargo (Configurações)
   modulePermissions: Record<string, UserRole[]>;
   updateModulePermissions: (permissions: Record<string, UserRole[]>) => void;
+
+  // Logomarca e Identidade Visual do Sistema
+  systemLogo: string;
+  updateSystemLogo: (logo: string) => void;
 }
 
 const AdegaContext = createContext<AdegaContextType | undefined>(undefined);
@@ -540,6 +544,46 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           payment_method: 'SYSTEM',
           status: 'SYSTEM_CONFIG',
           items: newPermissions,
+        })
+        .then(() => {}, () => {});
+    }
+  };
+
+  // Logomarca Dinâmica do Sistema
+  const [systemLogo, setSystemLogoState] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const savedDirect = localStorage.getItem('adegaswg_system_logo');
+      if (savedDirect) return savedDirect;
+      try {
+        const savedConfig = localStorage.getItem('adegaswg_configuracoes_dados');
+        if (savedConfig) {
+          const parsed = JSON.parse(savedConfig);
+          if (parsed.logoUrl) return parsed.logoUrl;
+        }
+      } catch (e) {}
+    }
+    return '/logo.jpg';
+  });
+
+  const updateSystemLogo = (logo: string) => {
+    setSystemLogoState(logo);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('adegaswg_system_logo', logo);
+      try {
+        const savedConfig = localStorage.getItem('adegaswg_configuracoes_dados');
+        const parsed = savedConfig ? JSON.parse(savedConfig) : {};
+        localStorage.setItem('adegaswg_configuracoes_dados', JSON.stringify({ ...parsed, logoUrl: logo }));
+      } catch (e) {}
+    }
+
+    const sb = getSupabaseClient();
+    if (sb) {
+      sb.from('pedidos')
+        .upsert({
+          id: 'SYS_CONFIG_LOGO',
+          payment_method: 'SYSTEM',
+          status: 'SYSTEM_CONFIG',
+          items: { logoUrl: logo },
         })
         .then(() => {}, () => {});
     }
@@ -774,6 +818,19 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               saveToStorage('adegaswg_module_permissions', merged);
               return merged;
             });
+          }
+        }
+      } catch (e) {}
+
+      // 5. Carrega logotipo da Adega do Supabase
+      try {
+        const sb = getSupabaseClient();
+        if (sb) {
+          const { data, error } = await sb.from('pedidos').select('items').eq('id', 'SYS_CONFIG_LOGO').maybeSingle();
+          if (!error && data && data.items && (data.items as any).logoUrl) {
+            const cloudLogo = (data.items as any).logoUrl;
+            setSystemLogoState(cloudLogo);
+            localStorage.setItem('adegaswg_system_logo', cloudLogo);
           }
         }
       } catch (e) {}
@@ -4359,6 +4416,9 @@ Acerto Liquidado por: ${currentUser.name}
         // Permissões de Módulos por Cargo
         modulePermissions,
         updateModulePermissions,
+        // Logomarca e Identidade Visual do Sistema
+        systemLogo,
+        updateSystemLogo,
       }}
     >
       {children}

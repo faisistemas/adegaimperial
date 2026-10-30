@@ -39,7 +39,8 @@ export const Header: React.FC<HeaderProps> = ({
     cashSession, 
     notifications, 
     dismissNotification,
-    clearNotifications 
+    clearNotifications,
+    systemLogo 
   } = useAdega();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -60,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
         <div className="flex lg:hidden items-center gap-2 min-w-0">
           <div className="w-8 h-8 rounded-lg overflow-hidden border border-amber-500/30 bg-zinc-950 shrink-0">
-            <img src="/logo.jpg" alt="AdeGaswg" className="w-full h-full object-cover" />
+            <img src={systemLogo || "/logo.jpg"} alt="AdeGaswg" className="w-full h-full object-cover" />
           </div>
           <span className="font-serif font-black text-xs sm:text-sm text-zinc-100 tracking-tight truncate">
             {activeStore?.name || 'AdeGaswg'}

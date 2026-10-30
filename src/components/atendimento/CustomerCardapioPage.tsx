@@ -13,7 +13,7 @@ interface CustomerCardapioPageProps {
 }
 
 export const CustomerCardapioPage: React.FC<CustomerCardapioPageProps> = ({ onBackToSystem }) => {
-  const { products, tables, activeStore, addOrderToTable } = useAdega();
+  const { products, tables, activeStore, addOrderToTable, systemLogo } = useAdega();
 
   // Read table number from URL query params (e.g. ?mesa=1 or ?mesa=02)
   const [tableNumber, setTableNumber] = useState<number>(() => {
@@ -141,7 +141,7 @@ export const CustomerCardapioPage: React.FC<CustomerCardapioPageProps> = ({ onBa
       <div className="bg-zinc-950 border-b border-zinc-800/80 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl overflow-hidden border border-amber-500/40 bg-zinc-900 shrink-0">
-            <img src="/logo.jpg" alt="AdeGaswg" className="w-full h-full object-cover" />
+            <img src={systemLogo || "/logo.jpg"} alt="AdeGaswg" className="w-full h-full object-cover" />
           </div>
           <div>
             <div className="font-bold text-xs sm:text-sm text-zinc-100 font-serif leading-tight">

@@ -7,7 +7,7 @@ import { loadFromStorage, saveToStorage, STORAGE_KEYS } from '../../utils/storag
 import { getSupabaseClient } from '../../lib/supabase';
 
 export const ScreenLockOverlay: React.FC = () => {
-  const { isScreenLocked, setScreenLocked, users, setUsers, switchUserRole, verifyManagerPin } = useAdega();
+  const { isScreenLocked, setScreenLocked, users, setUsers, switchUserRole, verifyManagerPin, systemLogo } = useAdega();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -369,7 +369,7 @@ export const ScreenLockOverlay: React.FC = () => {
         <div className="flex items-center justify-center gap-3.5 mx-auto py-1">
           <div className="w-16 h-16 rounded-2xl bg-[#0c0e11] border border-amber-500/70 shadow-[0_0_20px_rgba(245,158,11,0.25)] flex items-center justify-center p-1.5 shrink-0">
             <img
-              src="/logo.jpg"
+              src={systemLogo || "/logo.jpg"}
               alt="AdeGaswg"
               className="w-full h-full object-contain rounded-xl"
             />

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Printer, X, Download, CheckCircle2, Usb, Scissors } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Order, Store } from '../../types';
+import { useAdega } from '../../context/AdegaContext';
 import { printThermalViaBrowser, sendEscPosToSerial, generatePdvReceipt, checkWebSerialSupport } from '../../utils/thermalPrinter';
 import { playSuccessBeep, playCashDrawerSound } from '../../utils/peripheralUtils';
 
@@ -13,6 +14,7 @@ interface ThermalReceiptModalProps {
 }
 
 export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({ isOpen, onClose, order, store }) => {
+  const { systemLogo } = useAdega();
   const [printFeedback, setPrintFeedback] = useState<string | null>(null);
 
   if (!isOpen || !order) return null;
@@ -111,7 +113,7 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({ isOpen
             {/* Logomarca da Empresa */}
             <div className="text-center mb-2">
               <img 
-                src="/logo.jpg" 
+                src={systemLogo || "/logo.jpg"} 
                 alt={`Logo ${store.name}`}
                 className="mx-auto max-h-12 w-auto object-contain filter grayscale contrast-150" 
               />

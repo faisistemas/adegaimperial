@@ -4,7 +4,7 @@ import {
   Shield, Save, CheckCircle2, Plus, Trash2, Wine,
   ShoppingCart, Truck, Droplets, LayoutGrid, FileText,
   UtensilsCrossed, Bike, ReceiptText, DollarSign, TrendingUp,
-  BarChart3, Printer, Cpu, KeyRound, Check, RotateCcw, Lock
+  BarChart3, Printer, Cpu, KeyRound, Check, RotateCcw, Lock, Upload
 } from 'lucide-react';
 import { useAdega, DEFAULT_MODULE_PERMISSIONS } from '../../context/AdegaContext';
 import { UserRole } from '../../types';
@@ -15,6 +15,7 @@ interface DadosAdeGaswg {
   telefone: string;
   horarioFuncionamento: string;
   endereco: string;
+  logoUrl?: string;
 }
 
 interface HorarioDia {
@@ -187,7 +188,7 @@ const ROLES_LIST: { id: UserRole; label: string; handle: string; description: st
 const STORAGE_KEY = 'adegaswg_configuracoes';
 
 export const ConfiguracoesView: React.FC = () => {
-  const { modulePermissions, updateModulePermissions } = useAdega();
+  const { modulePermissions, updateModulePermissions, systemLogo, updateSystemLogo } = useAdega();
   const [activeSubTab, setActiveSubTab] = useState<'geral' | 'horarios' | 'feriados' | 'notificacoes' | 'auditoria' | 'permissoes'>('geral');
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -263,20 +264,92 @@ export const ConfiguracoesView: React.FC = () => {
 
   // 1. Dados Gerais da AdeGaswg
   const [dados, setDados] = useState<DadosAdeGaswg>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_dados`) || localStorage.getItem(`adega_imperial_configuracoes_dados`);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      // fallback
-    }
-    return {
+    let base = {
       nome: 'AdeGaswg LTDA',
       cnpj: '12.345.678/0001-90',
       telefone: '(11) 98765-4321',
       horarioFuncionamento: 'Seg a Dom: 10:00 - 02:00',
       endereco: 'Av. Paulista, 1500 - Bela Vista, São Paulo - SP',
+      logoUrl: '/logo.jpg',
     };
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_dados`) || localStorage.getItem(`adega_imperial_configuracoes_dados`);
+      if (saved) {
+        base = { ...base, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      // fallback
+    }
+    return base;
   });
+
+  // Sincroniza logo caso mude externamente
+  useEffect(() => {
+    if (systemLogo && systemLogo !== dados.logoUrl) {
+      setDados((prev) => ({ ...prev, logoUrl: systemLogo }));
+    }
+  }, [systemLogo]);
+
+  // Upload da Logomarca
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor, selecione um arquivo de imagem válido (PNG, JPG, WEBP, SVG).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (!result) return;
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_DIM = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          }
+        } else {
+          if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          setDados((prev) => ({ ...prev, logoUrl: dataUrl }));
+          updateSystemLogo(dataUrl);
+        } else {
+          setDados((prev) => ({ ...prev, logoUrl: result }));
+          updateSystemLogo(result);
+        }
+        setFeedback('Logomarca atualizada com sucesso!');
+        setTimeout(() => setFeedback(null), 3000);
+      };
+      img.onerror = () => {
+        setDados((prev) => ({ ...prev, logoUrl: result }));
+        updateSystemLogo(result);
+        setFeedback('Logomarca atualizada!');
+        setTimeout(() => setFeedback(null), 3000);
+      };
+      img.src = result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   // 2. Horários de Atendimento da Adega & Salão
   const [horarios, setHorarios] = useState<HorarioDia[]>(() => {
@@ -327,6 +400,9 @@ export const ConfiguracoesView: React.FC = () => {
       localStorage.setItem(`${STORAGE_KEY}_dados`, JSON.stringify(dados));
       localStorage.setItem(`${STORAGE_KEY}_horarios`, JSON.stringify(horarios));
       localStorage.setItem(`${STORAGE_KEY}_feriados`, JSON.stringify(feriados));
+      if (dados.logoUrl) {
+        updateSystemLogo(dados.logoUrl);
+      }
       setFeedback('Configurações da AdeGaswg salvas com sucesso!');
       setTimeout(() => setFeedback(null), 3000);
     } catch (err) {
@@ -517,6 +593,60 @@ export const ConfiguracoesView: React.FC = () => {
                 placeholder="Rua, número, bairro, cidade e CEP"
                 className="w-full bg-zinc-950 border border-zinc-800/90 rounded-lg px-3.5 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 transition-colors"
               />
+            </div>
+
+            {/* Linha 4: Logomarca da Adega */}
+            <div>
+              <label className="text-xs text-zinc-400 block mb-1.5 font-medium">
+                Logomarca / Logotipo da Adega
+              </label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 bg-zinc-950 border border-zinc-800/90 rounded-lg">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden border border-amber-500/40 bg-zinc-900 flex items-center justify-center shrink-0 shadow-md ring-1 ring-amber-500/20">
+                    <img
+                      src={dados.logoUrl || systemLogo || '/logo.jpg'}
+                      alt="Logomarca da Adega"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-xs font-semibold text-zinc-200 block truncate">
+                      Logomarca Atual
+                    </span>
+                    <span className="text-[11px] text-zinc-500 block truncate">
+                      {dados.logoUrl && dados.logoUrl.startsWith('data:image')
+                        ? '✓ Imagem personalizada carregada'
+                        : 'Formatos suportados: PNG, JPG, WEBP, SVG'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <label className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 border border-zinc-700/60 shadow-sm">
+                    <Upload className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Subir Logomarca</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  {dados.logoUrl && dados.logoUrl !== '/logo.jpg' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDados({ ...dados, logoUrl: '/logo.jpg' });
+                        updateSystemLogo('/logo.jpg');
+                      }}
+                      className="px-2.5 py-2 text-zinc-400 hover:text-rose-400 text-xs transition-colors cursor-pointer"
+                      title="Restaurar logotipo padrão"
+                    >
+                      Padrão
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 

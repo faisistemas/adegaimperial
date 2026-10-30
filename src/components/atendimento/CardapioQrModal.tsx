@@ -16,7 +16,7 @@ interface CardapioQrModalProps {
 }
 
 export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClose }) => {
-  const { products, tables, activeStore, addOrderToTable } = useAdega();
+  const { products, tables, activeStore, addOrderToTable, systemLogo } = useAdega();
 
   // Selected table state
   const [selectedTableId, setSelectedTableId] = useState<number>(() => {
@@ -301,7 +301,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
         <body>
           <div class="display-card">
             <div class="logo-box">
-              <img src="/logo.jpg" alt="Logo" />
+              <img src={systemLogo || "/logo.jpg"} alt="Logo" />
             </div>
             <div class="store-name">${storeName}</div>
             <div class="subtitle">Cardápio & Pedidos Digitais</div>
@@ -500,7 +500,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
               {/* Logomarca da Adega com fundo preto e bordas arredondadas */}
               <div className="w-11 h-11 rounded-xl overflow-hidden shadow-sm mx-auto mb-1.5 bg-black flex items-center justify-center p-1 border border-zinc-200/80 shrink-0">
                 <img
-                  src="/logo.jpg"
+                  src={systemLogo || "/logo.jpg"}
                   alt="AdeGaswg"
                   className="w-full h-full object-contain"
                 />
@@ -568,7 +568,7 @@ export const CardapioQrModal: React.FC<CardapioQrModalProps> = ({ isOpen, onClos
             <div className="p-3 sm:p-4 md:p-5 bg-gradient-to-br from-amber-950/70 via-zinc-950 to-zinc-950 border-b border-zinc-800 text-center relative shrink-0">
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden border border-amber-500/40 shadow-md shadow-amber-950/60 mx-auto mb-1.5 sm:mb-2 bg-zinc-950 ring-1 ring-amber-500/25">
                 <img
-                  src="/logo.jpg"
+                  src={systemLogo || "/logo.jpg"}
                   alt="AdeGaswg"
                   className="w-full h-full object-cover"
                 />

@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
   onOpenCardapioQr
 }) => {
-  const { currentUser, modulePermissions } = useAdega();
+  const { currentUser, modulePermissions, systemLogo } = useAdega();
 
   const isRoleAllowed = (itemId: string, allowedRoles: UserRole[]): boolean => {
     const roles = modulePermissions?.[itemId] || allowedRoles;
@@ -231,7 +231,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center gap-2.5">
             <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl overflow-hidden border border-amber-500/40 shadow-md shadow-amber-950/50 bg-zinc-950 shrink-0 ring-1 ring-amber-500/25">
               <img
-                src="/logo.jpg"
+                src={systemLogo || "/logo.jpg"}
                 alt="AdeGaswg"
                 className="h-full w-full object-cover object-center"
               />
