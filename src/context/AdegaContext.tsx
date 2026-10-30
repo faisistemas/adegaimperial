@@ -427,7 +427,7 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return (loaded || INITIAL_USERS)
       .filter((u) => u && u.id !== 'u-2' && u.id !== 'u-1793120258445' && u.name.toLowerCase() !== 'teste')
       .map((u) => {
-        if (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin)) {
+        if (!u.pin) {
           return { ...u, pin: '#Adegaswg2027*' };
         }
         return u;
@@ -746,18 +746,14 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           prev
             .filter((u) => u && u.id !== 'u-2' && u.id !== 'u-1793120258445' && u.name.toLowerCase() !== 'teste')
             .forEach((u) => {
-              const cleanPin = (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin))
-                ? '#Adegaswg2027*'
-                : u.pin;
+              const cleanPin = !u.pin ? '#Adegaswg2027*' : u.pin;
               map.set(u.id, { ...u, pin: cleanPin });
             });
           fetchedUsers
             .filter((u) => u && u.id !== 'u-2' && u.id !== 'u-1793120258445' && u.name.toLowerCase() !== 'teste')
             .forEach((u: User) => {
               if (u && u.id) {
-                const cleanPin = (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin))
-                  ? '#Adegaswg2027*'
-                  : u.pin;
+                const cleanPin = !u.pin ? '#Adegaswg2027*' : u.pin;
                 map.set(u.id, { ...(map.get(u.id) || {}), ...u, pin: cleanPin });
               }
             });
@@ -966,16 +962,12 @@ export const AdegaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const verifyManagerPin = (pin: string): { valid: boolean; manager?: User } => {
     const trimmed = String(pin || '').trim();
+    if (!trimmed) return { valid: false };
     const manager = users.find(
-      (u) => (u.role === 'STORE_MANAGER' || u.role === 'SUPER_ADMIN') && u.pin === trimmed
+      (u) => (u.role === 'STORE_MANAGER' || u.role === 'SUPER_ADMIN') && String(u.pin || '').trim() === trimmed
     );
     if (manager) {
       return { valid: true, manager };
-    }
-    // Senha padrão mestre única solicitada
-    if (trimmed === '#Adegaswg2027*') {
-      const admin = users.find((u) => u.role === 'SUPER_ADMIN') || users[0];
-      return { valid: true, manager: admin };
     }
     return { valid: false };
   };

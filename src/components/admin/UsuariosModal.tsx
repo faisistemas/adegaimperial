@@ -6,6 +6,7 @@ import {
 import { useAdega } from '../../context/AdegaContext';
 import { User, UserRole } from '../../types';
 import { getSupabaseClient } from '../../lib/supabase';
+import { loadFromStorage, saveToStorage, STORAGE_KEYS } from '../../utils/storage';
 
 interface UsuariosModalProps {
   isOpen: boolean;
@@ -94,28 +95,30 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
 
     const updatedUser = { ...user, pin: newPassword };
 
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === user.id) {
-          return updatedUser;
-        }
-        return u;
-      })
-    );
+    // 1. Atualiza lista de usuários localmente e no storage
+    const nextUsers = users.map((u) => (u.id === user.id ? updatedUser : u));
+    setUsers(nextUsers);
+    saveToStorage(STORAGE_KEYS.USERS, nextUsers);
 
     if (currentUser.id === user.id) {
-      switchUserRole({ ...currentUser, pin: newPassword });
+      switchUserRole(updatedUser);
     }
 
-    // Persiste no Supabase em segundo plano (API e Cliente direto)
-    fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedUser),
-    }).catch(() => {});
-
+    // 2. Persiste imediatamente no Supabase (tanto na tabela usuarios quanto em SYS_CONFIG_USUARIOS)
     const sb = getSupabaseClient();
     if (sb) {
+      // Atualiza SYS_CONFIG_USUARIOS na tabela pedidos
+      sb.from('pedidos')
+        .upsert({
+          id: 'SYS_CONFIG_USUARIOS',
+          payment_method: 'SYSTEM',
+          status: 'SYSTEM_CONFIG',
+          items: nextUsers,
+          updated_at: new Date().toISOString(),
+        })
+        .then(() => {}, (err) => console.error('[Supabase Config Error]:', err));
+
+      // Atualiza tabela usuarios
       sb.from('usuarios')
         .upsert({
           id: updatedUser.id,
@@ -132,6 +135,13 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
         });
     }
 
+    // 3. Persiste no backend Node.js
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedUser),
+    }).catch(() => {});
+
     setPasswords((prev) => ({ ...prev, [user.id]: '' }));
     showNotification('success', `Senha de ${user.name} atualizada com sucesso!`);
   };
@@ -146,7 +156,9 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
     }
 
     if (window.confirm(`Deseja realmente excluir o usuário "${targetUser.name}"?`)) {
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      const remainingUsers = users.filter((u) => u.id !== userId);
+      setUsers(remainingUsers);
+      saveToStorage(STORAGE_KEYS.USERS, remainingUsers);
 
       // Remove no Supabase em segundo plano (API e Cliente direto)
       fetch(`/api/users/${userId}`, {
@@ -156,9 +168,17 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
       const sbDelete = getSupabaseClient();
       if (sbDelete) {
         sbDelete.from('usuarios').delete().eq('id', userId).then(() => {}, () => {});
+        sbDelete.from('pedidos')
+          .upsert({
+            id: 'SYS_CONFIG_USUARIOS',
+            payment_method: 'SYSTEM',
+            status: 'SYSTEM_CONFIG',
+            items: remainingUsers,
+            updated_at: new Date().toISOString(),
+          })
+          .then(() => {}, () => {});
       }
 
-      const remainingUsers = users.filter((u) => u.id !== userId);
       if (userId === currentUser.id && remainingUsers.length > 0) {
         switchUserRole(remainingUsers[0]);
       }
@@ -222,17 +242,9 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
         storeId: currentUser.storeId || 'store-1',
       };
 
-      setUsers((prev) =>
-        prev.map((u) => {
-          if (u.id === editingUserId) {
-            return {
-              ...u,
-              ...updatedUser,
-            };
-          }
-          return u;
-        })
-      );
+      const nextUsers = users.map((u) => (u.id === editingUserId ? { ...u, ...updatedUser } : u));
+      setUsers(nextUsers);
+      saveToStorage(STORAGE_KEYS.USERS, nextUsers);
 
       if (currentUser.id === editingUserId) {
         switchUserRole({
@@ -250,6 +262,16 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
 
       const sb = getSupabaseClient();
       if (sb) {
+        sb.from('pedidos')
+          .upsert({
+            id: 'SYS_CONFIG_USUARIOS',
+            payment_method: 'SYSTEM',
+            status: 'SYSTEM_CONFIG',
+            items: nextUsers,
+            updated_at: new Date().toISOString(),
+          })
+          .then(() => {}, () => {});
+
         sb.from('usuarios')
           .upsert({
             id: updatedUser.id,
@@ -280,7 +302,9 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
         storeId: currentUser.storeId || 'store-1',
       };
 
-      setUsers((prev) => [...prev.filter((u) => u.id !== newUser.id), newUser]);
+      const nextUsers = [...users.filter((u) => u.id !== newUser.id), newUser];
+      setUsers(nextUsers);
+      saveToStorage(STORAGE_KEYS.USERS, nextUsers);
 
       // Persiste no Supabase (API e Cliente direto)
       fetch('/api/users', {
@@ -291,6 +315,16 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
 
       const sb = getSupabaseClient();
       if (sb) {
+        sb.from('pedidos')
+          .upsert({
+            id: 'SYS_CONFIG_USUARIOS',
+            payment_method: 'SYSTEM',
+            status: 'SYSTEM_CONFIG',
+            items: nextUsers,
+            updated_at: new Date().toISOString(),
+          })
+          .then(() => {}, () => {});
+
         sb.from('usuarios')
           .upsert({
             id: newUser.id,
@@ -596,132 +630,135 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* Modal de Detalhes do Usuário (Disparado pelo ícone de Olho) */}
-        {viewingUser && (
-          <div 
-            className="absolute inset-0 bg-[#141517]/95 backdrop-blur-md rounded-2xl p-5 z-20 flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-zinc-800 text-emerald-400">
-                    <Shield className="w-4 h-4" />
+        {viewingUser && (() => {
+          const liveUser = users.find((u) => u.id === viewingUser.id) || viewingUser;
+          return (
+            <div 
+              className="absolute inset-0 bg-[#141517]/95 backdrop-blur-md rounded-2xl p-5 z-20 flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-zinc-800 text-emerald-400">
+                      <Shield className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-zinc-100">Ficha do Operador</h4>
+                      <p className="text-[11px] text-zinc-400">Credenciais e nível de acesso</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-zinc-100">Ficha do Operador</h4>
-                    <p className="text-[11px] text-zinc-400">Credenciais e nível de acesso</p>
+                  <button
+                    type="button"
+                    onClick={() => setViewingUser(null)}
+                    className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-zinc-400">Nome</div>
+                      <div className="font-bold text-sm text-white">{liveUser.name}</div>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-[11px] ${getRoleBadge(liveUser).className}`}>
+                      {getRoleBadge(liveUser).label}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
+                    <span className="text-zinc-400 flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-zinc-500" />
+                      E-mail
+                    </span>
+                    <span className="text-zinc-200 font-mono truncate max-w-[200px]">
+                      {liveUser.email || 'Não informado'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
+                    <span className="text-zinc-400 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-zinc-500" />
+                      WhatsApp
+                    </span>
+                    <span className="text-zinc-200 font-mono truncate max-w-[200px]">
+                      {liveUser.whatsapp || liveUser.phone || 'Não informado'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
+                    <span className="text-zinc-400 flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                      Senha
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-emerald-400 font-semibold tracking-wider">
+                        {showPinInViewer ? liveUser.pin : '••••'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowPinInViewer(!showPinInViewer)}
+                        className="p-1 rounded bg-zinc-800 text-zinc-300 hover:text-white"
+                        title={showPinInViewer ? 'Ocultar' : 'Exibir'}
+                      >
+                        {showPinInViewer ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs space-y-1">
+                    <span className="font-semibold text-zinc-400 flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5 text-emerald-500" />
+                      Permissões
+                    </span>
+                    <p className="text-[11px] text-zinc-300">
+                      {getRoleDescription(liveUser.role)}
+                    </p>
                   </div>
                 </div>
+              </div>
+
+              <div className="pt-3 border-t border-zinc-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleStartEdit(liveUser)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-xl text-xs font-semibold cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Editar Dados</span>
+                  </button>
+
+                  {currentUser.id !== liveUser.id && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        switchUserRole(liveUser);
+                        showNotification('success', `Conectado como ${liveUser.name}!`);
+                        setViewingUser(null);
+                        onClose();
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs cursor-pointer shadow-md"
+                    >
+                      <LogIn className="w-3.5 h-3.5" />
+                      <span>Entrar</span>
+                    </button>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setViewingUser(null)}
-                  className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"
+                  className="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  Fechar
                 </button>
               </div>
-
-              <div className="mt-4 space-y-3">
-                <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between">
-                  <div>
-                    <div className="text-xs text-zinc-400">Nome</div>
-                    <div className="font-bold text-sm text-white">{viewingUser.name}</div>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded text-[11px] ${getRoleBadge(viewingUser).className}`}>
-                    {getRoleBadge(viewingUser).label}
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
-                  <span className="text-zinc-400 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-zinc-500" />
-                    E-mail
-                  </span>
-                  <span className="text-zinc-200 font-mono truncate max-w-[200px]">
-                    {viewingUser.email || 'Não informado'}
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
-                  <span className="text-zinc-400 flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-zinc-500" />
-                    WhatsApp
-                  </span>
-                  <span className="text-zinc-200 font-mono truncate max-w-[200px]">
-                    {viewingUser.whatsapp || viewingUser.phone || 'Não informado'}
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
-                  <span className="text-zinc-400 flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-zinc-500" />
-                    Senha
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-emerald-400 font-semibold tracking-wider">
-                      {showPinInViewer ? viewingUser.pin : '••••'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowPinInViewer(!showPinInViewer)}
-                      className="p-1 rounded bg-zinc-800 text-zinc-300 hover:text-white"
-                      title={showPinInViewer ? 'Ocultar' : 'Exibir'}
-                    >
-                      {showPinInViewer ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs space-y-1">
-                  <span className="font-semibold text-zinc-400 flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5 text-emerald-500" />
-                    Permissões
-                  </span>
-                  <p className="text-[11px] text-zinc-300">
-                    {getRoleDescription(viewingUser.role)}
-                  </p>
-                </div>
-              </div>
             </div>
-
-            <div className="pt-3 border-t border-zinc-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleStartEdit(viewingUser)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-xl text-xs font-semibold cursor-pointer"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>Editar Dados</span>
-                </button>
-
-                {currentUser.id !== viewingUser.id && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      switchUserRole(viewingUser);
-                      showNotification('success', `Conectado como ${viewingUser.name}!`);
-                      setViewingUser(null);
-                      onClose();
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs cursor-pointer shadow-md"
-                  >
-                    <LogIn className="w-3.5 h-3.5" />
-                    <span>Entrar</span>
-                  </button>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setViewingUser(null)}
-                className="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium cursor-pointer"
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

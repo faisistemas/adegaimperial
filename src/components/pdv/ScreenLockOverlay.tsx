@@ -144,7 +144,7 @@ export const ScreenLockOverlay: React.FC = () => {
     // Carrega os usuários mais recentes diretamente do storage com fallback para o contexto
     const storedUsers = loadFromStorage<User[]>(STORAGE_KEYS.USERS, users);
     let currentUsers = (storedUsers && storedUsers.length > 0 ? storedUsers : users).map((u) => {
-      if (!u.pin || ['1234', '1111', '2222', '9999', 'admin', 'admin123'].includes(u.pin)) {
+      if (!u.pin) {
         return { ...u, pin: '#Adegaswg2027*' };
       }
       return u;
@@ -185,36 +185,8 @@ export const ScreenLockOverlay: React.FC = () => {
 
       if (matched) {
         const matchedPin = String(matched.pin || '').trim();
-        if (matchedPin === trimmedPass || trimmedPass === '#Adegaswg2027*' || verifyManagerPin(trimmedPass).valid) {
+        if (matchedPin === trimmedPass) {
           switchUserRole(matched);
-          setScreenLocked(false);
-          playSuccessBeep();
-          setEmail('');
-          setPassword('');
-          setIsLoading(false);
-          return;
-        }
-
-        // Se for admin e o operador digitar a nova senha padrão ou desejar alterar
-        if (isRoleAdmin && trimmedPass === '#Adegaswg2027*') {
-          const updatedUser = { ...matched, pin: '#Adegaswg2027*' };
-          const nextUsers = currentUsers.map((u) => (u.id === matched.id ? updatedUser : u));
-          setUsers(nextUsers);
-          saveToStorage(STORAGE_KEYS.USERS, nextUsers);
-          switchUserRole(updatedUser);
-
-          const sbQuick = getSupabaseClient();
-          if (sbQuick) {
-            sbQuick.from('pedidos')
-              .upsert({
-                id: 'SYS_CONFIG_USUARIOS',
-                payment_method: 'SYSTEM',
-                status: 'SYSTEM_CONFIG',
-                items: nextUsers,
-              })
-              .then(() => {}, () => {});
-          }
-
           setScreenLocked(false);
           playSuccessBeep();
           setEmail('');
@@ -238,7 +210,7 @@ export const ScreenLockOverlay: React.FC = () => {
 
             if (foundCloud) {
               const cloudPin = String(foundCloud.pin || '').trim();
-              if (cloudPin === trimmedPass || isMasterPass || verifyManagerPin(trimmedPass).valid) {
+              if (cloudPin === trimmedPass) {
                 setUsers(configRow.items);
                 switchUserRole(foundCloud);
                 setScreenLocked(false);
@@ -253,54 +225,16 @@ export const ScreenLockOverlay: React.FC = () => {
         } catch (err) {}
       }
 
-      // Se for administrador e a senha digitada for a credencial mestre padrão
-      if (isRoleAdmin && isMasterPass) {
-        const adminUser = matched || currentUsers.find((u) => u.role === 'SUPER_ADMIN') || currentUsers[0];
-        if (adminUser) {
-          switchUserRole(adminUser);
-          setScreenLocked(false);
-          playSuccessBeep();
-          setEmail('');
-          setPassword('');
-          setIsLoading(false);
-          return;
-        }
-      }
-
       setErrorMsg('Senha incorreta para este usuário.');
       playErrorBuzz();
       setIsLoading(false);
       return;
     }
 
-    // 2. Busca se a senha digitada é a senha padrão mestre ou pertence diretamente a algum usuário
-    if (trimmedPass === '#Adegaswg2027*') {
-      const adminUser = currentUsers.find((u) => u.role === 'SUPER_ADMIN') || currentUsers[0];
-      switchUserRole(adminUser);
-      setScreenLocked(false);
-      playSuccessBeep();
-      setEmail('');
-      setPassword('');
-      setIsLoading(false);
-      return;
-    }
-
+    // 2. Busca se a senha digitada pertence diretamente a algum usuário
     const userByPass = currentUsers.find((u) => String(u.pin || '').trim() === trimmedPass);
     if (userByPass) {
       switchUserRole(userByPass);
-      setScreenLocked(false);
-      playSuccessBeep();
-      setEmail('');
-      setPassword('');
-      setIsLoading(false);
-      return;
-    }
-
-    // 3. Verifica credencial mestre (PIN mestre / Administrador)
-    const managerAuth = verifyManagerPin(trimmedPass);
-    if (managerAuth.valid) {
-      const adminUser = managerAuth.manager || currentUsers.find((u) => u.role === 'SUPER_ADMIN') || currentUsers[0];
-      switchUserRole(adminUser);
       setScreenLocked(false);
       playSuccessBeep();
       setEmail('');
