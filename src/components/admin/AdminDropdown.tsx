@@ -194,11 +194,8 @@ export const AdminDropdown: React.FC<AdminDropdownProps> = ({
         )}
       </div>
 
-      {/* Rótulo Operador + Badge Dinâmico */}
-      <div className="hidden md:flex items-center gap-1.5">
-        <span className="text-xs sm:text-sm font-semibold text-zinc-200 truncate max-w-[130px]">
-          {currentUser?.name || 'Administrador'}
-        </span>
+      {/* Badge Dinâmico da Função/Role */}
+      <div className="hidden md:flex items-center">
         <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-md bg-zinc-800/90 text-zinc-300 border border-zinc-700/60 font-medium">
           {currentUser?.role === 'SUPER_ADMIN' 
             ? 'admin' 
