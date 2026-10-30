@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   KeyRound, X, Plus, Check, AlertCircle, 
-  Eye, EyeOff, Edit3, Trash2, Shield, Mail, Lock, Phone, LogIn 
+  Eye, EyeOff, Edit3, Trash2, Shield, Mail, Lock, Phone, LogIn, Copy
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
 import { User, UserRole } from '../../types';
@@ -29,7 +29,9 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
 
   // Estado para visualização (Ficha do Operador - ícone de olho)
   const [viewingUser, setViewingUser] = useState<User | null>(null);
-  const [showPinInViewer, setShowPinInViewer] = useState(false);
+  const [showPinInViewer, setShowPinInViewer] = useState(true);
+  const [showFormPin, setShowFormPin] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
 
   // Fechar com tecla ESC
@@ -84,6 +86,57 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
   const showNotification = (type: 'success' | 'error', text: string) => {
     setFeedback({ type, text });
     setTimeout(() => setFeedback(null), 3500);
+  };
+
+  const handleCopy = (text: string, label: string) => {
+    if (!text || text.trim() === '') {
+      showNotification('error', `Não há ${label.toLowerCase()} cadastrado para copiar.`);
+      return;
+    }
+
+    const cleanText = text.trim();
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(cleanText)
+        .then(() => {
+          setCopiedField(label);
+          showNotification('success', `${label} copiado para a área de transferência!`);
+          setTimeout(() => setCopiedField(null), 2500);
+        })
+        .catch(() => fallbackCopy(cleanText, label));
+    } else {
+      fallbackCopy(cleanText, label);
+    }
+  };
+
+  const fallbackCopy = (text: string, label: string) => {
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.top = '0';
+      textArea.style.left = '0';
+      textArea.style.width = '2em';
+      textArea.style.height = '2em';
+      textArea.style.padding = '0';
+      textArea.style.border = 'none';
+      textArea.style.outline = 'none';
+      textArea.style.boxShadow = 'none';
+      textArea.style.background = 'transparent';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      if (successful) {
+        setCopiedField(label);
+        showNotification('success', `${label} copiado com sucesso!`);
+        setTimeout(() => setCopiedField(null), 2500);
+      } else {
+        showNotification('error', `Falha ao copiar ${label.toLowerCase()}.`);
+      }
+    } catch {
+      showNotification('error', `Falha ao copiar ${label.toLowerCase()}.`);
+    }
   };
 
   const handleUpdatePassword = (user: User) => {
@@ -483,15 +536,25 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
               onChange={(e) => setFormEmail(e.target.value)}
               className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-700"
             />
-            <input
-              type="password"
-              placeholder="Senha"
-              maxLength={30}
-              value={formPin}
-              onChange={(e) => setFormPin(e.target.value)}
-              className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-700 font-mono"
-              required
-            />
+            <div className="relative flex items-center">
+              <input
+                type={showFormPin ? 'text' : 'password'}
+                placeholder="Senha"
+                maxLength={30}
+                value={formPin}
+                onChange={(e) => setFormPin(e.target.value)}
+                className="w-full px-3 py-1.5 pr-8 bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-700 font-mono"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowFormPin(!showFormPin)}
+                className="absolute right-2 text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                title={showFormPin ? 'Ocultar senha' : 'Ver senha'}
+              >
+                {showFormPin ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
           </div>
 
           <div className="flex justify-end pt-1">
@@ -520,11 +583,21 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
                 {/* Lado Esquerdo / Superior: Nome + @handle + badge + Botão Entrar */}
                 <div className="flex items-center justify-between sm:justify-start gap-2 min-w-0 flex-1">
                   <div className="min-w-0 flex-1">
-                    <div className="font-bold text-white text-sm sm:text-base leading-tight truncate">
+                    <div 
+                      onClick={() => handleCopy(user.name, 'Nome')}
+                      className="font-bold text-white text-sm sm:text-base leading-tight truncate select-all cursor-pointer hover:underline"
+                      title="Clique para copiar o nome"
+                    >
                       {user.name}
                     </div>
                     <div className="flex items-center gap-1.5 mt-1 text-xs text-zinc-400 font-medium">
-                      <span>@{handle}</span>
+                      <span 
+                        onClick={() => handleCopy(`@${handle}`, 'Usuário')}
+                        className="select-all cursor-pointer hover:text-zinc-200 hover:underline transition-colors"
+                        title="Clique para copiar @usuário"
+                      >
+                        @{handle}
+                      </span>
                       <span className="text-zinc-600">·</span>
                       <span className={`px-2 py-0.5 rounded text-[11px] leading-tight ${badge.className}`}>
                         {badge.label}
@@ -595,10 +668,10 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
                     type="button"
                     onClick={() => {
                       setViewingUser(user);
-                      setShowPinInViewer(false);
+                      setShowPinInViewer(true);
                     }}
                     className="p-2 sm:p-2.5 rounded-xl bg-[#202226] hover:bg-[#2c2f35] text-zinc-300 hover:text-white border border-zinc-700/40 transition-colors cursor-pointer flex items-center justify-center"
-                    title="Visualizar detalhes do operador"
+                    title={`Visualizar senha e ficha de ${user.name}`}
                   >
                     <Eye className="w-4 h-4 text-zinc-300" />
                   </button>
@@ -632,6 +705,12 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
         {/* Modal de Detalhes do Usuário (Disparado pelo ícone de Olho) */}
         {viewingUser && (() => {
           const liveUser = users.find((u) => u.id === viewingUser.id) || viewingUser;
+          const userPassword = (liveUser.pin && String(liveUser.pin).trim() !== '')
+            ? String(liveUser.pin).trim()
+            : (liveUser.role === 'SUPER_ADMIN' ? '#Adegaswg2027*' : '1234');
+          const handle = getUserHandle(liveUser);
+          const badge = getRoleBadge(liveUser);
+
           return (
             <div 
               className="absolute inset-0 bg-[#141517]/95 backdrop-blur-md rounded-2xl p-5 z-20 flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150"
@@ -651,84 +730,194 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
                   <button
                     type="button"
                     onClick={() => setViewingUser(null)}
-                    className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 cursor-pointer"
+                    title="Fechar Ficha"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 <div className="mt-4 space-y-3">
+                  {/* Nome e Cargo */}
                   <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between">
                     <div>
                       <div className="text-xs text-zinc-400">Nome</div>
-                      <div className="font-bold text-sm text-white">{liveUser.name}</div>
+                      <div 
+                        onClick={() => handleCopy(liveUser.name, 'Nome')}
+                        className="font-bold text-sm text-white select-all cursor-pointer hover:underline"
+                        title="Clique para copiar o nome"
+                      >
+                        {liveUser.name}
+                      </div>
                     </div>
-                    <span className={`px-2 py-0.5 rounded text-[11px] ${getRoleBadge(liveUser).className}`}>
-                      {getRoleBadge(liveUser).label}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(liveUser.name, 'Nome')}
+                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
+                        title="Copiar Nome"
+                      >
+                        {copiedField === 'Nome' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span className="hidden sm:inline">Copiar</span>
+                      </button>
+                      <span className={`px-2 py-0.5 rounded text-[11px] ${badge.className}`}>
+                        {badge.label}
+                      </span>
+                    </div>
                   </div>
 
+                  {/* Usuário / Handle */}
+                  <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
+                    <span className="text-zinc-400 flex items-center gap-1.5">
+                      <span className="text-zinc-500 font-mono font-bold">@</span>
+                      Usuário / Login
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span 
+                        onClick={() => handleCopy(`@${handle}`, 'Usuário')}
+                        className="text-zinc-200 font-mono select-all cursor-pointer hover:underline"
+                        title="Clique para copiar o usuário"
+                      >
+                        @{handle}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(`@${handle}`, 'Usuário')}
+                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                        title="Copiar Usuário"
+                      >
+                        {copiedField === 'Usuário' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* E-mail */}
                   <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
                     <span className="text-zinc-400 flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5 text-zinc-500" />
                       E-mail
                     </span>
-                    <span className="text-zinc-200 font-mono truncate max-w-[200px]">
-                      {liveUser.email || 'Não informado'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span 
+                        onClick={() => liveUser.email && handleCopy(liveUser.email, 'E-mail')}
+                        className="text-zinc-200 font-mono select-all cursor-pointer hover:underline truncate max-w-[170px] sm:max-w-[240px]"
+                        title={liveUser.email ? "Clique para copiar o e-mail" : ""}
+                      >
+                        {liveUser.email || 'Não informado'}
+                      </span>
+                      {liveUser.email && (
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(liveUser.email || '', 'E-mail')}
+                          className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                          title="Copiar E-mail"
+                        >
+                          {copiedField === 'E-mail' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
+                  {/* WhatsApp */}
                   <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
                     <span className="text-zinc-400 flex items-center gap-1.5">
                       <Phone className="w-3.5 h-3.5 text-zinc-500" />
                       WhatsApp
                     </span>
-                    <span className="text-zinc-200 font-mono truncate max-w-[200px]">
-                      {liveUser.whatsapp || liveUser.phone || 'Não informado'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span 
+                        onClick={() => (liveUser.whatsapp || liveUser.phone) && handleCopy(liveUser.whatsapp || liveUser.phone || '', 'WhatsApp')}
+                        className="text-zinc-200 font-mono select-all cursor-pointer hover:underline truncate max-w-[170px] sm:max-w-[240px]"
+                        title={(liveUser.whatsapp || liveUser.phone) ? "Clique para copiar o WhatsApp" : ""}
+                      >
+                        {liveUser.whatsapp || liveUser.phone || 'Não informado'}
+                      </span>
+                      {(liveUser.whatsapp || liveUser.phone) && (
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(liveUser.whatsapp || liveUser.phone || '', 'WhatsApp')}
+                          className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                          title="Copiar WhatsApp"
+                        >
+                          {copiedField === 'WhatsApp' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
+                  {/* Senha com visualização e botão de copiar */}
                   <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
                     <span className="text-zinc-400 flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5 text-zinc-500" />
                       Senha
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-emerald-400 font-semibold tracking-wider">
-                        {showPinInViewer ? liveUser.pin : '••••'}
+                      <span 
+                        onClick={() => handleCopy(userPassword, 'Senha')}
+                        className="font-mono text-emerald-400 font-semibold tracking-wider select-all cursor-pointer hover:underline"
+                        title="Clique para copiar a senha"
+                      >
+                        {showPinInViewer ? userPassword : '••••••••'}
                       </span>
                       <button
                         type="button"
                         onClick={() => setShowPinInViewer(!showPinInViewer)}
-                        className="p-1 rounded bg-zinc-800 text-zinc-300 hover:text-white"
-                        title={showPinInViewer ? 'Ocultar' : 'Exibir'}
+                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                        title={showPinInViewer ? 'Ocultar Senha' : 'Ver Senha'}
                       >
                         {showPinInViewer ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(userPassword, 'Senha')}
+                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                        title="Copiar Senha"
+                      >
+                        {copiedField === 'Senha' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   </div>
 
+                  {/* Permissões */}
                   <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs space-y-1">
                     <span className="font-semibold text-zinc-400 flex items-center gap-1.5">
                       <Shield className="w-3.5 h-3.5 text-emerald-500" />
                       Permissões
                     </span>
-                    <p className="text-[11px] text-zinc-300">
+                    <p className="text-[11px] text-zinc-300 select-text">
                       {getRoleDescription(liveUser.role)}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-zinc-800 flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              {/* Rodapé com botões de Ação */}
+              <div className="pt-3 border-t border-zinc-800 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
                     onClick={() => handleStartEdit(liveUser)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-xl text-xs font-semibold cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     <span>Editar Dados</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const allInfo = `Nome: ${liveUser.name}\nUsuário: @${handle}\nCargo: ${badge.label}\nEmail: ${liveUser.email || 'Não informado'}\nWhatsApp: ${liveUser.whatsapp || liveUser.phone || 'Não informado'}\nSenha: ${userPassword}`;
+                      handleCopy(allInfo, 'Todas as Informações');
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+                    title="Copiar todas as credenciais do operador"
+                  >
+                    {copiedField === 'Todas as Informações' ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                    <span>Copiar Tudo</span>
                   </button>
 
                   {currentUser.id !== liveUser.id && (
@@ -740,7 +929,7 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
                         setViewingUser(null);
                         onClose();
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs cursor-pointer shadow-md"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all active:scale-95"
                     >
                       <LogIn className="w-3.5 h-3.5" />
                       <span>Entrar</span>
@@ -751,7 +940,7 @@ export const UsuariosModal: React.FC<UsuariosModalProps> = ({ isOpen, onClose })
                 <button
                   type="button"
                   onClick={() => setViewingUser(null)}
-                  className="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium cursor-pointer"
+                  className="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium cursor-pointer transition-colors"
                 >
                   Fechar
                 </button>
