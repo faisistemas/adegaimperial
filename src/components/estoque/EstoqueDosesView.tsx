@@ -61,7 +61,7 @@ export const EstoqueDosesView: React.FC = () => {
       {/* Navegação por Sub-Abas do Módulo de Produtos & Estoque */}
       <div className="overflow-x-auto pb-1">
         <div className="flex items-center gap-1.5 min-w-max border-b border-zinc-800/80 pb-2">
-          {/* 1. Produtos e Embalagens */}
+          {/* 1. Produtos */}
           <button
             id="tab-estoque-produtos"
             onClick={() => setActiveSubTab('PRODUTOS')}
@@ -72,7 +72,7 @@ export const EstoqueDosesView: React.FC = () => {
             }`}
           >
             <Package className="w-4 h-4" />
-            <span>Produtos & Embalagens ({products.length})</span>
+            <span>Produtos ({products.length})</span>
             {produtosAbaixoMinimo > 0 && (
               <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
                 activeSubTab === 'PRODUTOS' ? 'bg-zinc-950 text-rose-400' : 'bg-rose-500 text-white'
