@@ -3,7 +3,7 @@ import {
   Package, Search, Plus, Edit2, Trash2, ArrowUpRight, 
   AlertTriangle, AlertOctagon, CheckCircle2, DollarSign, Barcode, Layers, 
   Percent, ShieldAlert, X, Filter, Sparkles, RefreshCw, Eye, History,
-  ArrowRightLeft, Sliders, TrendingUp, TrendingDown
+  ArrowRightLeft, Sliders, TrendingUp, TrendingDown, Upload
 } from 'lucide-react';
 import { useAdega } from '../../context/AdegaContext';
 import { Product, ProductCategory, ProductType, UnitOfMeasure } from '../../types';
@@ -271,6 +271,61 @@ export const ProdutosCatalogoTab: React.FC = () => {
     }
 
     setIsModalOpen(false);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor, selecione um arquivo de imagem válido (PNG, JPG, WEBP).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (!result) return;
+
+      const img = new Image();
+      img.onload = () => {
+        // Redimensionar no canvas para manter peso leve e evitar estouro de armazenamento
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 600;
+        const MAX_HEIGHT = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          setFormData(prev => ({ ...prev, image: dataUrl }));
+        } else {
+          setFormData(prev => ({ ...prev, image: result }));
+        }
+      };
+      img.onerror = () => {
+        setFormData(prev => ({ ...prev, image: result }));
+      };
+      img.src = result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const handleConfirmRestock = () => {
@@ -986,6 +1041,34 @@ export const ProdutosCatalogoTab: React.FC = () => {
                       placeholder="https://..."
                       className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
                     />
+
+                    {/* Opção de subir a imagem embaixo da URL */}
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <label className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 hover:text-amber-300 border border-zinc-700 text-xs font-semibold flex items-center gap-2 cursor-pointer transition-colors shadow-sm">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Subir Imagem</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      <span className="text-[10px] text-zinc-400 flex-1 truncate">
+                        {formData.image?.startsWith('data:image') 
+                          ? '✓ Imagem carregada do dispositivo' 
+                          : 'Ou selecione um arquivo do computador (PNG, JPG, WEBP)'}
+                      </span>
+                      {formData.image && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, image: '' })}
+                          className="text-[10px] text-zinc-400 hover:text-red-400 transition-colors cursor-pointer"
+                        >
+                          Limpar
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
